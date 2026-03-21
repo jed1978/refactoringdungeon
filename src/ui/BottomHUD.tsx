@@ -13,20 +13,20 @@ function StatBar({ label, current, max, color }: StatBarProps) {
   return (
     <div className="flex items-center gap-2">
       <span
-        className="text-white w-6 text-right"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '6px' }}
+        className="text-white w-8 text-right"
+        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '18px' }}
       >
         {label}
       </span>
-      <div className="w-24 h-2 bg-gray-800 rounded-sm overflow-hidden border border-gray-600">
+      <div className="w-24 h-3 bg-gray-800 rounded-sm overflow-hidden border border-gray-600">
         <div
           className="h-full transition-all duration-300"
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
       <span
-        className="text-gray-300 w-16"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '6px' }}
+        className="text-gray-300 w-20"
+        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '18px' }}
       >
         {current}/{max}
       </span>
@@ -43,7 +43,7 @@ export function BottomHUD() {
       {interactionPrompt && (
         <div
           className="text-center text-yellow-300 mb-1"
-          style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: '10px' }}
+          style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: '30px' }}
         >
           {interactionPrompt}
         </div>
@@ -53,16 +53,16 @@ export function BottomHUD() {
           <StatBar label="HP" current={stats.hp} max={stats.maxHp} color="#ef4444" />
           <StatBar label="MP" current={stats.mp} max={stats.maxMp} color="#3b82f6" />
         </div>
-        <div className="flex flex-col items-end gap-0.5">
+        <div className="flex flex-col items-end gap-1">
           <span
             className="text-yellow-300"
-            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '7px' }}
+            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '21px' }}
           >
             LV.{stats.level} {STRINGS.level}
           </span>
           <span
             className="text-amber-400"
-            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '7px' }}
+            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '21px' }}
           >
             {STRINGS.gold} {stats.gold}
           </span>

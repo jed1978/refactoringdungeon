@@ -529,7 +529,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Record<string, never>>(
 
             if (s.transition.kind === "name_display") {
               renderCtx.fillStyle = "#22c55e";
-              renderCtx.font = "8px 'Press Start 2P'";
+              renderCtx.font = "24px 'Press Start 2P'";
               renderCtx.textAlign = "center";
               renderCtx.textBaseline = "middle";
               renderCtx.fillText(

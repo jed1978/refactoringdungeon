@@ -1,5 +1,5 @@
-import { useGameState } from '../state/GameContext';
-import { FLOOR_THEMES } from '../utils/constants';
+import { useGameState } from "../state/GameContext";
+import { FLOOR_THEMES } from "../utils/constants";
 
 export function HUD() {
   const { currentFloor } = useGameState();
@@ -11,7 +11,7 @@ export function HUD() {
     <div className="absolute top-0 left-0 right-0 z-10 bg-black/70 px-3 py-2 flex items-center justify-between">
       <span
         className="text-green-400 text-xs tracking-wider"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '8px' }}
+        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "24px" }}
       >
         {floorName}
       </span>

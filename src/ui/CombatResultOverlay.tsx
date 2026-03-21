@@ -26,7 +26,7 @@ export function CombatResultOverlay() {
           <div
             className="mb-3"
             style={{
-              fontSize: "10px",
+              fontSize: "30px",
               fontFamily: "'Press Start 2P', monospace",
               color: "#ef4444",
             }}
@@ -36,7 +36,7 @@ export function CombatResultOverlay() {
           <div
             className="mb-4"
             style={{
-              fontSize: "7px",
+              fontSize: "21px",
               fontFamily: "'Noto Sans TC', sans-serif",
               color: "#9ca3af",
               lineHeight: 1.6,
@@ -47,7 +47,7 @@ export function CombatResultOverlay() {
           <div
             className="mb-2"
             style={{
-              fontSize: "6px",
+              fontSize: "18px",
               fontFamily: "'Press Start 2P', monospace",
               color: "#6b7280",
             }}
@@ -58,8 +58,8 @@ export function CombatResultOverlay() {
             onClick={handleRestart}
             className="border border-gray-500 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded"
             style={{
-              padding: "4px 8px",
-              fontSize: "7px",
+              padding: "8px 16px",
+              fontSize: "21px",
               fontFamily: "'Noto Sans TC', sans-serif",
             }}
           >
@@ -81,7 +81,7 @@ export function CombatResultOverlay() {
           <div
             className="mb-3"
             style={{
-              fontSize: "8px",
+              fontSize: "24px",
               fontFamily: "'Press Start 2P', monospace",
               color: "#ffd700",
             }}
@@ -91,7 +91,7 @@ export function CombatResultOverlay() {
           <div
             className="mb-4"
             style={{
-              fontSize: "7px",
+              fontSize: "21px",
               fontFamily: "'Noto Sans TC', sans-serif",
               color: "#d1fae5",
               lineHeight: 1.6,
@@ -105,8 +105,8 @@ export function CombatResultOverlay() {
             onClick={handleRestart}
             className="border border-yellow-500 bg-yellow-900 hover:bg-yellow-800 text-yellow-200 rounded"
             style={{
-              padding: "4px 8px",
-              fontSize: "7px",
+              padding: "8px 16px",
+              fontSize: "21px",
               fontFamily: "'Noto Sans TC', sans-serif",
             }}
           >

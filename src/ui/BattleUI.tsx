@@ -54,18 +54,18 @@ export function BattleUI({ onAction }: Props) {
       {/* Combat log — top overlay */}
       <div
         className="absolute top-0 left-0 right-0 pointer-events-none"
-        style={{ padding: "4px 6px" }}
+        style={{ padding: "6px 8px" }}
       >
         <div
           className="bg-black bg-opacity-70 border border-gray-600 rounded"
-          style={{ padding: "4px 6px", minHeight: "40px" }}
+          style={{ padding: "6px 8px", minHeight: "52px" }}
         >
           {logEntries.map((entry, i) => (
             <div
               key={i}
               className="text-white leading-tight"
               style={{
-                fontSize: "6px",
+                fontSize: "18px",
                 fontFamily: "'Noto Sans TC', sans-serif",
                 lineHeight: "1.4",
               }}
@@ -79,19 +79,19 @@ export function BattleUI({ onAction }: Props) {
       {/* Action panel — bottom overlay */}
       <div
         className="absolute bottom-0 left-0 right-0"
-        style={{ padding: "3px 4px" }}
+        style={{ padding: "4px 6px" }}
       >
         <div
           className="bg-black bg-opacity-80 border border-gray-500 rounded"
-          style={{ padding: "4px" }}
+          style={{ padding: "6px" }}
         >
           {/* HP/MP bars */}
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-3 mb-3">
             <div className="flex-1">
-              <div className="flex justify-between mb-0.5">
+              <div className="flex justify-between mb-1">
                 <span
                   style={{
-                    fontSize: "5px",
+                    fontSize: "15px",
                     fontFamily: "'Press Start 2P', monospace",
                     color: "#9ca3af",
                   }}
@@ -100,7 +100,7 @@ export function BattleUI({ onAction }: Props) {
                 </span>
                 <span
                   style={{
-                    fontSize: "5px",
+                    fontSize: "15px",
                     fontFamily: "'Press Start 2P', monospace",
                     color: "#9ca3af",
                   }}
@@ -110,7 +110,7 @@ export function BattleUI({ onAction }: Props) {
               </div>
               <div
                 className="w-full bg-gray-800 rounded-full"
-                style={{ height: "4px" }}
+                style={{ height: "8px" }}
               >
                 <div
                   className="rounded-full h-full transition-all"
@@ -119,10 +119,10 @@ export function BattleUI({ onAction }: Props) {
               </div>
             </div>
             <div className="flex-1">
-              <div className="flex justify-between mb-0.5">
+              <div className="flex justify-between mb-1">
                 <span
                   style={{
-                    fontSize: "5px",
+                    fontSize: "15px",
                     fontFamily: "'Press Start 2P', monospace",
                     color: "#9ca3af",
                   }}
@@ -131,7 +131,7 @@ export function BattleUI({ onAction }: Props) {
                 </span>
                 <span
                   style={{
-                    fontSize: "5px",
+                    fontSize: "15px",
                     fontFamily: "'Press Start 2P', monospace",
                     color: "#9ca3af",
                   }}
@@ -141,7 +141,7 @@ export function BattleUI({ onAction }: Props) {
               </div>
               <div
                 className="w-full bg-gray-800 rounded-full"
-                style={{ height: "4px" }}
+                style={{ height: "8px" }}
               >
                 <div
                   className="rounded-full h-full transition-all"
@@ -155,7 +155,7 @@ export function BattleUI({ onAction }: Props) {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <BattleButton
               label="⚔ 攻擊"
               disabled={disabled}
@@ -211,8 +211,8 @@ function BattleButton({ label, disabled, onClick, active }: ButtonProps) {
             : "border-gray-500 bg-gray-800 text-gray-200 hover:bg-gray-700 active:bg-gray-600",
       ].join(" ")}
       style={{
-        padding: "3px 2px",
-        fontSize: "7px",
+        padding: "6px 4px",
+        fontSize: "21px",
         fontFamily: "'Noto Sans TC', sans-serif",
       }}
     >

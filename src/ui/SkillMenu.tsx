@@ -13,21 +13,21 @@ export function SkillMenu({ skills, mp, onSelect, onClose }: Props) {
   return (
     <div
       className="absolute bottom-full left-0 right-0 mb-1 bg-black bg-opacity-90 border border-gray-500 rounded"
-      style={{ padding: '4px' }}
+      style={{ padding: '6px' }}
     >
-      <div className="flex justify-between items-center mb-1">
-        <span style={{ fontSize: '6px', fontFamily: "'Press Start 2P', monospace", color: '#9ca3af' }}>技能</span>
+      <div className="flex justify-between items-center mb-2">
+        <span style={{ fontSize: '18px', fontFamily: "'Press Start 2P', monospace", color: '#9ca3af' }}>技能</span>
         <button
           onClick={onClose}
           className="text-gray-500 hover:text-gray-300"
-          style={{ fontSize: '8px', lineHeight: 1 }}
+          style={{ fontSize: '24px', lineHeight: 1 }}
         >
           ✕
         </button>
       </div>
 
       {available.length === 0 && (
-        <div style={{ fontSize: '6px', fontFamily: "'Noto Sans TC', sans-serif", color: '#6b7280' }}>
+        <div style={{ fontSize: '18px', fontFamily: "'Noto Sans TC', sans-serif", color: '#6b7280' }}>
           沒有技能
         </div>
       )}
@@ -40,19 +40,19 @@ export function SkillMenu({ skills, mp, onSelect, onClose }: Props) {
             onClick={() => canAfford && onSelect(skill.id)}
             disabled={!canAfford}
             className={[
-              'w-full text-left rounded mb-0.5 flex justify-between items-center',
+              'w-full text-left rounded mb-1 flex justify-between items-center',
               canAfford
                 ? 'hover:bg-gray-700 text-gray-200'
                 : 'text-gray-600 cursor-not-allowed',
             ].join(' ')}
-            style={{ padding: '2px 4px' }}
+            style={{ padding: '4px 6px' }}
           >
-            <span style={{ fontSize: '6px', fontFamily: "'Noto Sans TC', sans-serif" }}>
+            <span style={{ fontSize: '18px', fontFamily: "'Noto Sans TC', sans-serif" }}>
               {skill.name}
             </span>
             <span
               style={{
-                fontSize: '5px',
+                fontSize: '15px',
                 fontFamily: "'Press Start 2P', monospace",
                 color: canAfford ? '#3b82f6' : '#374151',
               }}

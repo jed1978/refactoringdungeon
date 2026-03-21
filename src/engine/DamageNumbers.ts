@@ -27,42 +27,42 @@ export function updateDamageNumbers(
 ): DamageNumber[] {
   const dtS = dt / 1000;
   return numbers
-    .map(n => ({
+    .map((n) => ({
       ...n,
       y: n.y + FLOAT_SPEED * dtS,
       alpha: 1 - n.elapsed / FLOAT_LIFE,
       elapsed: n.elapsed + dt,
     }))
-    .filter(n => n.elapsed < FLOAT_LIFE);
+    .filter((n) => n.elapsed < FLOAT_LIFE);
 }
 
 export function renderDamageNumbers(
   ctx: CanvasRenderingContext2D,
   numbers: readonly DamageNumber[],
 ): void {
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
   for (const n of numbers) {
     if (n.alpha <= 0) continue;
     ctx.globalAlpha = Math.max(0, n.alpha);
 
     if (n.isCrit) {
-      ctx.font = "bold 8px 'Press Start 2P', monospace";
-      ctx.fillStyle = '#ffd700';
+      ctx.font = "bold 24px 'Press Start 2P', monospace";
+      ctx.fillStyle = "#ffd700";
       ctx.fillText(`暴擊! ${n.value}`, n.x, n.y);
     } else if (n.isHeal) {
-      ctx.font = "6px 'Press Start 2P', monospace";
-      ctx.fillStyle = '#44ff88';
+      ctx.font = "18px 'Press Start 2P', monospace";
+      ctx.fillStyle = "#44ff88";
       ctx.fillText(`+${n.value}`, n.x, n.y);
     } else {
-      ctx.font = "6px 'Press Start 2P', monospace";
-      ctx.fillStyle = '#ffffff';
+      ctx.font = "18px 'Press Start 2P', monospace";
+      ctx.fillStyle = "#ffffff";
       ctx.fillText(String(n.value), n.x, n.y);
     }
   }
 
   ctx.globalAlpha = 1;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 }
