@@ -1,19 +1,22 @@
-import { useRef, useEffect } from "react";
-import { STRINGS } from "../data/strings";
-import { playerMapSprite } from "../sprites/player";
-import { drawSprite, getAnimationFrame } from "../engine/SpriteRenderer";
+import { useRef, useEffect } from 'react';
+import { STRINGS } from '../data/strings';
+import { playerMapSprite } from '../sprites/player';
+import { drawSprite, getAnimationFrame } from '../engine/SpriteRenderer';
+import { hasSave } from '../state/saveLoad';
 
 type TitleScreenProps = {
   readonly onStart: () => void;
+  readonly onContinue: () => void;
 };
 
-export function TitleScreen({ onStart }: TitleScreenProps) {
+export function TitleScreen({ onStart, onContinue }: TitleScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const saveExists = hasSave();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
 
     let animId: number;
@@ -39,9 +42,18 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
     };
   }, []);
 
+  const buttonStyle = {
+    fontFamily: "'Press Start 2P', monospace",
+    fontSize: '12px',
+    boxShadow: `
+      inset -2px -2px 0 #111827,
+      inset 2px 2px 0 #4b5563,
+      0 0 0 2px #1f2937
+    `,
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center gap-8">
-      {/* Title */}
       <div className="flex flex-col items-center gap-3">
         <h1
           className="text-green-400 text-2xl tracking-widest"
@@ -57,39 +69,38 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
         </p>
       </div>
 
-      {/* Player sprite preview */}
       <canvas
         ref={canvasRef}
         width={32}
         height={32}
         className="w-16 h-16"
-        style={{ imageRendering: "pixelated" }}
+        style={{ imageRendering: 'pixelated' }}
       />
 
-      {/* Start button */}
-      <button
-        onClick={onStart}
-        onPointerDown={onStart}
-        className="px-6 py-3 text-white bg-gray-900 hover:bg-green-900 hover:text-green-300 transition-colors cursor-pointer"
-        style={{
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: "12px",
-          boxShadow: `
-            inset -2px -2px 0 #111827,
-            inset 2px 2px 0 #4b5563,
-            0 0 0 2px #1f2937
-          `,
-        }}
-      >
-        {STRINGS.startGame}
-      </button>
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={onStart}
+          className="px-6 py-3 text-white bg-gray-900 hover:bg-green-900 hover:text-green-300 transition-colors cursor-pointer"
+          style={buttonStyle}
+        >
+          {STRINGS.startGame}
+        </button>
+        {saveExists && (
+          <button
+            onClick={onContinue}
+            className="px-6 py-3 text-white bg-gray-900 hover:bg-blue-900 hover:text-blue-300 transition-colors cursor-pointer"
+            style={buttonStyle}
+          >
+            {STRINGS.continueGame}
+          </button>
+        )}
+      </div>
 
-      {/* Footer */}
       <p
         className="text-gray-700 text-xs mt-8"
         style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
       >
-        WASD / 方向鍵移動
+        WASD / 方向鍵移動 ｜ Space 互動
       </p>
     </div>
   );

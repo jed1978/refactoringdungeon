@@ -1,0 +1,43 @@
+import type { MonsterDef } from '../utils/types';
+
+export const FLOOR1_MONSTERS: readonly MonsterDef[] = [
+  {
+    id: 'duplicate_code',
+    name: '複製貼上靈',
+    description: '由無數 Ctrl+C / Ctrl+V 怨念凝聚而成的幽靈',
+    hp: 30,
+    atk: 8,
+    def: 3,
+    spd: 5,
+    exp: 15,
+    gold: 10,
+    behavior: 'split_at_half_hp',
+    spriteId: 'duplicate_code',
+  },
+  {
+    id: 'magic_number',
+    name: '魔數精靈',
+    description: '潛伏在程式碼中的神秘數字，沒人記得它代表什麼',
+    hp: 25,
+    atk: 12,
+    def: 2,
+    spd: 7,
+    exp: 12,
+    gold: 8,
+    behavior: 'random_damage',
+    spriteId: 'magic_number',
+  },
+  {
+    id: 'dead_code',
+    name: '殭屍程式',
+    description: '早該刪掉卻沒人敢動的死程式碼，成群結隊出沒',
+    hp: 15,
+    atk: 5,
+    def: 1,
+    spd: 3,
+    exp: 8,
+    gold: 5,
+    behavior: 'swarm',
+    spriteId: 'dead_code',
+  },
+] as const;

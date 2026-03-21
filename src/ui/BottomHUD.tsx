@@ -1,4 +1,5 @@
 import { STRINGS } from '../data/strings';
+import { useGameState } from '../state/GameContext';
 
 type StatBarProps = {
   readonly label: string;
@@ -34,25 +35,36 @@ function StatBar({ label, current, max, color }: StatBarProps) {
 }
 
 export function BottomHUD() {
+  const { player, interactionPrompt } = useGameState();
+  const { stats } = player;
+
   return (
     <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/70 px-3 py-2">
+      {interactionPrompt && (
+        <div
+          className="text-center text-yellow-300 mb-1"
+          style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: '10px' }}
+        >
+          {interactionPrompt}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <StatBar label="HP" current={75} max={100} color="#ef4444" />
-          <StatBar label="MP" current={40} max={100} color="#3b82f6" />
+          <StatBar label="HP" current={stats.hp} max={stats.maxHp} color="#ef4444" />
+          <StatBar label="MP" current={stats.mp} max={stats.maxMp} color="#3b82f6" />
         </div>
         <div className="flex flex-col items-end gap-0.5">
           <span
             className="text-yellow-300"
             style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '7px' }}
           >
-            LV.1 {STRINGS.level}
+            LV.{stats.level} {STRINGS.level}
           </span>
           <span
             className="text-amber-400"
             style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '7px' }}
           >
-            {STRINGS.gold} 0
+            {STRINGS.gold} {stats.gold}
           </span>
         </div>
       </div>

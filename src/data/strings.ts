@@ -11,4 +11,17 @@ export const STRINGS = {
   mp: '重構能量',
   level: '年資',
   gold: '金幣',
+  // Interaction prompts
+  stairsPrompt: '按 Space 下樓',
+  chestPrompt: '按 Space 開啟寶箱',
+  doorLockedPrompt: '需要鑰匙才能開門',
+  shrinePrompt: '按 Space 接受 Code Review',
+  bookshelfPrompt: '按 Space 查閱 Stack Overflow',
+  coffeePrompt: '按 Space 泡杯咖啡',
+  shopPrompt: '按 Space 進入商店',
+  chestOpened: '獲得 15 金幣！',
+  combatTriggered: '遭遇了 {0}！',
+  floorTransition: '{0}F {1}',
+  bossDoorLocked: '消滅所有怪物才能通過！',
+  bossDoorOpen: '前方是 Boss 房間...',
 } as const;

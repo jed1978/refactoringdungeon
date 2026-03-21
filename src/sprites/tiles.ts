@@ -1,82 +1,45 @@
 import type { SpriteFrame } from "../utils/types";
+import { TileType } from "../utils/types";
+import { floor1A, floor1B, wall1, voidTile } from "./tileFloor";
+import { doorLocked, doorOpen, bossDoor } from "./tileDoors";
+import {
+  stairsDown,
+  chestClosed,
+  chestOpen,
+  shrine,
+  bookshelf,
+  coffeeMachine,
+  npcMarker,
+  shopCounter,
+} from "./tileObjects";
 
-// Floor 1: Frontend Swamp theme colors
-const F1 = "#4a5944"; // floor primary
-const F2 = "#3d4c38"; // floor shadow
-const F3 = "#566b4e"; // floor highlight
-const W1 = "#2d3328"; // wall primary
-const W2 = "#222822"; // wall dark
-const W3 = "#3a4234"; // wall top highlight
-const V = "#000000"; // void
-
-// Stone floor variant 1
-export const floor1A: SpriteFrame = [
-  [F1, F1, F1, F2, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1],
-  [F1, F1, F1, F2, F1, F1, F1, F1, F1, F1, F2, F1, F1, F3, F1, F1],
-  [F1, F1, F1, F2, F1, F1, F3, F1, F1, F1, F2, F1, F1, F1, F1, F1],
-  [F2, F2, F2, F2, F1, F1, F1, F1, F1, F1, F2, F2, F2, F2, F2, F2],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F3, F1, F1, F1, F1, F1, F1, F1],
-  [F1, F1, F3, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F3, F1, F1, F1],
-  [F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2],
-  [F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F1, F1, F1],
-  [F1, F3, F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F3, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F3, F1, F1, F1, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F1, F1, F1],
-  [F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1],
-  [F1, F1, F1, F1, F3, F1, F1, F1, F1, F1, F1, F3, F1, F1, F1, F1],
-];
-
-// Stone floor variant 2 (slightly different crack pattern)
-export const floor1B: SpriteFrame = [
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F1],
-  [F1, F3, F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1, F3, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F1],
-  [F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2],
-  [F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1],
-  [F1, F1, F1, F1, F1, F2, F1, F1, F3, F1, F1, F1, F1, F1, F1, F1],
-  [F1, F1, F3, F1, F1, F2, F1, F1, F1, F1, F1, F1, F1, F1, F3, F1],
-  [F1, F1, F1, F1, F1, F2, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1],
-  [F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1],
-  [F1, F1, F1, F3, F1, F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F3, F1, F1, F1, F2, F1, F1, F1],
-  [F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1, F2, F1, F1, F1],
-  [F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2],
-  [F1, F1, F1, F1, F1, F3, F1, F1, F1, F1, F1, F1, F1, F1, F1, F1],
-];
-
-// Wall tile (top edge highlighted for depth)
-export const wall1: SpriteFrame = [
-  [W3, W3, W3, W3, W3, W3, W3, W3, W3, W3, W3, W3, W3, W3, W3, W3],
-  [W3, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W3],
-  [W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W2, W1, W1, W1, W1, W1, W2, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W2, W1, W1, W1, W1, W1, W2, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W2, W1, W1, W1, W1, W1, W2, W1, W1, W1, W1, W1, W1],
-  [W2, W2, W2, W2, W1, W1, W1, W1, W1, W2, W2, W2, W2, W2, W2, W2],
-  [W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W1, W1, W1, W2, W1, W1, W1, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W1, W1, W1, W2, W1, W1, W1, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W1, W1, W1, W2, W1, W1, W1, W1, W1, W1, W1, W1, W1],
-  [W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2],
-  [W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1],
-  [W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W1, W2],
-  [W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2, W2],
-];
-
-// Void tile (pure black)
-export const voidTile: SpriteFrame = Array.from({ length: 16 }, () =>
-  Array.from({ length: 16 }, () => V),
-);
+export { floor1A, floor1B, wall1, voidTile } from "./tileFloor";
+export { doorLocked, doorOpen, bossDoor } from "./tileDoors";
+export {
+  stairsDown,
+  chestClosed,
+  chestOpen,
+  shrine,
+  bookshelf,
+  coffeeMachine,
+  npcMarker,
+  shopCounter,
+} from "./tileObjects";
 
 // Map tile type to sprite frame(s)
 export const tileSprites: Record<number, SpriteFrame[]> = {
-  0: [voidTile], // Void
-  1: [floor1A, floor1B], // Floor (random variant)
-  2: [wall1], // Wall
+  [TileType.Void]: [voidTile],
+  [TileType.Floor]: [floor1A, floor1B],
+  [TileType.Wall]: [wall1],
+  [TileType.DoorLocked]: [doorLocked],
+  [TileType.DoorOpen]: [doorOpen],
+  [TileType.StairsDown]: [stairsDown],
+  [TileType.ChestClosed]: [chestClosed],
+  [TileType.ChestOpen]: [chestOpen],
+  [TileType.ShopCounter]: [shopCounter],
+  [TileType.Shrine]: [shrine],
+  [TileType.Bookshelf]: [bookshelf],
+  [TileType.CoffeeMachine]: [coffeeMachine],
+  [TileType.NpcMarker]: [npcMarker],
+  [TileType.BossDoor]: [bossDoor],
 };
