@@ -1,0 +1,96 @@
+import { useRef, useEffect } from "react";
+import { STRINGS } from "../data/strings";
+import { playerMapSprite } from "../sprites/player";
+import { drawSprite, getAnimationFrame } from "../engine/SpriteRenderer";
+
+type TitleScreenProps = {
+  readonly onStart: () => void;
+};
+
+export function TitleScreen({ onStart }: TitleScreenProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    ctx.imageSmoothingEnabled = false;
+
+    let animId: number;
+    let stopped = false;
+    const startTime = performance.now();
+
+    function draw(now: number) {
+      if (stopped) return;
+      const elapsed = now - startTime;
+      ctx.clearRect(0, 0, 32, 32);
+
+      const sheet = playerMapSprite.downIdle;
+      const frame = getAnimationFrame(sheet, elapsed);
+      drawSprite(ctx, frame, 8, 8, 16, 16);
+
+      animId = requestAnimationFrame(draw);
+    }
+
+    animId = requestAnimationFrame(draw);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(animId);
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center gap-8">
+      {/* Title */}
+      <div className="flex flex-col items-center gap-3">
+        <h1
+          className="text-green-400 text-2xl tracking-widest"
+          style={{ fontFamily: "'Press Start 2P', monospace" }}
+        >
+          {STRINGS.title}
+        </h1>
+        <p
+          className="text-gray-500 text-sm tracking-wider"
+          style={{ fontFamily: "'Press Start 2P', monospace" }}
+        >
+          {STRINGS.subtitle}
+        </p>
+      </div>
+
+      {/* Player sprite preview */}
+      <canvas
+        ref={canvasRef}
+        width={32}
+        height={32}
+        className="w-16 h-16"
+        style={{ imageRendering: "pixelated" }}
+      />
+
+      {/* Start button */}
+      <button
+        onClick={onStart}
+        onPointerDown={onStart}
+        className="px-6 py-3 text-white bg-gray-900 hover:bg-green-900 hover:text-green-300 transition-colors cursor-pointer"
+        style={{
+          fontFamily: "'Press Start 2P', monospace",
+          fontSize: "12px",
+          boxShadow: `
+            inset -2px -2px 0 #111827,
+            inset 2px 2px 0 #4b5563,
+            0 0 0 2px #1f2937
+          `,
+        }}
+      >
+        {STRINGS.startGame}
+      </button>
+
+      {/* Footer */}
+      <p
+        className="text-gray-700 text-xs mt-8"
+        style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
+      >
+        WASD / 方向鍵移動
+      </p>
+    </div>
+  );
+}
