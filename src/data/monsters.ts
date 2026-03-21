@@ -12,6 +12,7 @@ export const FLOOR1_BOSS: MonsterDef = {
   gold: 50,
   behavior: "boss_spaghetti",
   spriteId: "spaghetti_code",
+  spriteSize: 48,
 };
 
 export const FLOOR1_MONSTERS: readonly MonsterDef[] = [
@@ -27,6 +28,7 @@ export const FLOOR1_MONSTERS: readonly MonsterDef[] = [
     gold: 10,
     behavior: "split_at_half_hp",
     spriteId: "duplicate_code",
+    spriteSize: 32,
   },
   {
     id: "magic_number",
@@ -40,6 +42,7 @@ export const FLOOR1_MONSTERS: readonly MonsterDef[] = [
     gold: 8,
     behavior: "random_damage",
     spriteId: "magic_number",
+    spriteSize: 32,
   },
   {
     id: "dead_code",
@@ -53,5 +56,6 @@ export const FLOOR1_MONSTERS: readonly MonsterDef[] = [
     gold: 5,
     behavior: "swarm",
     spriteId: "dead_code",
+    spriteSize: 32,
   },
 ] as const;

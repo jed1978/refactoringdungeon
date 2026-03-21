@@ -2,14 +2,22 @@ import { useState } from "react";
 import type { CombatAction } from "../utils/types";
 import { useGameState } from "../state/GameContext";
 import { SkillMenu } from "./SkillMenu";
+import { STRINGS } from "../data/strings";
+import { getDefaultEnemyPositions, MONSTER_Y } from "../engine/BattleRenderer";
+import { VIEWPORT } from "../utils/constants";
 
 type Props = {
   onAction: (action: CombatAction) => void;
 };
 
+type PendingType = "attack" | "skill" | null;
+
 export function BattleUI({ onAction }: Props) {
   const gameState = useGameState();
   const [showSkills, setShowSkills] = useState(false);
+  const [pendingSkillId, setPendingSkillId] = useState<string | null>(null);
+  // null = not selecting; otherwise waiting for target click
+  const [pendingAction, setPendingAction] = useState<PendingType>(null);
 
   if (gameState.gameMode.mode !== "combat") return null;
 
@@ -20,26 +28,61 @@ export function BattleUI({ onAction }: Props) {
   const disabled =
     isAnimatingPhase || combat.phase === "victory" || combat.phase === "defeat";
 
+  const aliveEnemies = combat.enemies
+    .map((e, i) => ({ enemy: e, index: i }))
+    .filter(({ enemy }) => enemy.currentHp > 0);
+
+  // Execute action with resolved target
+  const fireAction = (targetIndex: number) => {
+    setPendingAction(null);
+    setShowSkills(false);
+    if (pendingAction === "skill" && pendingSkillId) {
+      onAction({ type: "skill", skillId: pendingSkillId, targetIndex });
+      setPendingSkillId(null);
+    } else {
+      onAction({ type: "attack", targetIndex });
+    }
+  };
+
   const handleAttack = () => {
     if (disabled) return;
     setShowSkills(false);
-    onAction({ type: "attack" });
+    if (aliveEnemies.length === 1 && aliveEnemies[0]) {
+      // Single target — fire immediately
+      onAction({ type: "attack", targetIndex: aliveEnemies[0].index });
+    } else if (aliveEnemies.length > 1) {
+      // Multiple targets — enter selection mode
+      setPendingAction("attack");
+    }
   };
 
   const handleSkill = () => {
     if (disabled) return;
     setShowSkills((s) => !s);
+    setPendingAction(null);
   };
 
   const handleSkillSelect = (skillId: string) => {
     setShowSkills(false);
-    onAction({ type: "skill", skillId });
+    if (aliveEnemies.length === 1 && aliveEnemies[0]) {
+      onAction({ type: "skill", skillId, targetIndex: aliveEnemies[0].index });
+    } else if (aliveEnemies.length > 1) {
+      setPendingSkillId(skillId);
+      setPendingAction("skill");
+    }
   };
 
   const handleFlee = () => {
     if (disabled) return;
+    setPendingAction(null);
     setShowSkills(false);
     onAction({ type: "flee" });
+  };
+
+  const handleEnemyClick = (index: number) => {
+    if (pendingAction) {
+      fireAction(index);
+    }
   };
 
   const hpPct = stats.maxHp > 0 ? stats.hp / stats.maxHp : 0;
@@ -47,40 +90,104 @@ export function BattleUI({ onAction }: Props) {
   const hpColor =
     hpPct > 0.5 ? "#22c55e" : hpPct > 0.25 ? "#eab308" : "#ef4444";
 
-  const logEntries = combat.log.entries.slice(-4);
+  const logEntries = combat.log.entries.slice(-2);
+  const enemyPositions = getDefaultEnemyPositions(combat.enemies.length);
 
   return (
     <>
-      {/* Combat log — top overlay */}
-      <div
-        className="absolute top-0 left-0 right-0 pointer-events-none"
-        style={{ padding: "6px 8px" }}
-      >
-        <div
-          className="bg-black bg-opacity-70 border border-gray-600 rounded"
-          style={{ padding: "6px 8px", minHeight: "52px" }}
-        >
-          {logEntries.map((entry, i) => (
-            <div
-              key={i}
-              className="text-white leading-tight"
-              style={{
-                fontSize: "18px",
-                fontFamily: "'Noto Sans TC', sans-serif",
-                lineHeight: "1.4",
-              }}
-            >
-              {entry}
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Monster names — DOM overlay, clickable when selecting target */}
+      {combat.enemies.map((enemy, i) => {
+        if (enemy.currentHp <= 0) return null; // hide dead enemies
+        const size = enemy.def.spriteSize;
+        const pos = enemyPositions[i];
+        if (!pos) return null;
+        const centerXPct = ((pos.x + size / 2) / VIEWPORT.logicalWidth) * 100;
+        // Position name above the HP bar (HP bar is drawn at MONSTER_Y - 8)
+        const nameYPct = ((MONSTER_Y - 10) / VIEWPORT.logicalHeight) * 100;
+        const isClickable = pendingAction !== null;
+        return (
+          <div
+            key={`${enemy.def.id}-${i}`}
+            className="absolute"
+            onClick={() => handleEnemyClick(i)}
+            style={{
+              left: `${centerXPct}%`,
+              top: `${nameYPct}%`,
+              transform: "translate(-50%, -100%)",
+              backgroundColor: isClickable
+                ? "rgba(234,179,8,0.85)"
+                : "rgba(0,0,0,0.75)",
+              padding: "2px 5px",
+              borderRadius: "2px",
+              fontSize: "18px",
+              fontFamily: "'Noto Sans TC', sans-serif",
+              color: isClickable ? "#1a1100" : "#fde68a",
+              whiteSpace: "nowrap",
+              cursor: isClickable ? "pointer" : "default",
+              outline: isClickable ? "1px solid #eab308" : "none",
+              pointerEvents: isClickable ? "auto" : "none",
+            }}
+          >
+            {isClickable ? `▶ ${enemy.def.name}` : enemy.def.name}
+          </div>
+        );
+      })}
 
-      {/* Action panel — bottom overlay */}
+      {/* Target selection prompt */}
+      {pendingAction && (
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            top: "58%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "rgba(0,0,0,0.8)",
+            padding: "4px 10px",
+            borderRadius: "3px",
+            fontSize: "13px",
+            fontFamily: "'Noto Sans TC', sans-serif",
+            color: "#eab308",
+            whiteSpace: "nowrap",
+          }}
+        >
+          選擇目標
+        </div>
+      )}
+
+      {/* Bottom overlay — combat log row + action panel */}
       <div
         className="absolute bottom-0 left-0 right-0"
-        style={{ padding: "4px 6px" }}
+        style={{ padding: "4px 6px 6px" }}
       >
+        {/* Combat log — left 65%, leaves right side clear for player sprite */}
+        <div className="pointer-events-none" style={{ marginBottom: "4px" }}>
+          <div
+            className="bg-black bg-opacity-70 border border-gray-600 rounded"
+            style={{
+              width: "65%",
+              padding: "4px 8px",
+              minHeight: "32px",
+              maxHeight: "52px",
+              overflow: "hidden",
+            }}
+          >
+            {logEntries.map((entry, i) => (
+              <div
+                key={combat.log.entries.length - logEntries.length + i}
+                className="text-white leading-tight"
+                style={{
+                  fontSize: "14px",
+                  fontFamily: "'Noto Sans TC', sans-serif",
+                  lineHeight: "1.4",
+                }}
+              >
+                {entry}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action panel */}
         <div
           className="bg-black bg-opacity-80 border border-gray-500 rounded"
           style={{ padding: "6px" }}
@@ -157,19 +264,19 @@ export function BattleUI({ onAction }: Props) {
           {/* Action buttons */}
           <div className="flex gap-2">
             <BattleButton
-              label="⚔ 攻擊"
-              disabled={disabled}
+              label={`⚔ ${STRINGS.combatAttack}`}
+              disabled={disabled || pendingAction !== null}
               onClick={handleAttack}
             />
             <BattleButton
-              label="🔧 技能"
-              disabled={disabled}
+              label={`🔧 ${STRINGS.combatSkill}`}
+              disabled={disabled || pendingAction !== null}
               onClick={handleSkill}
               active={showSkills}
             />
             <BattleButton
-              label="🏃 逃跑"
-              disabled={disabled}
+              label={`🏃 ${STRINGS.combatFlee}`}
+              disabled={disabled || pendingAction !== null}
               onClick={handleFlee}
             />
           </div>

@@ -123,6 +123,7 @@ export type MonsterDef = {
   readonly gold: number;
   readonly behavior: string;
   readonly spriteId: string;
+  readonly spriteSize: 32 | 48;
 };
 
 export type MonsterState = {
@@ -171,8 +172,12 @@ export type FloorState = {
 
 // Combat
 export type CombatAction =
-  | { readonly type: "attack" }
-  | { readonly type: "skill"; readonly skillId: string }
+  | { readonly type: "attack"; readonly targetIndex: number }
+  | {
+      readonly type: "skill";
+      readonly skillId: string;
+      readonly targetIndex: number;
+    }
   | { readonly type: "item"; readonly itemId: string }
   | { readonly type: "flee" };
 

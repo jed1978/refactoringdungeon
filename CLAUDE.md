@@ -490,6 +490,49 @@ src/
 
 ---
 
+## CRITICAL ARCHITECTURE NOTES
+
+### 1. Combat Event → Animation Mapping (CRITICAL)
+
+Every `CombatEvent` kind emitted by `combatStateMachine.ts` **must** have a corresponding `case` in `applyEvents()` in `combatLoop.ts`, and that case **must** queue at least one animation via `queueAnimation()`.
+
+**Why:** `BattleAnimator`'s `frame.finished` only becomes `true` when the animation queue had items and all have completed. If an event queues no animation, the queue stays empty → `finished` is never `true` → `handleAnimationComplete()` never runs → the game permanently freezes.
+
+**Past incidents:** `flee_failed` and `reveal` events both caused combat lock because they were missing from `applyEvents()`.
+
+**Rule:** Whenever a new `CombatEvent` kind is added to the discriminated union in `combatStateMachine.ts`, immediately add a matching `case` in `applyEvents()` in `combatLoop.ts` that queues at least a minimal animation (e.g. `hit_reaction_player` or `hit_reaction_enemy`).
+
+### 2. Two-Tier State Architecture
+
+The game uses two distinct state tiers that must not be mixed:
+
+- **60fps tier (`useRef`):** `CombatLoopState` and other game-loop state lives in a `useRef`. Direct property assignment is allowed for performance. Arrays must still use `.map()` to produce new arrays — no direct index mutation (`arr[i] = x` is forbidden).
+- **React tier (`useReducer`):** `GameState` via `GameContext` + `useReducer`. Strictly immutable — all updates via `dispatch(GameAction)`.
+
+Communication is one-way: 60fps tier reads from React state via snapshot, writes back via `dispatch()`. Never put 60fps loop state into React state (causes re-render storm), and never read React state directly inside the rAF loop.
+
+### 3. Canvas Text Must Use DOM Overlays
+
+Due to `image-rendering: pixelated` CSS scaling applied to the canvas, any text drawn via the Canvas 2D text API becomes blurry/aliased at display size.
+
+**Rule:** All player-visible text (monster names, combat log, HP values, dialogue) must be rendered as DOM elements with `position: absolute` on top of the canvas. Use `VIEWPORT.logicalWidth` / `VIEWPORT.logicalHeight` as the coordinate reference for percentage positioning.
+
+**Exception:** Damage numbers (`DamageNumbers.ts`) are rendered on canvas intentionally — the pixelated style is a feature, not a bug, and they need tight synchronisation with canvas animations.
+
+### 4. DOM Overlay Coordinate System
+
+DOM overlays on the battle canvas use percentage positioning derived from logical canvas coordinates:
+
+```ts
+const xPct = (logicalX / VIEWPORT.logicalWidth) * 100;   // VIEWPORT.logicalWidth = 240
+const yPct = (logicalY / VIEWPORT.logicalHeight) * 100;  // VIEWPORT.logicalHeight = 176
+// style={{ left: `${xPct}%`, top: `${yPct}%` }}
+```
+
+This keeps DOM elements aligned with canvas content at any CSS scale factor (2x–4x).
+
+---
+
 ## CODING STANDARDS
 - No `any` type — strict TypeScript
 - All game logic functions must be pure

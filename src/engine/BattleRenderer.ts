@@ -14,6 +14,7 @@ import { hitSparkEffect } from "../sprites/effects";
 
 export type BattleEnemy = {
   readonly spriteId: string;
+  readonly spriteSize: 32 | 48;
   readonly animKey: string;
   readonly x: number;
   readonly y: number;
@@ -55,10 +56,10 @@ export type BattleRenderState = {
 };
 
 const PLAYER_X = VIEWPORT.logicalWidth - 56;
-const PLAYER_Y = VIEWPORT.logicalHeight - 72;
+const PLAYER_Y = VIEWPORT.logicalHeight - 76;
 const PLAYER_W = 32;
 const PLAYER_H = 48;
-const MONSTER_Y = 24;
+export const MONSTER_Y = 75;
 const MONSTER_SIZE_NORMAL = 32;
 const MONSTER_SIZE_BOSS = 48;
 
@@ -112,8 +113,7 @@ export function renderBattle(
     const sheet = spriteSheets?.[enemy.animKey] ?? spriteSheets?.["idle"];
     if (!sheet) return;
 
-    const isBoss = enemy.spriteId === "spaghetti_code";
-    const size = isBoss ? MONSTER_SIZE_BOSS : MONSTER_SIZE_NORMAL;
+    const size = enemy.spriteSize;
     const drawX = Math.round(enemy.x + enemy.offsetX);
     const drawY = Math.round(enemy.y + enemy.offsetY);
 
@@ -135,19 +135,8 @@ export function renderBattle(
       enemy.maxHp,
     );
 
-    // Monster name below sprite (避免被頂部 log 遮住)
-    ctx.font = "10px 'Noto Sans TC', sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    // 半透明黑色底色增加可讀性
-    const nameY = drawY + size + 3;
-    const nameW = ctx.measureText(enemy.name).width;
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillRect(drawX + size / 2 - nameW / 2 - 2, nameY - 1, nameW + 4, 11);
-    ctx.fillStyle = "#fde68a";
-    ctx.fillText(enemy.name, drawX + size / 2, nameY);
-    ctx.textAlign = "left";
-    ctx.textBaseline = "alphabetic";
+    // Monster names are rendered as DOM elements in BattleUI to avoid
+    // canvas anti-aliasing blur under pixelated CSS scaling.
   });
 
   // Draw player
@@ -239,6 +228,7 @@ function drawWhiteFlash(
 }
 
 function darken(hex: string, amount: number): string {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex;
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
