@@ -193,25 +193,18 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
             }
             case "event":
               dispatch({
-                type: "SET_INTERACTION_PROMPT",
-                prompt: getEventPrompt(facing.tileType),
+                type: "SET_GAME_MODE",
+                gameMode: {
+                  mode: "event",
+                  eventId: tileTypeToEventId(facing.tileType),
+                },
               });
-              setTimeout(
-                () =>
-                  dispatch({ type: "SET_INTERACTION_PROMPT", prompt: null }),
-                2000,
-              );
               break;
             case "shop":
               dispatch({
-                type: "SET_INTERACTION_PROMPT",
-                prompt: STRINGS.shopPrompt,
+                type: "SET_GAME_MODE",
+                gameMode: { mode: "shop" },
               });
-              setTimeout(
-                () =>
-                  dispatch({ type: "SET_INTERACTION_PROMPT", prompt: null }),
-                1500,
-              );
               break;
             case "stairs":
             case "none":
@@ -313,7 +306,8 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
           }
 
           // --- EXPLORATION UPDATE ---
-          if (gs.gameMode.mode !== "exploring") return;
+          if (gs.gameMode.mode !== "exploring" && gs.gameMode.mode !== "event")
+            return;
 
           s.elapsedMs += dt;
           const tileMap = gs.floor.tileMap;
@@ -494,7 +488,8 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
           }
 
           // --- EXPLORATION RENDER ---
-          if (gs.gameMode.mode !== "exploring") return;
+          if (gs.gameMode.mode !== "exploring" && gs.gameMode.mode !== "event")
+            return;
 
           const mapMonsters: MapMonster[] = gs.floor.monsters.map((m) => ({
             position: m.position,
@@ -569,16 +564,16 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
   },
 );
 
-function getEventPrompt(tileType: TileType): string {
+function tileTypeToEventId(tileType: TileType): string {
   switch (tileType) {
     case TileType.Shrine:
-      return STRINGS.shrinePrompt;
+      return "shrine";
     case TileType.Bookshelf:
-      return STRINGS.bookshelfPrompt;
+      return "bookshelf";
     case TileType.CoffeeMachine:
-      return STRINGS.coffeePrompt;
+      return "coffee";
     default:
-      return "";
+      return "shrine";
   }
 }
 

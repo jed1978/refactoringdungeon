@@ -545,6 +545,22 @@ This keeps DOM elements aligned with canvas content at any CSS scale factor (2x�
 - Discriminated unions for game states
 - Canvas coordinates always in logical pixels (16px tile units), scale handled by CSS
 
+## TESTING
+
+### Browser Testing Tool
+Use `agent-browser` (NOT Playwright MCP) for all browser-based testing:
+- **`agent-browser:agent-browser`** — Manual test flows: navigate to `localhost:5173`, click through specific game scenarios
+- **`agent-browser:dogfood`** — Exploratory testing: systematically walk through the game to find bugs and UX issues
+
+### When to Test
+- After implementing a new feature or fixing a bug, run agent-browser to verify visually
+- After combat system changes, test a full battle flow (enter combat → attack/skill → victory/defeat)
+- After UI changes, verify DOM overlay alignment with canvas at different viewport sizes
+
+### Dev Server
+- `npm run dev` must be running before any browser test
+- Default URL: `http://localhost:5173`
+
 ## RESPONSE RULES
 - All responses in Traditional Chinese (繁體中文)
 - Explain what you're building before writing code

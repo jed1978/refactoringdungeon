@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { GameProvider, useGameState } from "../state/GameContext";
 import { TitleScreen } from "../ui/TitleScreen";
 import { GameCanvas } from "../ui/GameCanvas";
@@ -8,15 +8,21 @@ import { BottomHUD } from "../ui/BottomHUD";
 import { Minimap } from "../ui/Minimap";
 import { BattleUI } from "../ui/BattleUI";
 import { CombatResultOverlay } from "../ui/CombatResultOverlay";
+import { InventoryScreen } from "../ui/InventoryScreen";
+import { ShopScreen } from "../ui/ShopScreen";
+import { DialogueBox } from "../ui/DialogueBox";
 import { generateFloor } from "../features/map/bspGenerator";
 import { loadFromLocalStorage } from "../state/saveLoad";
 import { useGameDispatch } from "../state/GameContext";
+import { EVENTS } from "../data/events";
+import { applyEventReward } from "../features/events/eventHandler";
 import type { CombatAction } from "../utils/types";
 
 function AppContent() {
   const gameState = useGameState();
   const dispatch = useGameDispatch();
   const canvasRef = useRef<GameCanvasHandle>(null);
+  const [showInventory, setShowInventory] = useState(false);
 
   const handleStart = () => {
     const seed = Date.now();
@@ -47,9 +53,17 @@ function AppContent() {
   }
 
   const isCombat = gameState.gameMode.mode === "combat";
+  const isShop = gameState.gameMode.mode === "shop";
+  const isEvent = gameState.gameMode.mode === "event";
   const isOverScreen =
     gameState.gameMode.mode === "game_over" ||
     gameState.gameMode.mode === "victory";
+  const isExploring = gameState.gameMode.mode === "exploring";
+
+  const activeEvent =
+    isEvent && gameState.gameMode.mode === "event"
+      ? EVENTS[gameState.gameMode.eventId]
+      : null;
 
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center">
@@ -64,8 +78,66 @@ function AppContent() {
           </>
         )}
 
+        {/* Inventory toggle button — only in exploring mode */}
+        {isExploring && (
+          <button
+            className="absolute bottom-16 right-2 z-20 bg-gray-800/80 border border-yellow-600 text-yellow-300 hover:bg-gray-700/80 px-2 py-1 leading-none"
+            style={{
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: "18px",
+            }}
+            onClick={() => setShowInventory(true)}
+            title="開啟背包"
+          >
+            🎒
+          </button>
+        )}
+
         {isCombat && <BattleUI onAction={handleCombatAction} />}
         {isOverScreen && <CombatResultOverlay />}
+
+        {/* Inventory overlay */}
+        {showInventory && isExploring && (
+          <InventoryScreen onClose={() => setShowInventory(false)} />
+        )}
+
+        {/* Shop overlay — triggered by facing ShopCounter tile */}
+        {isShop && (
+          <ShopScreen
+            onClose={() =>
+              dispatch({
+                type: "SET_GAME_MODE",
+                gameMode: { mode: "exploring" },
+              })
+            }
+          />
+        )}
+
+        {/* Event dialogue — Shrine / Bookshelf / Coffee Machine */}
+        {isEvent && activeEvent && (
+          <DialogueBox
+            portrait={activeEvent.portrait}
+            title={activeEvent.title}
+            text={activeEvent.text}
+            choices={activeEvent.choices.map((c) => ({
+              label: c.label,
+              onSelect: () => {
+                const result = applyEventReward(
+                  gameState.player.stats,
+                  c.reward,
+                );
+                dispatch({
+                  type: "UPDATE_PLAYER_STATS",
+                  stats: result.newStats,
+                });
+                dispatch({
+                  type: "SET_GAME_MODE",
+                  gameMode: { mode: "exploring" },
+                });
+              },
+            }))}
+          />
+        )}
       </div>
     </div>
   );

@@ -7,9 +7,12 @@ import type {
   MonsterState,
   PlayerStats,
   CombatState,
+  Equipment,
+  EquipmentSlots,
 } from "../utils/types";
 import { TileType } from "../utils/types";
 import { initCombat } from "../features/combat/combatStateMachine";
+import { ITEMS_MAP } from "../data/items";
 
 export type GameAction =
   | {
@@ -57,7 +60,25 @@ export type GameAction =
       readonly type: "UPDATE_PLAYER_STATS";
       readonly stats: Partial<PlayerState["stats"]>;
     }
-  | { readonly type: "RETURN_TO_TITLE" };
+  | { readonly type: "RETURN_TO_TITLE" }
+  | { readonly type: "EQUIP"; readonly equipment: Equipment }
+  | { readonly type: "UNEQUIP"; readonly slot: keyof EquipmentSlots }
+  | { readonly type: "USE_ITEM"; readonly itemId: string }
+  | {
+      readonly type: "ADD_ITEM";
+      readonly itemId: string;
+      readonly quantity: number;
+    }
+  | {
+      readonly type: "BUY_ITEM";
+      readonly itemId: string;
+      readonly price: number;
+    }
+  | {
+      readonly type: "SELL_EQUIPMENT";
+      readonly slot: keyof EquipmentSlots;
+      readonly price: number;
+    };
 
 export type GameStateWithPrompt = GameState & {
   readonly interactionPrompt: string | null;
@@ -225,6 +246,133 @@ export function gameReducer(
 
     case "RETURN_TO_TITLE":
       return { ...state, gameMode: { mode: "title" }, interactionPrompt: null };
+
+    case "EQUIP": {
+      const eq = action.equipment;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          equipment: { ...state.player.equipment, [eq.slot]: eq },
+        },
+      };
+    }
+
+    case "UNEQUIP":
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          equipment: { ...state.player.equipment, [action.slot]: null },
+        },
+      };
+
+    case "USE_ITEM": {
+      const itemDef = ITEMS_MAP[action.itemId];
+      if (!itemDef) return state;
+      const newInventory = state.player.inventory
+        .map((it) =>
+          it.id === action.itemId ? { ...it, quantity: it.quantity - 1 } : it,
+        )
+        .filter((it) => it.quantity > 0);
+      const s = state.player.stats;
+      let newStats = s;
+      if (itemDef.effect === "heal_hp") {
+        newStats = { ...s, hp: Math.min(s.maxHp, s.hp + itemDef.value) };
+      } else if (itemDef.effect === "heal_mp") {
+        newStats = { ...s, mp: Math.min(s.maxMp, s.mp + itemDef.value) };
+      } else if (itemDef.effect === "max_hp") {
+        newStats = {
+          ...s,
+          maxHp: s.maxHp + itemDef.value,
+          hp: s.hp + itemDef.value,
+        };
+      }
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          stats: newStats,
+          inventory: newInventory,
+        },
+      };
+    }
+
+    case "ADD_ITEM": {
+      const exists = state.player.inventory.find(
+        (it) => it.id === action.itemId,
+      );
+      const itemDef = ITEMS_MAP[action.itemId];
+      if (!itemDef) return state;
+      const newInventory = exists
+        ? state.player.inventory.map((it) =>
+            it.id === action.itemId
+              ? { ...it, quantity: it.quantity + action.quantity }
+              : it,
+          )
+        : [
+            ...state.player.inventory,
+            {
+              id: itemDef.id,
+              name: itemDef.name,
+              description: itemDef.description,
+              quantity: action.quantity,
+            },
+          ];
+      return {
+        ...state,
+        player: { ...state.player, inventory: newInventory },
+      };
+    }
+
+    case "BUY_ITEM": {
+      if (state.player.stats.gold < action.price) return state;
+      const itemDef = ITEMS_MAP[action.itemId];
+      if (!itemDef) return state;
+      const exists = state.player.inventory.find(
+        (it) => it.id === action.itemId,
+      );
+      const newInventory = exists
+        ? state.player.inventory.map((it) =>
+            it.id === action.itemId ? { ...it, quantity: it.quantity + 1 } : it,
+          )
+        : [
+            ...state.player.inventory,
+            {
+              id: itemDef.id,
+              name: itemDef.name,
+              description: itemDef.description,
+              quantity: 1,
+            },
+          ];
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          stats: {
+            ...state.player.stats,
+            gold: state.player.stats.gold - action.price,
+          },
+          inventory: newInventory,
+        },
+      };
+    }
+
+    case "SELL_EQUIPMENT": {
+      const eq = state.player.equipment[action.slot];
+      if (!eq) return state;
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          equipment: { ...state.player.equipment, [action.slot]: null },
+          stats: {
+            ...state.player.stats,
+            gold: state.player.stats.gold + action.price,
+          },
+        },
+      };
+    }
 
     default:
       return state;
