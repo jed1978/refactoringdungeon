@@ -180,12 +180,29 @@ export type CombatLog = {
   readonly entries: readonly string[];
 };
 
+export type CombatPhase =
+  | "selecting"
+  | "animating"
+  | "enemy_turn"
+  | "victory"
+  | "defeat";
+
+export type TurnOrderEntry =
+  | { readonly kind: "player" }
+  | { readonly kind: "enemy"; readonly index: number };
+
 export type CombatState = {
   readonly enemies: readonly MonsterState[];
   readonly turn: number;
   readonly isPlayerTurn: boolean;
   readonly log: CombatLog;
-  readonly phase: "selecting" | "animating" | "result";
+  readonly phase: CombatPhase;
+  readonly turnOrder: readonly TurnOrderEntry[];
+  readonly currentTurnIndex: number;
+  readonly selectedTarget: number;
+  readonly revealedEnemies: readonly number[];
+  readonly bossEntangledTurns: number;
+  readonly floorMonsterIndex: number;
 };
 
 // Game mode discriminated union

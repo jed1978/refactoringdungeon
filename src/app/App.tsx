@@ -1,15 +1,22 @@
-import { GameProvider, useGameState, useGameDispatch } from '../state/GameContext';
+import { useRef } from 'react';
+import { GameProvider, useGameState } from '../state/GameContext';
 import { TitleScreen } from '../ui/TitleScreen';
 import { GameCanvas } from '../ui/GameCanvas';
+import type { GameCanvasHandle } from '../ui/GameCanvas';
 import { HUD } from '../ui/HUD';
 import { BottomHUD } from '../ui/BottomHUD';
 import { Minimap } from '../ui/Minimap';
+import { BattleUI } from '../ui/BattleUI';
+import { CombatResultOverlay } from '../ui/CombatResultOverlay';
 import { generateFloor } from '../features/map/bspGenerator';
 import { loadFromLocalStorage } from '../state/saveLoad';
+import { useGameDispatch } from '../state/GameContext';
+import type { CombatAction } from '../utils/types';
 
 function AppContent() {
   const gameState = useGameState();
   const dispatch = useGameDispatch();
+  const canvasRef = useRef<GameCanvasHandle>(null);
 
   const handleStart = () => {
     const seed = Date.now();
@@ -28,17 +35,32 @@ function AppContent() {
     }
   };
 
+  const handleCombatAction = (action: CombatAction) => {
+    canvasRef.current?.submitCombatAction(action);
+  };
+
   if (gameState.gameMode.mode === 'title') {
     return <TitleScreen onStart={handleStart} onContinue={handleContinue} />;
   }
 
+  const isCombat = gameState.gameMode.mode === 'combat';
+  const isOverScreen = gameState.gameMode.mode === 'game_over' || gameState.gameMode.mode === 'victory';
+
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center">
       <div className="relative w-full max-w-3xl aspect-[240/176]">
-        <GameCanvas />
-        <HUD />
-        <BottomHUD />
-        <Minimap />
+        <GameCanvas ref={canvasRef} />
+
+        {!isCombat && !isOverScreen && (
+          <>
+            <HUD />
+            <BottomHUD />
+            <Minimap />
+          </>
+        )}
+
+        {isCombat && <BattleUI onAction={handleCombatAction} />}
+        {isOverScreen && <CombatResultOverlay />}
       </div>
     </div>
   );

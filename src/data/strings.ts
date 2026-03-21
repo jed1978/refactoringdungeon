@@ -24,4 +24,41 @@ export const STRINGS = {
   floorTransition: '{0}F {1}',
   bossDoorLocked: '消滅所有怪物才能通過！',
   bossDoorOpen: '前方是 Boss 房間...',
+  // Combat actions
+  combatAttack: '攻擊',
+  combatSkill: '技能',
+  combatItem: '道具',
+  combatFlee: '逃跑',
+  combatBack: '返回',
+  // Combat log — attack
+  playerAttacks: '你對{0}發動攻擊！',
+  playerDealsNormal: '造成了 {0} 點傷害。',
+  playerDealsCrit: '暴擊！造成了 {0} 點傷害！',
+  enemyAttacks: '{0} 攻擊了你！',
+  enemyDealsNormal: '你受到 {0} 點傷害。',
+  enemyDealsCrit: '暴擊！你受到 {0} 點傷害！',
+  // Combat log — skills
+  playerUsesSkill: '你施展了《{0}》！',
+  skillExtractMethod: '把 {0} 的程式碼提取出來，造成 {1} 點傷害！',
+  skillRenameVariable: '重新命名後，{0} 的面貌昭然若揭... ATK:{1} DEF:{2} SPD:{3}',
+  skillInlineTemp: '直接內聯！先手攻擊，造成 {0} 點傷害！',
+  skillNoMp: 'MP 不足，沒有重構能量了...',
+  // Combat log — monster behaviors
+  duplicateSplits: '{0} 分裂了！又多了一隻！（你的 KPI 又增加了）',
+  magicNumberUnpredictable: '{0} 的傷害完全隨機，就像寫 code 沒有規律一樣。',
+  bossEntangle: '{0} 用麵條纏住了你！移動速度降低 2 回合！',
+  bossEntangleFail: '{0} 想纏你，但你成功解開了麵條...這次。',
+  // Combat log — results
+  monsterDefeated: '{0} 被消滅了！獲得 {1} EXP 和 {2} 金幣。',
+  fleeSuccess: '你成功逃跑了！（下次記得多寫測試再 merge）',
+  fleeFail: '逃跑失敗！{0} 趁虛而入攻擊了你！',
+  // Victory / defeat
+  combatVictory: '戰鬥勝利！',
+  combatDefeat: '你被 legacy code 吞噬了...',
+  levelUp: '升級了！現在是 LV.{0} 年資工程師！',
+  xpGained: '獲得 {0} EXP',
+  goldGained: '獲得 {0} 金幣',
+  gameOverEpitaph: '這位工程師因不敵技術債而倒下，享年 LV.{0}。',
+  continueAdventure: '繼續',
+  newGame: '再來一局',
 } as const;
