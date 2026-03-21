@@ -9,7 +9,7 @@ const _ = null; // transparent
 const R = "#cc3333"; // marinara red (main strands)
 const r = "#881111"; // deep red shadow
 const Y = "#e8c84a"; // pasta yellow
-const y = "#c8a830"; // pasta yellow shadow
+// pasta yellow shadow: #c8a830 (unused, kept for palette reference)
 const S = "#661a1a"; // dark sauce / shadow
 const C = "#f5e6c8"; // cream / pasta highlight
 const G = "#44aa44"; // herb dot green

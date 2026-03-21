@@ -49,6 +49,7 @@ export type CombatLoopState = {
   localPhase: CombatPhase;
   outcome: "none" | "victory" | "defeat" | "fled";
   lastProcessedTurnIndex: number;
+  pendingUnlockedSkills: readonly string[];
 };
 
 const IDLE_FRAME: AnimFrame = {
@@ -86,6 +87,7 @@ export function createCombatLoopState(
     localPhase: combat.phase,
     outcome: "none",
     lastProcessedTurnIndex: -1,
+    pendingUnlockedSkills: [],
   };
 }
 
@@ -208,6 +210,7 @@ function handleAnimationComplete(
     dispatch({
       type: "COMBAT_END_VICTORY",
       newPlayerStats: gameState.player.stats,
+      unlockedSkills: loop.pendingUnlockedSkills,
     });
     return;
   }
@@ -305,7 +308,7 @@ function applyEvents(
         });
         break;
       case "skill_used":
-        // TODO: queue player_skill animation distinct from basic attack
+        // Animation handled by accompanying damage_dealt / buff_applied events
         break;
       case "monster_died":
         loop.animState = queueAnimation(loop.animState, {
@@ -313,6 +316,38 @@ function applyEvents(
           targetIndex: event.index,
           elapsed: 0,
         });
+        break;
+      case "buff_applied":
+        if (event.target === "player") {
+          loop.animState = queueAnimation(loop.animState, {
+            kind: "hit_reaction_player",
+            elapsed: 0,
+          });
+        } else {
+          loop.animState = queueAnimation(loop.animState, {
+            kind: "hit_reaction_enemy",
+            targetIndex: event.target,
+            elapsed: 0,
+          });
+        }
+        break;
+      case "monster_split":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "screen_flash_white",
+          elapsed: 0,
+        });
+        // Expand enemyVisible array for the new clone
+        loop.enemyVisible = [...loop.enemyVisible, true];
+        break;
+      case "level_up":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "screen_flash_white",
+          elapsed: 0,
+        });
+        loop.pendingUnlockedSkills = [
+          ...loop.pendingUnlockedSkills,
+          ...event.unlockedSkills,
+        ];
         break;
       case "damage_received": {
         const entry = combat.turnOrder[combat.currentTurnIndex];
@@ -338,6 +373,48 @@ function applyEvents(
         ];
         break;
       }
+      case "damage_reflected":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "hit_reaction_player",
+          elapsed: 0,
+        });
+        loop.damageNumbers = [
+          ...loop.damageNumbers,
+          createDamageNumber(
+            event.damage,
+            BATTLE_PLAYER_X + 16,
+            BATTLE_PLAYER_Y - 8,
+            false,
+            false,
+          ),
+        ];
+        break;
+      case "monster_summon":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "screen_flash_white",
+          elapsed: 0,
+        });
+        loop.enemyVisible = [...loop.enemyVisible, true];
+        break;
+      case "buff_stolen":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "hit_reaction_player",
+          elapsed: 0,
+        });
+        break;
+      case "boss_phase_shift":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "boss_phase_shift",
+          elapsed: 0,
+        });
+        break;
+      case "boss_enrage":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "hit_reaction_enemy",
+          targetIndex: 0,
+          elapsed: 0,
+        });
+        break;
       case "combat_won":
         loop.animState = queueAnimation(loop.animState, {
           kind: "transition_out",

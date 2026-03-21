@@ -1,17 +1,17 @@
-import { useRef } from 'react';
-import { GameProvider, useGameState } from '../state/GameContext';
-import { TitleScreen } from '../ui/TitleScreen';
-import { GameCanvas } from '../ui/GameCanvas';
-import type { GameCanvasHandle } from '../ui/GameCanvas';
-import { HUD } from '../ui/HUD';
-import { BottomHUD } from '../ui/BottomHUD';
-import { Minimap } from '../ui/Minimap';
-import { BattleUI } from '../ui/BattleUI';
-import { CombatResultOverlay } from '../ui/CombatResultOverlay';
-import { generateFloor } from '../features/map/bspGenerator';
-import { loadFromLocalStorage } from '../state/saveLoad';
-import { useGameDispatch } from '../state/GameContext';
-import type { CombatAction } from '../utils/types';
+import { useRef } from "react";
+import { GameProvider, useGameState } from "../state/GameContext";
+import { TitleScreen } from "../ui/TitleScreen";
+import { GameCanvas } from "../ui/GameCanvas";
+import type { GameCanvasHandle } from "../ui/GameCanvas";
+import { HUD } from "../ui/HUD";
+import { BottomHUD } from "../ui/BottomHUD";
+import { Minimap } from "../ui/Minimap";
+import { BattleUI } from "../ui/BattleUI";
+import { CombatResultOverlay } from "../ui/CombatResultOverlay";
+import { generateFloor } from "../features/map/bspGenerator";
+import { loadFromLocalStorage } from "../state/saveLoad";
+import { useGameDispatch } from "../state/GameContext";
+import type { CombatAction } from "../utils/types";
 
 function AppContent() {
   const gameState = useGameState();
@@ -21,17 +21,20 @@ function AppContent() {
   const handleStart = () => {
     const seed = Date.now();
     const floor = generateFloor(1, seed);
-    const startRoom = floor.rooms.find(r => r.type === 'start');
+    const startRoom = floor.rooms.find((r) => r.type === "start");
     const startPos = startRoom
-      ? { x: Math.floor(startRoom.x + startRoom.width / 2), y: Math.floor(startRoom.y + startRoom.height / 2) }
+      ? {
+          x: Math.floor(startRoom.x + startRoom.width / 2),
+          y: Math.floor(startRoom.y + startRoom.height / 2),
+        }
       : { x: 5, y: 5 };
-    dispatch({ type: 'START_GAME', floor, startPos });
+    dispatch({ type: "START_GAME", floor, startPos });
   };
 
   const handleContinue = () => {
     const saved = loadFromLocalStorage();
     if (saved) {
-      dispatch({ type: 'LOAD_SAVE', state: { ...saved, interactionPrompt: null } });
+      dispatch({ type: "LOAD_SAVE", state: saved });
     }
   };
 
@@ -39,12 +42,14 @@ function AppContent() {
     canvasRef.current?.submitCombatAction(action);
   };
 
-  if (gameState.gameMode.mode === 'title') {
+  if (gameState.gameMode.mode === "title") {
     return <TitleScreen onStart={handleStart} onContinue={handleContinue} />;
   }
 
-  const isCombat = gameState.gameMode.mode === 'combat';
-  const isOverScreen = gameState.gameMode.mode === 'game_over' || gameState.gameMode.mode === 'victory';
+  const isCombat = gameState.gameMode.mode === "combat";
+  const isOverScreen =
+    gameState.gameMode.mode === "game_over" ||
+    gameState.gameMode.mode === "victory";
 
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center">

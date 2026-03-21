@@ -48,7 +48,7 @@ export type GameCanvasHandle = {
   submitCombatAction: (action: CombatAction) => void;
 };
 
-export const GameCanvas = forwardRef<GameCanvasHandle, Record<string, never>>(
+export const GameCanvas = forwardRef<GameCanvasHandle, object>(
   function GameCanvas(_, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameState = useGameState();
@@ -514,6 +514,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Record<string, never>>(
             mapMonsters,
             explored: gs.floor.explored,
             visibleSet: s.visibleSet,
+            floorLevel: gs.currentFloor,
           };
           renderExploration(renderCtx, renderState);
 

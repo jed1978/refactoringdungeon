@@ -1,10 +1,10 @@
-import type { TileMap, Room, Position, FloorState, MonsterState } from '../../utils/types';
-import { TileType, RoomType } from '../../utils/types';
-import { FLOOR_THEMES } from '../../utils/constants';
-import { createRng, randomInt } from '../../utils/random';
-import { assignRoomTypes } from './roomAssigner';
-import { validateMap } from './mapValidator';
-import { populateRooms } from './roomPopulator';
+import type { Position, FloorState } from "../../utils/types";
+import { TileType, RoomType } from "../../utils/types";
+import { FLOOR_THEMES } from "../../utils/constants";
+import { createRng, randomInt } from "../../utils/random";
+import { assignRoomTypes } from "./roomAssigner";
+import { validateMap } from "./mapValidator";
+import { populateRooms } from "./roomPopulator";
 
 const MAP_WIDTH = 40;
 const MAP_HEIGHT = 30;
@@ -33,31 +33,37 @@ function splitLeaf(leaf: Leaf, rng: () => number): Leaf {
   if (leaf.left !== null) return leaf;
   if (leaf.w < MIN_LEAF_SIZE * 2 && leaf.h < MIN_LEAF_SIZE * 2) return leaf;
 
-  const splitH = leaf.w < MIN_LEAF_SIZE * 2
-    ? true
-    : leaf.h < MIN_LEAF_SIZE * 2
-      ? false
-      : rng() > 0.5;
+  const splitH =
+    leaf.w < MIN_LEAF_SIZE * 2
+      ? true
+      : leaf.h < MIN_LEAF_SIZE * 2
+        ? false
+        : rng() > 0.5;
 
   if (splitH) {
     if (leaf.h < MIN_LEAF_SIZE * 2) return leaf;
     const split = randomInt(rng, MIN_LEAF_SIZE, leaf.h - MIN_LEAF_SIZE);
     const left = createLeaf(leaf.x, leaf.y, leaf.w, split);
     const right = createLeaf(leaf.x, leaf.y + split, leaf.w, leaf.h - split);
-    return { ...leaf, left: splitLeaf(left, rng), right: splitLeaf(right, rng) };
+    return {
+      ...leaf,
+      left: splitLeaf(left, rng),
+      right: splitLeaf(right, rng),
+    };
   } else {
     if (leaf.w < MIN_LEAF_SIZE * 2) return leaf;
     const split = randomInt(rng, MIN_LEAF_SIZE, leaf.w - MIN_LEAF_SIZE);
     const left = createLeaf(leaf.x, leaf.y, split, leaf.h);
     const right = createLeaf(leaf.x + split, leaf.y, leaf.w - split, leaf.h);
-    return { ...leaf, left: splitLeaf(left, rng), right: splitLeaf(right, rng) };
+    return {
+      ...leaf,
+      left: splitLeaf(left, rng),
+      right: splitLeaf(right, rng),
+    };
   }
 }
 
-function carveRoomsInLeaf(
-  leaf: Leaf,
-  rng: () => number,
-): Leaf {
+function carveRoomsInLeaf(leaf: Leaf, rng: () => number): Leaf {
   if (leaf.left && leaf.right) {
     return {
       ...leaf,
@@ -74,7 +80,9 @@ function carveRoomsInLeaf(
   return { ...leaf, room: { x: roomX, y: roomY, w: roomW, h: roomH } };
 }
 
-function collectRooms(leaf: Leaf): { x: number; y: number; w: number; h: number }[] {
+function collectRooms(
+  leaf: Leaf,
+): { x: number; y: number; w: number; h: number }[] {
   if (leaf.room) return [leaf.room];
   const rooms: { x: number; y: number; w: number; h: number }[] = [];
   if (leaf.left) rooms.push(...collectRooms(leaf.left));
@@ -82,7 +90,12 @@ function collectRooms(leaf: Leaf): { x: number; y: number; w: number; h: number 
   return rooms;
 }
 
-function getRoomCenter(room: { x: number; y: number; w: number; h: number }): Position {
+function getRoomCenter(room: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}): Position {
   return {
     x: Math.floor(room.x + room.w / 2),
     y: Math.floor(room.y + room.h / 2),
@@ -187,11 +200,17 @@ function placeDoors(
 ): void {
   for (const pos of doorPositions) {
     // Only place door if it's at a room entrance (adjacent to both room floor and corridor)
-    const isAtRoomEdge = rooms.some(room => {
-      const inRoom = pos.x >= room.x && pos.x < room.x + room.w
-        && pos.y >= room.y && pos.y < room.y + room.h;
-      const nearRoom = pos.x >= room.x - 1 && pos.x <= room.x + room.w
-        && pos.y >= room.y - 1 && pos.y <= room.y + room.h;
+    const isAtRoomEdge = rooms.some((room) => {
+      const inRoom =
+        pos.x >= room.x &&
+        pos.x < room.x + room.w &&
+        pos.y >= room.y &&
+        pos.y < room.y + room.h;
+      const nearRoom =
+        pos.x >= room.x - 1 &&
+        pos.x <= room.x + room.w &&
+        pos.y >= room.y - 1 &&
+        pos.y <= room.y + room.h;
       return !inRoom && nearRoom;
     });
 
@@ -201,9 +220,7 @@ function placeDoors(
   }
 }
 
-function buildGrid(
-  rng: () => number,
-): {
+function buildGrid(rng: () => number): {
   tileMap: TileType[][];
   rooms: { x: number; y: number; w: number; h: number }[];
 } {
@@ -243,7 +260,7 @@ export function generateFloor(floorLevel: number, seed: number): FloorState {
 
     // Assign room types
     const typedRooms = assignRoomTypes(
-      rawRooms.map(r => ({
+      rawRooms.map((r) => ({
         x: r.x,
         y: r.y,
         width: r.w,
@@ -253,8 +270,8 @@ export function generateFloor(floorLevel: number, seed: number): FloorState {
       rng,
     );
 
-    const startRoom = typedRooms.find(r => r.type === RoomType.Start);
-    const bossRoom = typedRooms.find(r => r.type === RoomType.Boss);
+    const startRoom = typedRooms.find((r) => r.type === RoomType.Start);
+    const bossRoom = typedRooms.find((r) => r.type === RoomType.Boss);
 
     if (!startRoom || !bossRoom) continue;
 
@@ -282,10 +299,10 @@ export function generateFloor(floorLevel: number, seed: number): FloorState {
     return {
       level: floorLevel,
       theme,
-      tileMap: populated.tileMap.map(row => [...row]),
+      tileMap: populated.tileMap.map((row) => [...row]),
       rooms: typedRooms,
       monsters: populated.monsters,
-      explored: explored.map(row => [...row]),
+      explored: explored.map((row) => [...row]),
     };
   }
 

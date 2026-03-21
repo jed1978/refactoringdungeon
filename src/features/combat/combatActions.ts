@@ -9,9 +9,20 @@ export type AttackResult = {
   readonly targetIndex: number;
 };
 
+export type AoeHit = {
+  readonly targetIndex: number;
+  readonly damage: number;
+  readonly isCrit: boolean;
+};
+
 export type SkillResult =
   | { readonly kind: 'damage'; readonly damage: number; readonly isCrit: boolean; readonly targetIndex: number }
   | { readonly kind: 'reveal'; readonly targetIndex: number }
+  | { readonly kind: 'stun'; readonly damage: number; readonly isCrit: boolean; readonly targetIndex: number }
+  | { readonly kind: 'buff_self'; readonly buffId: string }
+  | { readonly kind: 'aoe'; readonly hits: readonly AoeHit[] }
+  | { readonly kind: 'weaken'; readonly damage: number; readonly isCrit: boolean; readonly targetIndex: number }
+  | { readonly kind: 'chain'; readonly hits: readonly AoeHit[] }
   | { readonly kind: 'no_mp' };
 
 export function resolvePlayerAttack(
@@ -32,6 +43,7 @@ export function resolveSkill(
   targetIndex: number,
   enemies: readonly MonsterState[],
   rng: () => number,
+  _state?: CombatState,
 ): SkillResult {
   const skill = SKILLS_MAP[skillId];
   if (!skill) return { kind: 'no_mp' };
@@ -46,12 +58,53 @@ export function resolveSkill(
       const target = enemies[targetIndex];
       if (!target) return { kind: 'no_mp' };
       let multiplier = skill.multiplier;
-      // Extra damage vs magic_number for replace_magic_number skill
       if (skillId === 'replace_magic_number' && target.def.id === 'magic_number') {
         multiplier = 2.0;
       }
       const result = calculateDamage(playerStats.atk, target.def.def, multiplier, rng);
       return { kind: 'damage', ...result, targetIndex };
+    }
+
+    case 'stun': {
+      const target = enemies[targetIndex];
+      if (!target) return { kind: 'no_mp' };
+      let multiplier = skill.multiplier;
+      if (skillId === 'replace_magic_number' && target.def.id === 'magic_number') {
+        multiplier = 2.0;
+      }
+      const result = calculateDamage(playerStats.atk, target.def.def, multiplier, rng);
+      return { kind: 'stun', damage: result.damage, isCrit: result.isCrit, targetIndex };
+    }
+
+    case 'dodge_next':
+      return { kind: 'buff_self', buffId: 'dodge_next' };
+
+    case 'aoe': {
+      const hits: AoeHit[] = enemies
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.currentHp > 0)
+        .map(({ e, i }) => {
+          const result = calculateDamage(playerStats.atk, e.def.def, skill.multiplier, rng);
+          return { targetIndex: i, damage: result.damage, isCrit: result.isCrit };
+        });
+      return { kind: 'aoe', hits };
+    }
+
+    case 'weaken': {
+      const target = enemies[targetIndex];
+      if (!target) return { kind: 'no_mp' };
+      const result = calculateDamage(playerStats.atk, target.def.def, skill.multiplier, rng);
+      return { kind: 'weaken', damage: result.damage, isCrit: result.isCrit, targetIndex };
+    }
+
+    case 'chain': {
+      const target = enemies[targetIndex];
+      if (!target) return { kind: 'no_mp' };
+      const hits: AoeHit[] = Array.from({ length: 3 }, () => {
+        const result = calculateDamage(playerStats.atk, target.def.def, skill.multiplier, rng);
+        return { targetIndex, damage: result.damage, isCrit: result.isCrit };
+      });
+      return { kind: 'chain', hits };
     }
 
     default: {
@@ -73,8 +126,7 @@ export function resolveMonsterAttack(
 }
 
 export function resolveInlineTempOrder(
-  combatState: CombatState,
+  _combatState: CombatState,
 ): boolean {
-  // Inline temp always goes first — check if it's used before player's normal turn
   return true;
 }

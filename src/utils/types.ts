@@ -208,6 +208,8 @@ export type CombatState = {
   readonly revealedEnemies: readonly number[];
   readonly bossEntangledTurns: number;
   readonly floorMonsterIndex: number;
+  readonly playerDodgeTurns: number;
+  readonly bossPhase: number; // 0=initial, 1=<75%, 2=<50%, 3=<25% (enrage)
 };
 
 // Game mode discriminated union

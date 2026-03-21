@@ -1,9 +1,16 @@
-import type { MonsterState, CombatAction, CombatState } from '../../utils/types';
+import type {
+  MonsterState,
+  CombatAction,
+  CombatState,
+} from "../../utils/types";
 
 export type MonsterAIResult = {
   readonly action: CombatAction;
   readonly shouldSplit: boolean;
   readonly entanglePlayer: boolean;
+  readonly shouldSkip: boolean;
+  readonly hitCount: number; // 1 = normal, 3 = shotgun
+  readonly shouldSummon: boolean;
 };
 
 export function chooseMonsterAction(
@@ -13,44 +20,111 @@ export function chooseMonsterAction(
 ): MonsterAIResult {
   const { behavior } = monster.def;
 
+  // targetIndex: 0 is a placeholder; processEnemyTurn resolves the actual target
+  const attackAction: CombatAction = { type: "attack", targetIndex: 0 };
+  const base = {
+    action: attackAction,
+    shouldSplit: false,
+    entanglePlayer: false,
+    shouldSkip: false,
+    hitCount: 1,
+    shouldSummon: false,
+  };
+
   switch (behavior) {
-    case 'split_at_half_hp': {
-      const shouldSplit = monster.currentHp <= monster.def.hp / 2
-        && !hasSplitBuff(monster);
-      return { action: { type: 'attack' }, shouldSplit, entanglePlayer: false };
+    case "split_at_half_hp": {
+      const shouldSplit =
+        monster.currentHp <= monster.def.hp / 2 && !hasSplitBuff(monster);
+      return { ...base, shouldSplit };
     }
 
-    case 'random_damage':
-      return { action: { type: 'attack' }, shouldSplit: false, entanglePlayer: false };
+    case "random_damage":
+      return { ...base };
 
-    case 'swarm':
-      return { action: { type: 'attack' }, shouldSplit: false, entanglePlayer: false };
+    case "swarm":
+      return { ...base };
 
-    case 'boss_spaghetti': {
+    case "boss_spaghetti": {
       const turnMod = combatState.turn % 3;
-      const entanglePlayer = turnMod === 0
-        || (rng() < 0.1 && combatState.bossEntangledTurns === 0);
-      return { action: { type: 'attack' }, shouldSplit: false, entanglePlayer };
+      const entanglePlayer =
+        turnMod === 0 || (rng() < 0.1 && combatState.bossEntangledTurns === 0);
+      return { ...base, entanglePlayer };
+    }
+
+    case "long_method":
+      return { ...base };
+
+    case "feature_envy":
+      return { ...base };
+
+    case "shotgun_surgery":
+      return { ...base, hitCount: 3 };
+
+    case "boss_circular_dep":
+      return { ...base };
+
+    case "n_plus_one": {
+      const shouldSummon = !hasSummonBuff(monster);
+      return { ...base, shouldSummon };
+    }
+
+    case "premature_opt":
+      return { ...base };
+
+    case "leaky_abstraction":
+      return { ...base };
+
+    case "boss_big_ball":
+      return { ...base };
+
+    case "data_clump":
+      return { ...base };
+
+    case "lazy_class":
+      return { ...base, shouldSkip: true };
+
+    case "boss_god_class": {
+      // Phase 3 (enrage): attack twice is handled in processEnemyTurn
+      const entanglePlayer =
+        combatState.bossPhase >= 2 &&
+        rng() < 0.3 &&
+        combatState.bossEntangledTurns === 0;
+      return { ...base, entanglePlayer };
     }
 
     default:
-      return { action: { type: 'attack' }, shouldSplit: false, entanglePlayer: false };
+      return { ...base };
   }
 }
 
 function hasSplitBuff(monster: MonsterState): boolean {
-  return monster.buffs.some(b => b.id === 'already_split');
+  return monster.buffs.some((b) => b.id === "already_split");
+}
+
+function hasSummonBuff(monster: MonsterState): boolean {
+  return monster.buffs.some((b) => b.id === "already_summoned");
 }
 
 export function getMonsterAttackMultiplier(
   monster: MonsterState,
   rng: () => number,
 ): number {
+  const isWeakened = monster.buffs.some(
+    (b) => b.id === "weakened" && b.turnsRemaining > 0,
+  );
+  const weakenMultiplier = isWeakened ? 0.7 : 1.0;
+
   switch (monster.def.behavior) {
-    case 'random_damage':
+    case "random_damage":
       // Random between 0.3× and 3× ATK
-      return 0.3 + rng() * 2.7;
+      return (0.3 + rng() * 2.7) * weakenMultiplier;
+    case "leaky_abstraction":
+      // Bypasses DEF by simulating a high multiplier
+      return 1.4 * weakenMultiplier;
+    case "boss_god_class":
+      // Enrage phase: 1.5× damage
+      return 1.0 * weakenMultiplier;
     default:
-      return 1.0;
+      return 1.0 * weakenMultiplier;
   }
 }

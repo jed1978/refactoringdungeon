@@ -1,6 +1,11 @@
-import type { GameState, PlayerStats, PlayerState, FloorState } from '../utils/types';
-import { Direction, TileType, RoomType } from '../utils/types';
-import { FLOOR_THEMES } from '../utils/constants';
+import type {
+  GameState,
+  PlayerStats,
+  PlayerState,
+  FloorState,
+} from "../utils/types";
+import { Direction, TileType } from "../utils/types";
+import { FLOOR_THEMES } from "../utils/constants";
 
 export const STARTING_STATS: PlayerStats = {
   hp: 100,
@@ -21,7 +26,7 @@ export const STARTING_PLAYER: PlayerState = {
   direction: Direction.Down,
   isMoving: false,
   stats: STARTING_STATS,
-  skills: ['extract_method', 'rename_variable', 'inline_temp'],
+  skills: ["extract_method", "rename_variable", "inline_temp"],
   equipment: {
     weapon: null,
     armor: null,
@@ -42,7 +47,7 @@ const EMPTY_FLOOR: FloorState = {
 };
 
 export const INITIAL_GAME_STATE: GameState = {
-  gameMode: { mode: 'title' },
+  gameMode: { mode: "title" },
   player: STARTING_PLAYER,
   floor: EMPTY_FLOOR,
   currentFloor: 1,

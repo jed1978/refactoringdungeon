@@ -61,7 +61,7 @@ const PLAYER_W = 32;
 const PLAYER_H = 48;
 export const MONSTER_Y = 75;
 const MONSTER_SIZE_NORMAL = 32;
-const MONSTER_SIZE_BOSS = 48;
+// Boss monsters use 48px size (referenced via enemy.spriteSize at runtime)
 
 export function renderBattle(
   ctx: CanvasRenderingContext2D,
@@ -106,7 +106,7 @@ export function renderBattle(
   ctx.fillRect(0, groundY, logicalWidth, 1);
 
   // Draw monsters
-  state.enemies.forEach((enemy, idx) => {
+  state.enemies.forEach((enemy) => {
     if (!enemy.visible) return;
 
     const spriteSheets = monsterBattleSprites[enemy.spriteId];
@@ -191,8 +191,8 @@ function renderHpBar(
   y: number,
   width: number,
   hpPercent: number,
-  currentHp: number,
-  maxHp: number,
+  _currentHp: number,
+  _maxHp: number,
 ): void {
   const barW = width;
   const barH = 4;

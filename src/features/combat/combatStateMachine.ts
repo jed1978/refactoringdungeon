@@ -48,6 +48,7 @@ export type CombatEvent =
       readonly kind: "buff_applied";
       readonly buffId: string;
       readonly turns: number;
+      readonly target: "player" | number;
     }
   | {
       readonly kind: "combat_won";
@@ -59,7 +60,15 @@ export type CombatEvent =
       readonly kind: "level_up";
       readonly newLevel: number;
       readonly unlockedSkills: readonly string[];
-    };
+    }
+  | { readonly kind: "damage_reflected"; readonly damage: number }
+  | {
+      readonly kind: "monster_summon";
+      readonly newMonster: MonsterState;
+    }
+  | { readonly kind: "buff_stolen"; readonly buffId: string }
+  | { readonly kind: "boss_phase_shift"; readonly newPhase: number }
+  | { readonly kind: "boss_enrage" };
 
 export type CombatResult = {
   readonly state: CombatState;
@@ -84,6 +93,9 @@ export function initCombat(
     selectedTarget: 0,
     revealedEnemies: [],
     bossEntangledTurns: 0,
+    floorMonsterIndex: 0,
+    playerDodgeTurns: 0,
+    bossPhase: 0,
   };
 }
 
@@ -168,6 +180,7 @@ export function processPlayerAction(
         skillTarget,
         enemies,
         rng,
+        state,
       );
 
       if (result.kind === "damage") {
@@ -206,6 +219,156 @@ export function processPlayerAction(
           ...newState,
           revealedEnemies: [...state.revealedEnemies, result.targetIndex],
         };
+      } else if (result.kind === "stun") {
+        events.push({
+          kind: "damage_dealt",
+          targetIndex: result.targetIndex,
+          damage: result.damage,
+          isCrit: result.isCrit,
+        });
+        log.push(
+          result.isCrit
+            ? STRINGS.playerDealsCrit.replace("{0}", String(result.damage))
+            : STRINGS.playerDealsNormal.replace("{0}", String(result.damage)),
+        );
+        enemies = applyDamageToEnemy(
+          enemies,
+          result.targetIndex,
+          result.damage,
+          events,
+          log,
+          state,
+        );
+        // Apply stun buff to the target monster (if still alive)
+        const targetAfterDamage = enemies[result.targetIndex];
+        if (targetAfterDamage && targetAfterDamage.currentHp > 0) {
+          const stunBuff: Buff = {
+            id: "stunned",
+            name: "眩暈",
+            turnsRemaining: 1,
+            effect: "stunned",
+          };
+          enemies = enemies.map((e, i) =>
+            i === result.targetIndex
+              ? { ...e, buffs: [...e.buffs, stunBuff] }
+              : e,
+          );
+          events.push({
+            kind: "buff_applied",
+            buffId: "stunned",
+            turns: 1,
+            target: result.targetIndex,
+          });
+          log.push(
+            STRINGS.skillStun.replace(
+              "{0}",
+              enemies[result.targetIndex]?.def.name ?? "",
+            ),
+          );
+        }
+      } else if (result.kind === "buff_self") {
+        // dodge_next: track on combat state
+        newState = { ...newState, playerDodgeTurns: 1 };
+        events.push({
+          kind: "buff_applied",
+          buffId: result.buffId,
+          turns: 1,
+          target: "player",
+        });
+        log.push(STRINGS.skillDodgeNext);
+      } else if (result.kind === "aoe") {
+        log.push(STRINGS.skillAoe);
+        for (const hit of result.hits) {
+          events.push({
+            kind: "damage_dealt",
+            targetIndex: hit.targetIndex,
+            damage: hit.damage,
+            isCrit: hit.isCrit,
+          });
+          log.push(
+            hit.isCrit
+              ? STRINGS.playerDealsCrit.replace("{0}", String(hit.damage))
+              : STRINGS.playerDealsNormal.replace("{0}", String(hit.damage)),
+          );
+          enemies = applyDamageToEnemy(
+            enemies,
+            hit.targetIndex,
+            hit.damage,
+            events,
+            log,
+            state,
+          );
+        }
+      } else if (result.kind === "weaken") {
+        events.push({
+          kind: "damage_dealt",
+          targetIndex: result.targetIndex,
+          damage: result.damage,
+          isCrit: result.isCrit,
+        });
+        log.push(
+          result.isCrit
+            ? STRINGS.playerDealsCrit.replace("{0}", String(result.damage))
+            : STRINGS.playerDealsNormal.replace("{0}", String(result.damage)),
+        );
+        enemies = applyDamageToEnemy(
+          enemies,
+          result.targetIndex,
+          result.damage,
+          events,
+          log,
+          state,
+        );
+        // Apply weakened debuff to the target (if still alive)
+        const targetAfterDamage = enemies[result.targetIndex];
+        if (targetAfterDamage && targetAfterDamage.currentHp > 0) {
+          const weakenBuff: Buff = {
+            id: "weakened",
+            name: "能力削弱",
+            turnsRemaining: 2,
+            effect: "weakened",
+          };
+          enemies = enemies.map((e, i) =>
+            i === result.targetIndex
+              ? { ...e, buffs: [...e.buffs, weakenBuff] }
+              : e,
+          );
+          events.push({
+            kind: "buff_applied",
+            buffId: "weakened",
+            turns: 2,
+            target: result.targetIndex,
+          });
+          log.push(
+            STRINGS.skillWeaken.replace(
+              "{0}",
+              enemies[result.targetIndex]?.def.name ?? "",
+            ),
+          );
+        }
+      } else if (result.kind === "chain") {
+        log.push(STRINGS.skillChain);
+        for (const hit of result.hits) {
+          events.push({
+            kind: "damage_dealt",
+            targetIndex: hit.targetIndex,
+            damage: hit.damage,
+            isCrit: hit.isCrit,
+          });
+          log.push(
+            hit.isCrit
+              ? STRINGS.playerDealsCrit.replace("{0}", String(hit.damage))
+              : STRINGS.playerDealsNormal.replace("{0}", String(hit.damage)),
+          );
+          enemies = applyDamageToEnemy(
+            enemies,
+            hit.targetIndex,
+            hit.damage,
+            events,
+            log,
+            state,
+          );
+        }
       }
 
       const mp = Math.max(0, playerStats.mp - skill.mpCost);
@@ -219,7 +382,6 @@ export function processPlayerAction(
         events.push({ kind: "fled" });
         log.push(STRINGS.fleeSuccess);
       } else {
-        // Enemy free hit
         const firstEnemy = enemies.find((e) => e.currentHp > 0);
         if (firstEnemy) {
           const hit = resolveMonsterAttack(firstEnemy, playerStats, rng);
@@ -240,6 +402,74 @@ export function processPlayerAction(
 
     default:
       break;
+  }
+
+  // Boss special effects after player action
+  if (action.type !== "flee") {
+    const primaryIdx =
+      action.type === "attack" || action.type === "skill"
+        ? action.targetIndex
+        : -1;
+    if (primaryIdx >= 0) {
+      const originalEnemy = state.enemies[primaryIdx];
+      const updatedEnemy = enemies[primaryIdx];
+      if (originalEnemy && updatedEnemy && updatedEnemy.currentHp > 0) {
+        // Reflect damage for circular dependency boss
+        if (originalEnemy.def.behavior === "boss_circular_dep") {
+          const dmgDealt = events
+            .filter(
+              (e): e is Extract<typeof e, { kind: "damage_dealt" }> =>
+                e.kind === "damage_dealt" && e.targetIndex === primaryIdx,
+            )
+            .reduce((s, e) => s + e.damage, 0);
+          if (dmgDealt > 0) {
+            const reflectDmg = Math.max(1, Math.floor(dmgDealt * 0.3));
+            events.push({ kind: "damage_reflected", damage: reflectDmg });
+            const hp = Math.max(
+              0,
+              (newPlayerStats ?? playerStats).hp - reflectDmg,
+            );
+            newPlayerStats = { ...(newPlayerStats ?? playerStats), hp };
+            if (hp <= 0) events.push({ kind: "combat_lost" });
+            log.push(
+              STRINGS.damageReflected.replace("{0}", String(reflectDmg)),
+            );
+          }
+        }
+        // Phase shift for god class boss
+        if (originalEnemy.def.behavior === "boss_god_class") {
+          const hpPct = updatedEnemy.currentHp / originalEnemy.def.hp;
+          let bossPhase = newState.bossPhase;
+          if (hpPct < 0.75 && bossPhase < 1) {
+            bossPhase = 1;
+            events.push({ kind: "boss_phase_shift", newPhase: 1 });
+            newState = { ...newState, bossPhase };
+            log.push(
+              STRINGS.bossPhaseShift
+                .replace("{0}", originalEnemy.def.name)
+                .replace("{1}", "2"),
+            );
+          }
+          if (hpPct < 0.5 && bossPhase < 2) {
+            bossPhase = 2;
+            events.push({ kind: "boss_phase_shift", newPhase: 2 });
+            newState = { ...newState, bossPhase };
+            log.push(
+              STRINGS.bossPhaseShift
+                .replace("{0}", originalEnemy.def.name)
+                .replace("{1}", "3"),
+            );
+          }
+          if (hpPct < 0.25 && bossPhase < 3) {
+            bossPhase = 3;
+            events.push({ kind: "boss_phase_shift", newPhase: 3 });
+            events.push({ kind: "boss_enrage" });
+            newState = { ...newState, bossPhase };
+            log.push(STRINGS.bossEnrage.replace("{0}", originalEnemy.def.name));
+          }
+        }
+      }
+    }
   }
 
   // Check victory
@@ -305,10 +535,56 @@ export function processEnemyTurn(
     return advanceToNextTurn(state, events, log, newPlayerStats);
   }
 
-  const aiResult = chooseMonsterAction(monster, state, rng);
+  // Check if monster is stunned
+  const stunnedBuff = monster.buffs.find(
+    (b) => b.id === "stunned" && b.turnsRemaining > 0,
+  );
+  if (stunnedBuff) {
+    // Decrement stun, monster skips turn
+    const updatedBuffs = monster.buffs.map((b) =>
+      b.id === "stunned" ? { ...b, turnsRemaining: b.turnsRemaining - 1 } : b,
+    );
+    enemies = enemies.map((e, i) =>
+      i === enemyIndex ? { ...e, buffs: updatedBuffs } : e,
+    );
+    events.push({
+      kind: "buff_applied",
+      buffId: "stunned",
+      turns: stunnedBuff.turnsRemaining - 1,
+      target: enemyIndex,
+    });
+    log.push(STRINGS.monsterStunned.replace("{0}", monster.def.name));
+    newState = { ...newState, enemies };
+    return advanceToNextTurn(
+      { ...newState, log: { entries: [...state.log.entries, ...log] } },
+      events,
+      log,
+      newPlayerStats,
+    );
+  }
+
+  // Tick weakened buff on monster
+  enemies = enemies.map((e, i) => {
+    if (i !== enemyIndex) return e;
+    const updatedBuffs = e.buffs
+      .map((b) =>
+        b.id === "weakened"
+          ? { ...b, turnsRemaining: b.turnsRemaining - 1 }
+          : b,
+      )
+      .filter((b) => b.turnsRemaining > 0);
+    return { ...e, buffs: updatedBuffs };
+  });
+
+  const aiResult = chooseMonsterAction(enemies[enemyIndex]!, state, rng);
 
   if (aiResult.entanglePlayer) {
-    events.push({ kind: "buff_applied", buffId: "entangled", turns: 2 });
+    events.push({
+      kind: "buff_applied",
+      buffId: "entangled",
+      turns: 2,
+      target: "player",
+    });
     log.push(STRINGS.bossEntangle.replace("{0}", monster.def.name));
     newState = { ...newState, bossEntangledTurns: 2 };
   }
@@ -345,21 +621,102 @@ export function processEnemyTurn(
     enemies = [...enemies, clone];
   }
 
-  // Resolve attack
-  const hit = resolveMonsterAttack(monster, playerStats, rng);
-  events.push({
-    kind: "damage_received",
-    damage: hit.damage,
-    isCrit: hit.isCrit,
-  });
-  log.push(STRINGS.enemyAttacks.replace("{0}", monster.def.name));
-  log.push(
-    hit.isCrit
-      ? STRINGS.enemyDealsCrit.replace("{0}", String(hit.damage))
-      : STRINGS.enemyDealsNormal.replace("{0}", String(hit.damage)),
-  );
+  // lazy_class: skip turn
+  if (aiResult.shouldSkip) {
+    log.push(STRINGS.lazyClassSkip.replace("{0}", monster.def.name));
+    events.push({
+      kind: "buff_applied",
+      buffId: "lazy_skip",
+      turns: 0,
+      target: enemyIndex,
+    });
+    newState = { ...newState, enemies };
+    return advanceToNextTurn(
+      { ...newState, log: { entries: [...state.log.entries, ...log] } },
+      events,
+      log,
+      newPlayerStats,
+    );
+  }
 
-  const newHp = Math.max(0, playerStats.hp - hit.damage);
+  // n_plus_one: summon a copy (once per combat)
+  if (aiResult.shouldSummon) {
+    const clone: MonsterState = {
+      def: monster.def,
+      currentHp: Math.floor(monster.def.hp / 2),
+      position: monster.position,
+      buffs: [],
+    };
+    const summonedMonster: MonsterState = {
+      ...monster,
+      buffs: [
+        ...monster.buffs,
+        {
+          id: "already_summoned",
+          name: "已召喚",
+          turnsRemaining: 999,
+          effect: "summon_flag",
+        },
+      ],
+    };
+    enemies = enemies.map((e, i) => (i === enemyIndex ? summonedMonster : e));
+    events.push({ kind: "monster_summon", newMonster: clone });
+    log.push(STRINGS.monsterSummon.replace("{0}", monster.def.name));
+    enemies = [...enemies, clone];
+  }
+
+  // Check player dodge
+  if (state.playerDodgeTurns > 0) {
+    newState = { ...newState, playerDodgeTurns: 0 };
+    events.push({
+      kind: "buff_applied",
+      buffId: "dodge_active",
+      turns: 0,
+      target: "player",
+    });
+    log.push(STRINGS.playerDodged.replace("{0}", monster.def.name));
+    newState = { ...newState, enemies };
+    return advanceToNextTurn(
+      { ...newState, log: { entries: [...state.log.entries, ...log] } },
+      events,
+      log,
+      newPlayerStats,
+    );
+  }
+
+  // Resolve attack(s)
+  const currentMonster = enemies[enemyIndex]!;
+  const hitCount = aiResult.hitCount;
+  const isEnraged =
+    currentMonster.def.behavior === "boss_god_class" && newState.bossPhase >= 3;
+  const totalAttacks = isEnraged ? 2 : hitCount;
+
+  if (hitCount > 1) {
+    log.push(
+      STRINGS.shotgunSurgery
+        .replace("{0}", monster.def.name)
+        .replace("{1}", String(hitCount)),
+    );
+  }
+  log.push(STRINGS.enemyAttacks.replace("{0}", monster.def.name));
+
+  let totalDmg = 0;
+  for (let a = 0; a < totalAttacks; a++) {
+    const hit = resolveMonsterAttack(currentMonster, playerStats, rng);
+    totalDmg += hit.damage;
+    events.push({
+      kind: "damage_received",
+      damage: hit.damage,
+      isCrit: hit.isCrit,
+    });
+    log.push(
+      hit.isCrit
+        ? STRINGS.enemyDealsCrit.replace("{0}", String(hit.damage))
+        : STRINGS.enemyDealsNormal.replace("{0}", String(hit.damage)),
+    );
+  }
+
+  const newHp = Math.max(0, playerStats.hp - totalDmg);
   newPlayerStats = { ...playerStats, hp: newHp };
   if (newHp <= 0) events.push({ kind: "combat_lost" });
 
@@ -402,7 +759,7 @@ function applyDamageToEnemy(
   damage: number,
   events: CombatEvent[],
   log: string[],
-  state: CombatState,
+  _state: CombatState,
 ): MonsterState[] {
   const updated = enemies.map((e, i) => {
     if (i !== targetIndex) return e;

@@ -1,12 +1,12 @@
-import type { CameraState, TileMap, Position } from '../utils/types';
-import { Direction } from '../utils/types';
-import { TILE_SIZE, VIEWPORT } from '../utils/constants';
-import { renderTiles } from './TileRenderer';
-import { renderLighting } from './LightingSystem';
-import { renderFog } from './FogRenderer';
-import { drawSprite, getAnimationFrame } from './SpriteRenderer';
-import { playerMapSprite } from '../sprites/player';
-import { monsterMapSprites } from '../sprites/monsters/index';
+import type { CameraState, TileMap, Position } from "../utils/types";
+import { Direction } from "../utils/types";
+import { TILE_SIZE, VIEWPORT } from "../utils/constants";
+import { renderTiles } from "./TileRenderer";
+import { renderLighting } from "./LightingSystem";
+import { renderFog } from "./FogRenderer";
+import { drawSprite, getAnimationFrame } from "./SpriteRenderer";
+import { playerMapSprite } from "../sprites/player";
+import { monsterMapSprites } from "../sprites/monsters/index";
 
 export type MapMonster = {
   readonly position: Position;
@@ -26,12 +26,16 @@ export type ExplorationRenderState = {
   readonly mapMonsters: readonly MapMonster[];
   readonly explored: readonly (readonly boolean[])[];
   readonly visibleSet: ReadonlySet<string>;
+  readonly floorLevel: number;
 };
 
 function getPlayerSpriteKey(direction: Direction, isMoving: boolean): string {
-  const dirName = direction === Direction.Down ? 'down'
-    : direction === Direction.Up ? 'up'
-    : 'left'; // Left and Right both use 'left' (right is flipped)
+  const dirName =
+    direction === Direction.Down
+      ? "down"
+      : direction === Direction.Up
+        ? "up"
+        : "left"; // Left and Right both use 'left' (right is flipped)
 
   return isMoving ? `${dirName}Walk` : `${dirName}Idle`;
 }
@@ -46,11 +50,11 @@ export function renderExploration(
   ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
   // Fill background with black
-  ctx.fillStyle = '#000000';
+  ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
   // Draw tiles
-  renderTiles(ctx, state.tileMap, state.camera);
+  renderTiles(ctx, state.tileMap, state.camera, state.floorLevel);
 
   // Draw monsters (only if visible)
   for (const monster of state.mapMonsters) {
@@ -67,7 +71,10 @@ export function renderExploration(
   }
 
   // Draw player
-  const spriteKey = getPlayerSpriteKey(state.playerDirection, state.playerIsMoving);
+  const spriteKey = getPlayerSpriteKey(
+    state.playerDirection,
+    state.playerIsMoving,
+  );
   const sheet = playerMapSprite[spriteKey];
   if (sheet) {
     const frame = getAnimationFrame(sheet, state.elapsedMs);

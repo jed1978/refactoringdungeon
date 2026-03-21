@@ -2,6 +2,13 @@ import type { Room, MonsterState, Position } from '../../utils/types';
 import { TileType, RoomType } from '../../utils/types';
 import { randomInt } from '../../utils/random';
 import { getMonsterPool } from './monsterPools';
+import {
+  FLOOR1_BOSS,
+  FLOOR2_BOSS,
+  FLOOR3_BOSS,
+  FLOOR4_BOSS,
+} from '../../data/monsters';
+import type { MonsterDef } from '../../utils/types';
 
 type PopulateResult = {
   readonly tileMap: TileType[][];
@@ -33,6 +40,21 @@ function randomFloorPosition(
     }
   }
   return null;
+}
+
+export function getBossForFloor(floorLevel: number): MonsterDef {
+  switch (floorLevel) {
+    case 1:
+      return FLOOR1_BOSS;
+    case 2:
+      return FLOOR2_BOSS;
+    case 3:
+      return FLOOR3_BOSS;
+    case 4:
+      return FLOOR4_BOSS;
+    default:
+      return FLOOR4_BOSS;
+  }
 }
 
 export function populateRooms(
@@ -94,13 +116,12 @@ export function populateRooms(
       }
 
       case RoomType.Boss: {
-        // Place boss monster at center (stairs already placed by generator)
-        const bossMonster = pool[pool.length - 1]; // Use last monster as mini-boss
+        const boss = getBossForFloor(floorLevel);
         const bossPos = randomFloorPosition(room, tileMap, rng, occupied);
         if (bossPos) {
           monsters.push({
-            def: { ...bossMonster, hp: bossMonster.hp * 3, atk: bossMonster.atk * 2 },
-            currentHp: bossMonster.hp * 3,
+            def: boss,
+            currentHp: boss.hp,
             position: bossPos,
             buffs: [],
           });
