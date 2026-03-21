@@ -15,6 +15,7 @@ type PendingType = "attack" | "skill" | null;
 export function BattleUI({ onAction }: Props) {
   const gameState = useGameState();
   const [showSkills, setShowSkills] = useState(false);
+  const [showItems, setShowItems] = useState(false);
   const [pendingSkillId, setPendingSkillId] = useState<string | null>(null);
   // null = not selecting; otherwise waiting for target click
   const [pendingAction, setPendingAction] = useState<PendingType>(null);
@@ -22,7 +23,7 @@ export function BattleUI({ onAction }: Props) {
   if (gameState.gameMode.mode !== "combat") return null;
 
   const { combat } = gameState.gameMode;
-  const { stats, skills } = gameState.player;
+  const { stats, skills, inventory } = gameState.player;
   const isAnimatingPhase =
     combat.phase === "animating" || combat.phase === "enemy_turn";
   const disabled =
@@ -59,7 +60,20 @@ export function BattleUI({ onAction }: Props) {
   const handleSkill = () => {
     if (disabled) return;
     setShowSkills((s) => !s);
+    setShowItems(false);
     setPendingAction(null);
+  };
+
+  const handleItem = () => {
+    if (disabled) return;
+    setShowItems((s) => !s);
+    setShowSkills(false);
+    setPendingAction(null);
+  };
+
+  const handleItemUse = (itemId: string) => {
+    setShowItems(false);
+    onAction({ type: "item", itemId });
   };
 
   const handleSkillSelect = (skillId: string) => {
@@ -76,6 +90,7 @@ export function BattleUI({ onAction }: Props) {
     if (disabled) return;
     setPendingAction(null);
     setShowSkills(false);
+    setShowItems(false);
     onAction({ type: "flee" });
   };
 
@@ -275,6 +290,12 @@ export function BattleUI({ onAction }: Props) {
               active={showSkills}
             />
             <BattleButton
+              label={`💊 ${STRINGS.combatItem}`}
+              disabled={disabled || pendingAction !== null}
+              onClick={handleItem}
+              active={showItems}
+            />
+            <BattleButton
               label={`🏃 ${STRINGS.combatFlee}`}
               disabled={disabled || pendingAction !== null}
               onClick={handleFlee}
@@ -290,6 +311,55 @@ export function BattleUI({ onAction }: Props) {
             onSelect={handleSkillSelect}
             onClose={() => setShowSkills(false)}
           />
+        )}
+
+        {/* Item submenu */}
+        {showItems && (
+          <div
+            className="bg-gray-900 border border-yellow-600 rounded mt-1"
+            style={{ padding: "6px 8px" }}
+          >
+            {inventory.length === 0 ? (
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontFamily: "'Noto Sans TC', sans-serif",
+                  color: "#6b7280",
+                  padding: "2px 0",
+                }}
+              >
+                {STRINGS.noItems}
+              </div>
+            ) : (
+              inventory.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleItemUse(item.id)}
+                  className="w-full text-left hover:bg-gray-700 rounded px-2 py-1 flex justify-between items-center"
+                  style={{
+                    fontSize: "14px",
+                    fontFamily: "'Noto Sans TC', sans-serif",
+                    color: "#e5e7eb",
+                  }}
+                >
+                  <span>{item.name}</span>
+                  <span style={{ color: "#9ca3af" }}>×{item.quantity}</span>
+                </button>
+              ))
+            )}
+            <button
+              onClick={() => setShowItems(false)}
+              className="w-full text-center text-gray-500 hover:text-gray-300 mt-1"
+              style={{
+                fontSize: "12px",
+                fontFamily: "'Press Start 2P', monospace",
+                paddingTop: "4px",
+                borderTop: "1px solid #374151",
+              }}
+            >
+              {STRINGS.combatBack}
+            </button>
+          </div>
         )}
       </div>
     </>

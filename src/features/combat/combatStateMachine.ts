@@ -500,6 +500,19 @@ export function processPlayerAction(
     }
   }
 
+  // Flee fail: penalize with free hit but return control to player (no extra enemy turn)
+  const fleeFailed = events.some((e) => e.kind === "flee_failed");
+  if (fleeFailed) {
+    newState = {
+      ...newState,
+      enemies,
+      isPlayerTurn: true,
+      phase: "selecting",
+      log: { entries: [...state.log.entries, ...log] },
+    };
+    return { state: newState, events, newPlayerStats, logEntries: log };
+  }
+
   // Advance turn
   const nextTurnIndex = (state.currentTurnIndex + 1) % state.turnOrder.length;
   const nextEntry = state.turnOrder[nextTurnIndex];
