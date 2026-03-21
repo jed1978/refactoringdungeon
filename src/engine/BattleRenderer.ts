@@ -1,16 +1,16 @@
-import type { FloorTheme, SpriteFrame } from '../utils/types';
-import { TILE_SIZE, VIEWPORT } from '../utils/constants';
-import { drawSprite, getAnimationFrame } from './SpriteRenderer';
-import { renderParticles } from './ParticleSystem';
-import { renderDamageNumbers } from './DamageNumbers';
-import { renderFlash } from './ScreenEffects';
-import type { ParticleSystem } from './ParticleSystem';
-import type { DamageNumber } from './DamageNumbers';
-import type { ScreenFlash, ScreenShake } from './ScreenEffects';
-import { getShakeOffset } from './ScreenEffects';
-import { monsterBattleSprites } from '../sprites/monsters/battleIndex';
-import { playerBattleSprite } from '../sprites/playerBattle';
-import { hitSparkEffect } from '../sprites/effects';
+import type { FloorTheme, SpriteFrame } from "../utils/types";
+import { TILE_SIZE, VIEWPORT } from "../utils/constants";
+import { drawSprite, getAnimationFrame } from "./SpriteRenderer";
+import { renderParticles } from "./ParticleSystem";
+import { renderDamageNumbers } from "./DamageNumbers";
+import { renderFlash } from "./ScreenEffects";
+import type { ParticleSystem } from "./ParticleSystem";
+import type { DamageNumber } from "./DamageNumbers";
+import type { ScreenFlash, ScreenShake } from "./ScreenEffects";
+import { getShakeOffset } from "./ScreenEffects";
+import { monsterBattleSprites } from "../sprites/monsters/battleIndex";
+import { playerBattleSprite } from "../sprites/playerBattle";
+import { hitSparkEffect } from "../sprites/effects";
 
 export type BattleEnemy = {
   readonly spriteId: string;
@@ -90,8 +90,9 @@ export function renderBattle(
   ctx.fillStyle = state.theme.accent;
   ctx.globalAlpha = 0.15;
   for (let i = 0; i < 8; i++) {
-    const px = ((state.elapsedMs * (0.01 + i * 0.005) + i * 30) % logicalWidth);
-    const py = ((state.elapsedMs * (0.008 + i * 0.003) + i * 20) % (logicalHeight * 0.6));
+    const px = (state.elapsedMs * (0.01 + i * 0.005) + i * 30) % logicalWidth;
+    const py =
+      (state.elapsedMs * (0.008 + i * 0.003) + i * 20) % (logicalHeight * 0.6);
     ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
   }
   ctx.globalAlpha = 1;
@@ -108,10 +109,10 @@ export function renderBattle(
     if (!enemy.visible) return;
 
     const spriteSheets = monsterBattleSprites[enemy.spriteId];
-    const sheet = spriteSheets?.[enemy.animKey] ?? spriteSheets?.['idle'];
+    const sheet = spriteSheets?.[enemy.animKey] ?? spriteSheets?.["idle"];
     if (!sheet) return;
 
-    const isBoss = enemy.spriteId === 'spaghetti_code';
+    const isBoss = enemy.spriteId === "spaghetti_code";
     const size = isBoss ? MONSTER_SIZE_BOSS : MONSTER_SIZE_NORMAL;
     const drawX = Math.round(enemy.x + enemy.offsetX);
     const drawY = Math.round(enemy.y + enemy.offsetY);
@@ -124,17 +125,48 @@ export function renderBattle(
     }
 
     // HP bar above monster
-    renderHpBar(ctx, drawX, drawY - 8, size, enemy.hpPercent, enemy.currentHp, enemy.maxHp);
+    renderHpBar(
+      ctx,
+      drawX,
+      drawY - 8,
+      size,
+      enemy.hpPercent,
+      enemy.currentHp,
+      enemy.maxHp,
+    );
+
+    // Monster name below sprite (避免被頂部 log 遮住)
+    ctx.font = "10px 'Noto Sans TC', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    // 半透明黑色底色增加可讀性
+    const nameY = drawY + size + 3;
+    const nameW = ctx.measureText(enemy.name).width;
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.fillRect(drawX + size / 2 - nameW / 2 - 2, nameY - 1, nameW + 4, 11);
+    ctx.fillStyle = "#fde68a";
+    ctx.fillText(enemy.name, drawX + size / 2, nameY);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
   });
 
   // Draw player
   {
-    const sheet = playerBattleSprite[state.player.animKey] ?? playerBattleSprite.idle;
+    const sheet =
+      playerBattleSprite[state.player.animKey] ?? playerBattleSprite.idle;
     const drawX = Math.round(state.player.x + state.player.offsetX);
     const drawY = Math.round(state.player.y + state.player.offsetY);
 
     if (state.player.flashWhite) {
-      drawWhiteFlash(ctx, sheet.frames[0], PLAYER_W, PLAYER_H, drawX, drawY, true);
+      drawWhiteFlash(
+        ctx,
+        sheet.frames[0],
+        PLAYER_W,
+        PLAYER_H,
+        drawX,
+        drawY,
+        true,
+      );
     } else {
       const frame = getAnimationFrame(sheet, state.elapsedMs);
       drawSprite(ctx, frame, drawX, drawY, PLAYER_W, PLAYER_H, true); // flip=true to face left
@@ -176,14 +208,15 @@ function renderHpBar(
   const barW = width;
   const barH = 4;
   // Border
-  ctx.fillStyle = '#000000';
+  ctx.fillStyle = "#000000";
   ctx.fillRect(x - 1, y - 1, barW + 2, barH + 2);
   // Background
-  ctx.fillStyle = '#4a1515';
+  ctx.fillStyle = "#4a1515";
   ctx.fillRect(x, y, barW, barH);
   // Fill
   const fillW = Math.round(barW * hpPercent);
-  const hpColor = hpPercent > 0.5 ? '#22c55e' : hpPercent > 0.25 ? '#eab308' : '#ef4444';
+  const hpColor =
+    hpPercent > 0.5 ? "#22c55e" : hpPercent > 0.25 ? "#eab308" : "#ef4444";
   ctx.fillStyle = hpColor;
   if (fillW > 0) ctx.fillRect(x, y, fillW, barH);
 }
@@ -200,7 +233,7 @@ function drawWhiteFlash(
   // Draw sprite then overlay white
   drawSprite(ctx, frame, x, y, width, height, flip);
   ctx.globalAlpha = 0.8;
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = "#ffffff";
   ctx.fillRect(x, y, width, height);
   ctx.globalAlpha = 1;
 }
@@ -215,7 +248,9 @@ function darken(hex: string, amount: number): string {
   return `rgb(${dr},${dg},${db})`;
 }
 
-export function getDefaultEnemyPositions(count: number): { x: number; y: number }[] {
+export function getDefaultEnemyPositions(
+  count: number,
+): { x: number; y: number }[] {
   const spacing = VIEWPORT.logicalWidth / (count + 1);
   return Array.from({ length: count }, (_, i) => ({
     x: Math.round(spacing * (i + 1) - MONSTER_SIZE_NORMAL / 2),
