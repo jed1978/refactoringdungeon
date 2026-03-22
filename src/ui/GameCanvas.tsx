@@ -157,6 +157,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
         if (key === " ") {
           const s = stateRef.current;
           const gs = gameStateRef.current;
+          if (gs.gameMode.mode !== "exploring") return;
           const facing = checkFacingTile(
             gs.floor.tileMap,
             { x: s.playerTileX, y: s.playerTileY },
