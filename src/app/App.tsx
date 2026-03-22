@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { GameProvider, useGameState } from "../state/GameContext";
 import { TitleScreen } from "../ui/TitleScreen";
 import { GameCanvas } from "../ui/GameCanvas";
@@ -9,6 +9,7 @@ import { Minimap } from "../ui/Minimap";
 import { BattleUI } from "../ui/BattleUI";
 import { CombatResultOverlay } from "../ui/CombatResultOverlay";
 import { InventoryScreen } from "../ui/InventoryScreen";
+import { PauseMenu } from "../ui/PauseMenu";
 import { ShopScreen } from "../ui/ShopScreen";
 import { DialogueBox } from "../ui/DialogueBox";
 import { TutorialOverlay } from "../ui/TutorialOverlay";
@@ -24,6 +25,22 @@ function AppContent() {
   const dispatch = useGameDispatch();
   const canvasRef = useRef<GameCanvasHandle>(null);
   const [showInventory, setShowInventory] = useState(false);
+  const [showPauseMenu, setShowPauseMenu] = useState(false);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const mode = gameState.gameMode.mode;
+      if (mode !== "exploring") return;
+      if (showInventory) {
+        setShowInventory(false);
+        return;
+      }
+      setShowPauseMenu((prev) => !prev);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [gameState.gameMode.mode, showInventory]);
 
   const handleStart = () => {
     const seed = Date.now();
@@ -92,7 +109,12 @@ function AppContent() {
 
         {!isCombat && !isOverScreen && (
           <>
-            <HUD />
+            <HUD
+              onMenuClick={() => {
+                setShowPauseMenu(true);
+                setShowInventory(false);
+              }}
+            />
             <BottomHUD />
             <Minimap />
           </>
@@ -137,6 +159,11 @@ function AppContent() {
         {/* Inventory overlay */}
         {showInventory && isExploring && (
           <InventoryScreen onClose={() => setShowInventory(false)} />
+        )}
+
+        {/* Pause menu overlay */}
+        {showPauseMenu && isExploring && (
+          <PauseMenu onClose={() => setShowPauseMenu(false)} />
         )}
 
         {/* Shop overlay — triggered by facing ShopCounter tile */}

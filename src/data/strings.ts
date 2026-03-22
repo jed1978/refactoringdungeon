@@ -94,6 +94,17 @@ export const STRINGS = {
   notEnoughGold: "金幣不足！",
   itemUsed: "使用了 {0}！",
   equipChanged: "裝備了 {0}！",
+  // System menu
+  pauseMenu: "系統選單",
+  resume: "繼續冒險",
+  manualSave: "手動存檔",
+  saveSuccess: "存檔成功！",
+  saveFailed: "存檔失敗",
+  soundOn: "音效：開",
+  soundOff: "音效：關",
+  returnToTitleConfirm: "確定要回到標題畫面嗎？",
+  confirm: "確定",
+  cancel: "取消",
   // Phase 5: polish
   demoMode: "DEMO MODE",
   tutorialMove: "WASD / 方向鍵移動　Space / Enter 互動",

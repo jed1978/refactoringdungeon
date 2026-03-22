@@ -3,7 +3,11 @@ import { useGameState, useGameDispatch } from "../state/GameContext";
 import { FLOOR_THEMES } from "../utils/constants";
 import { AudioSystem } from "../engine/AudioSystem";
 
-export const HUD = React.memo(function HUD() {
+type HUDProps = {
+  readonly onMenuClick?: () => void;
+};
+
+export const HUD = React.memo(function HUD({ onMenuClick }: HUDProps) {
   const { currentFloor, settings, demoMode } = useGameState();
   const dispatch = useGameDispatch();
   const [localMuted, setLocalMuted] = useState(settings.muted);
@@ -38,13 +42,25 @@ export const HUD = React.memo(function HUD() {
           DEMO
         </span>
       )}
-      <button
-        onClick={toggleMute}
-        className="text-white text-2xl px-2 py-1 hover:opacity-70 transition-opacity"
-        title={localMuted ? "取消靜音" : "靜音"}
-      >
-        {localMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A"}
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={toggleMute}
+          className="text-white text-2xl px-2 py-1 hover:opacity-70 transition-opacity"
+          title={localMuted ? "取消靜音" : "靜音"}
+        >
+          {localMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A"}
+        </button>
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="text-gray-300 hover:text-white px-2 py-1 hover:opacity-70 transition-opacity"
+            style={{ fontSize: "24px", lineHeight: 1 }}
+            title="系統選單"
+          >
+            ☰
+          </button>
+        )}
+      </div>
     </div>
   );
 });
