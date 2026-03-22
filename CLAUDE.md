@@ -498,7 +498,7 @@ Every `CombatEvent` kind emitted by `combatStateMachine.ts` **must** have a corr
 
 **Why:** `BattleAnimator`'s `frame.finished` only becomes `true` when the animation queue had items and all have completed. If an event queues no animation, the queue stays empty → `finished` is never `true` → `handleAnimationComplete()` never runs → the game permanently freezes.
 
-**Past incidents:** `flee_failed` and `reveal` events both caused combat lock because they were missing from `applyEvents()`.
+**Past incidents:** `flee_failed` and `reveal` events both caused combat lock because they were missing from `applyEvents()`; see also Note 5 for a related flee bug.
 
 **Rule:** Whenever a new `CombatEvent` kind is added to the discriminated union in `combatStateMachine.ts`, immediately add a matching `case` in `applyEvents()` in `combatLoop.ts` that queues at least a minimal animation (e.g. `hit_reaction_player` or `hit_reaction_enemy`).
 
@@ -531,6 +531,45 @@ const yPct = (logicalY / VIEWPORT.logicalHeight) * 100;  // VIEWPORT.logicalHeig
 
 This keeps DOM elements aligned with canvas content at any CSS scale factor (2x–4x).
 
+### 5. New Game Must Reset Player to STARTING_PLAYER (CRITICAL)
+
+The `START_GAME` reducer case **must** spread `STARTING_PLAYER` from `initialState.ts`, not `state.player`.
+
+```ts
+// ✅ CORRECT
+case "START_GAME":
+  return {
+    ...state,
+    player: { ...STARTING_PLAYER, position: action.startPos },
+    ...
+  };
+
+// ❌ WRONG — carries over HP=0 and other dead-state stats from the previous run
+case "START_GAME":
+  return {
+    ...state,
+    player: { ...state.player, position: action.startPos },
+    ...
+  };
+```
+
+**Past incident:** After dying (HP=0 stored in state), starting a new game inherited HP=0 — player was dead from the first frame.
+
+### 6. Flee Fail Must Not Advance to Enemy Turn (CRITICAL)
+
+In `processPlayerAction()` inside `combatStateMachine.ts`, when flee fails, the function must **return early with `phase: "selecting"`** before the normal "advance to enemy_turn" code path.
+
+```ts
+// After resolving flee action:
+const fleeFailed = events.some((e) => e.kind === "flee_failed");
+if (fleeFailed) {
+  return { state: { ...newState, phase: "selecting", isPlayerTurn: true }, events, ... };
+}
+// Only reach enemy_turn advance if flee did NOT fail
+```
+
+**Past incident:** `flee_failed` was correctly handled in `applyEvents()` (no combat lock), but `processPlayerAction` fell through to advance `isPlayerTurn → false`, giving the enemy a free attack after a failed flee — effectively two enemy turns in one round.
+
 ---
 
 ## CODING STANDARDS
@@ -544,16 +583,43 @@ This keeps DOM elements aligned with canvas content at any CSS scale factor (2x�
 - All entities defined as data, not hardcoded in logic
 - Discriminated unions for game states
 - Canvas coordinates always in logical pixels (16px tile units), scale handled by CSS
+- **UI font size minimums:** Press Start 2P headers ≥ 18px, section labels ≥ 14px; Noto Sans TC item names ≥ 18px, secondary text ≥ 14px — never use 10-12px in player-facing UI (too small on scaled canvas)
 
 ## TESTING
 
 ### Browser Testing Tool
-Use `agent-browser` (NOT Playwright MCP) for all browser-based testing:
-- **`agent-browser:agent-browser`** — Manual test flows: navigate to `localhost:5173`, click through specific game scenarios
-- **`agent-browser:dogfood`** — Exploratory testing: systematically walk through the game to find bugs and UX issues
+
+**Platform note:** `agent-browser` binary is NOT available on darwin-arm64 (Apple Silicon Mac). Use **Playwright MCP** instead.
+
+| Tool | When to Use |
+|------|-------------|
+| `agent-browser:agent-browser` | Linux / CI environments where the binary is available |
+| `agent-browser:dogfood` | Same — Linux / CI only |
+| **Playwright MCP** (`mcp__plugin_playwright_playwright__*`) | **darwin-arm64 (Apple Silicon)** — use this for all browser testing on local dev |
+
+**Playwright MCP quick reference:**
+```
+browser_navigate → http://localhost:5173
+browser_snapshot → read page structure / find element refs
+browser_click / browser_press_key / browser_evaluate → interact
+browser_take_screenshot → visual verification
+browser_console_messages → check for JS errors
+```
+
+To read live game state from the browser console:
+```js
+const root = document.getElementById('root');
+const key = Object.keys(root).find(k => k.startsWith('__reactContainer'));
+let fiber = root[key]?.child;
+while (fiber) {
+  const s = fiber.memoizedState?.memoizedState;
+  if (s && s.player && s.gameMode) { console.log(JSON.stringify(s, null, 2)); break; }
+  fiber = fiber.child ?? fiber.sibling;
+}
+```
 
 ### When to Test
-- After implementing a new feature or fixing a bug, run agent-browser to verify visually
+- After implementing a new feature or fixing a bug, run browser tests to verify visually
 - After combat system changes, test a full battle flow (enter combat → attack/skill → victory/defeat)
 - After UI changes, verify DOM overlay alignment with canvas at different viewport sizes
 
