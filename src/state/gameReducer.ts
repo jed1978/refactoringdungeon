@@ -79,7 +79,8 @@ export type GameAction =
       readonly type: "SELL_EQUIPMENT";
       readonly slot: keyof EquipmentSlots;
       readonly price: number;
-    };
+    }
+  | { readonly type: "CONSUME_ITEM"; readonly itemId: string };
 
 export type GameStateWithPrompt = GameState & {
   readonly interactionPrompt: string | null;
@@ -372,6 +373,18 @@ export function gameReducer(
             gold: state.player.stats.gold + action.price,
           },
         },
+      };
+    }
+
+    case "CONSUME_ITEM": {
+      const newInventory = state.player.inventory
+        .map((it) =>
+          it.id === action.itemId ? { ...it, quantity: it.quantity - 1 } : it,
+        )
+        .filter((it) => it.quantity > 0);
+      return {
+        ...state,
+        player: { ...state.player, inventory: newInventory },
       };
     }
 

@@ -188,6 +188,9 @@ function handlePendingAction(
   loop.lastProcessedTurnIndex = -1;
   loop.localPhase = result.state.phase;
   applyEvents(loop, result.events, combat);
+  if (pendingAction.type === "item") {
+    dispatch({ type: "CONSUME_ITEM", itemId: pendingAction.itemId });
+  }
   if (result.newPlayerStats) {
     dispatch({
       type: "APPLY_COMBAT_RESULT",
@@ -435,6 +438,12 @@ function applyEvents(
           elapsed: 0,
         });
         loop.outcome = "fled";
+        break;
+      case "item_used":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "screen_flash_white",
+          elapsed: 0,
+        });
         break;
     }
   }

@@ -16,6 +16,7 @@ import {
 } from "./combatActions";
 import { chooseMonsterAction } from "./monsterAI";
 import { SKILLS_MAP } from "../../data/skills";
+import { ITEMS_MAP } from "../../data/items";
 import { STRINGS } from "../../data/strings";
 
 export type CombatEvent =
@@ -68,7 +69,12 @@ export type CombatEvent =
     }
   | { readonly kind: "buff_stolen"; readonly buffId: string }
   | { readonly kind: "boss_phase_shift"; readonly newPhase: number }
-  | { readonly kind: "boss_enrage" };
+  | { readonly kind: "boss_enrage" }
+  | {
+      readonly kind: "item_used";
+      readonly itemId: string;
+      readonly value: number;
+    };
 
 export type CombatResult = {
   readonly state: CombatState;
@@ -373,6 +379,39 @@ export function processPlayerAction(
 
       const mp = Math.max(0, playerStats.mp - skill.mpCost);
       newPlayerStats = { ...playerStats, mp };
+      break;
+    }
+
+    case "item": {
+      const itemDef = ITEMS_MAP[action.itemId];
+      if (!itemDef) break;
+      const ps = newPlayerStats ?? playerStats;
+      let itemNewStats = ps;
+      if (itemDef.effect === "heal_hp") {
+        itemNewStats = { ...ps, hp: Math.min(ps.maxHp, ps.hp + itemDef.value) };
+      } else if (itemDef.effect === "heal_mp") {
+        itemNewStats = { ...ps, mp: Math.min(ps.maxMp, ps.mp + itemDef.value) };
+      } else if (itemDef.effect === "max_hp") {
+        itemNewStats = {
+          ...ps,
+          maxHp: ps.maxHp + itemDef.value,
+          hp: ps.hp + itemDef.value,
+        };
+      } else if (itemDef.effect === "atk_boost") {
+        events.push({
+          kind: "buff_applied",
+          buffId: "atk_boost",
+          turns: itemDef.value,
+          target: "player",
+        });
+      }
+      newPlayerStats = itemNewStats;
+      events.push({
+        kind: "item_used",
+        itemId: itemDef.id,
+        value: itemDef.value,
+      });
+      log.push(STRINGS.itemUsed.replace("{0}", itemDef.name));
       break;
     }
 
