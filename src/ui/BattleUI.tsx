@@ -105,7 +105,7 @@ function BattleUIComponent({ onAction }: Props) {
   const hpColor =
     hpPct > 0.5 ? "#22c55e" : hpPct > 0.25 ? "#eab308" : "#ef4444";
 
-  const logEntries = combat.log.entries.slice(-2);
+  const logEntries = combat.log.entries.slice(-6);
   const enemyPositions = getDefaultEnemyPositions(combat.enemies.length);
 
   return (
