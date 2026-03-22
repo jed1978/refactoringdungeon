@@ -61,6 +61,9 @@ const ALL_EVENT_TILES = [
   TileType.Shrine,
   TileType.Bookshelf,
   TileType.CoffeeMachine,
+  TileType.DebtCollector,
+  TileType.PairProgrammer,
+  TileType.LegacyDocs,
 ] as const;
 
 export function populateRooms(

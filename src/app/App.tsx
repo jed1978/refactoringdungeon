@@ -179,6 +179,24 @@ function AppContent() {
                   type: "UPDATE_PLAYER_STATS",
                   stats: result.newStats,
                 });
+                // Side-effects for special reward kinds
+                if (c.reward.kind === "skip_encounters") {
+                  const hpCost = Math.floor(gameState.player.stats.maxHp * 0.3);
+                  dispatch({
+                    type: "UPDATE_PLAYER_STATS",
+                    stats: {
+                      hp: Math.max(1, gameState.player.stats.hp - hpCost),
+                    },
+                  });
+                  dispatch({ type: "SKIP_ENCOUNTERS", count: c.reward.count });
+                } else if (c.reward.kind === "reveal_map") {
+                  dispatch({ type: "REVEAL_MAP" });
+                } else if (c.reward.kind === "companion") {
+                  dispatch({
+                    type: "SET_COMPANION",
+                    combats: c.reward.combats,
+                  });
+                }
                 dispatch({
                   type: "SET_GAME_MODE",
                   gameMode: { mode: "exploring" },

@@ -11,6 +11,13 @@ export type MonsterAIResult = {
   readonly shouldSkip: boolean;
   readonly hitCount: number; // 1 = normal, 3 = shotgun
   readonly shouldSummon: boolean;
+  readonly bigBallAbility:
+    | "multi_hit"
+    | "steal_heal"
+    | "self_heal"
+    | "heavy_hit"
+    | "normal"
+    | null;
 };
 
 export function chooseMonsterAction(
@@ -29,6 +36,7 @@ export function chooseMonsterAction(
     shouldSkip: false,
     hitCount: 1,
     shouldSummon: false,
+    bigBallAbility: null as MonsterAIResult["bigBallAbility"],
   };
 
   switch (behavior) {
@@ -74,8 +82,15 @@ export function chooseMonsterAction(
     case "leaky_abstraction":
       return { ...base };
 
-    case "boss_big_ball":
-      return { ...base };
+    case "boss_big_ball": {
+      const phase = combatState.turn % 5;
+      if (phase === 0)
+        return { ...base, hitCount: 3, bigBallAbility: "multi_hit" };
+      if (phase === 1) return { ...base, bigBallAbility: "steal_heal" };
+      if (phase === 2) return { ...base, bigBallAbility: "self_heal" };
+      if (phase === 3) return { ...base, bigBallAbility: "heavy_hit" };
+      return { ...base, bigBallAbility: "normal" };
+    }
 
     case "data_clump":
       return { ...base };
@@ -123,6 +138,9 @@ export function getMonsterAttackMultiplier(
       return 1.4 * weakenMultiplier;
     case "boss_god_class":
       // Enrage phase: 1.5× damage
+      return 1.0 * weakenMultiplier;
+    case "boss_big_ball":
+      // heavy_hit phase handled in processEnemyTurn via bigBallAbility
       return 1.0 * weakenMultiplier;
     default:
       return 1.0 * weakenMultiplier;

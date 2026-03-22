@@ -201,6 +201,7 @@ function handlePendingAction(
     gameState.player.stats,
     loop.rng,
     gameState.demoMode ?? false,
+    gameState.companionCombats ?? 0,
   );
   onActionConsumed();
   loop.lastProcessedTurnIndex = -1;
@@ -224,6 +225,9 @@ function handleAnimationComplete(
   dispatch: (action: GameAction) => void,
 ): void {
   if (loop.outcome === "victory") {
+    if ((gameState.companionCombats ?? 0) > 0) {
+      dispatch({ type: "DECREMENT_COMPANION" });
+    }
     dispatch({
       type: "COMBAT_END_VICTORY",
       unlockedSkills: loop.pendingUnlockedSkills,
@@ -477,6 +481,29 @@ function applyEvents(
           elapsed: 0,
         });
         AudioSystem.play("item_used");
+        break;
+      case "companion_attack": {
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "hit_reaction_enemy",
+          targetIndex: event.targetIndex,
+          elapsed: 0,
+        });
+        const cPos = positions[event.targetIndex];
+        if (cPos) {
+          loop.damageNumbers = [
+            ...loop.damageNumbers,
+            createDamageNumber(event.damage, cPos.x + 16, cPos.y, false, false),
+          ];
+        }
+        AudioSystem.play("player_hit");
+        break;
+      }
+      case "boss_absorb_attack":
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "screen_flash_white",
+          elapsed: 0,
+        });
+        AudioSystem.play("enemy_hit");
         break;
     }
   }

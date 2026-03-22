@@ -11,6 +11,9 @@ import {
   coffeeMachine,
   npcMarker,
   shopCounter,
+  debtCollector,
+  pairProgrammer,
+  legacyDocs,
 } from "./tileObjects";
 
 export { floor1A, floor1B, wall1, voidTile } from "./tileFloor";
@@ -24,6 +27,9 @@ export {
   coffeeMachine,
   npcMarker,
   shopCounter,
+  debtCollector,
+  pairProgrammer,
+  legacyDocs,
 } from "./tileObjects";
 
 // Map tile type to sprite frame(s)
@@ -42,4 +48,7 @@ export const tileSprites: Record<number, SpriteFrame[]> = {
   [TileType.CoffeeMachine]: [coffeeMachine],
   [TileType.NpcMarker]: [npcMarker],
   [TileType.BossDoor]: [bossDoor],
+  [TileType.DebtCollector]: [debtCollector],
+  [TileType.PairProgrammer]: [pairProgrammer],
+  [TileType.LegacyDocs]: [legacyDocs],
 };

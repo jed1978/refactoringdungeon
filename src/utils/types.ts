@@ -32,6 +32,9 @@ export enum TileType {
   NpcMarker = 12,
   Fog = 13,
   BossDoor = 14,
+  DebtCollector = 15,
+  PairProgrammer = 16,
+  LegacyDocs = 17,
 }
 
 // Map types
@@ -244,6 +247,8 @@ export type GameState = {
     readonly tutorialCombat: boolean;
   };
   readonly demoMode: boolean;
+  readonly skipEncounters: number;
+  readonly companionCombats: number;
 };
 
 // Rendering

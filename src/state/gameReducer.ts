@@ -95,7 +95,12 @@ export type GameAction =
   | { readonly type: "INCREMENT_KILLS" }
   | { readonly type: "INCREMENT_ITEMS_USED" }
   | { readonly type: "INCREMENT_SKILL_USE"; readonly skillId: string }
-  | { readonly type: "SET_FLOOR_CLEARED"; readonly floor: number };
+  | { readonly type: "SET_FLOOR_CLEARED"; readonly floor: number }
+  | { readonly type: "SKIP_ENCOUNTERS"; readonly count: number }
+  | { readonly type: "DECREMENT_SKIP" }
+  | { readonly type: "SET_COMPANION"; readonly combats: number }
+  | { readonly type: "DECREMENT_COMPANION" }
+  | { readonly type: "REVEAL_MAP" };
 
 export type GameStateWithPrompt = GameState & {
   readonly interactionPrompt: string | null;
@@ -117,6 +122,8 @@ export function gameReducer(
         runStats: { ...INITIAL_RUN_STATS, startTime: Date.now() },
         flags: { tutorialMove: false, tutorialCombat: false },
         demoMode: false,
+        skipEncounters: 0,
+        companionCombats: 0,
       };
 
     case "LOAD_SAVE":
@@ -451,6 +458,8 @@ export function gameReducer(
         runStats: { ...INITIAL_RUN_STATS, startTime: Date.now() },
         flags: { tutorialMove: true, tutorialCombat: true },
         demoMode: true,
+        skipEncounters: 0,
+        companionCombats: 0,
       };
 
     case "INCREMENT_KILLS":
@@ -492,6 +501,29 @@ export function gameReducer(
           floorsCleared: Math.max(state.runStats.floorsCleared, action.floor),
         },
       };
+
+    case "SKIP_ENCOUNTERS":
+      return { ...state, skipEncounters: action.count };
+
+    case "DECREMENT_SKIP":
+      return {
+        ...state,
+        skipEncounters: Math.max(0, state.skipEncounters - 1),
+      };
+
+    case "SET_COMPANION":
+      return { ...state, companionCombats: action.combats };
+
+    case "DECREMENT_COMPANION":
+      return {
+        ...state,
+        companionCombats: Math.max(0, state.companionCombats - 1),
+      };
+
+    case "REVEAL_MAP": {
+      const revealed = state.floor.explored.map((row) => row.map(() => true));
+      return { ...state, floor: { ...state.floor, explored: revealed } };
+    }
 
     default:
       return state;

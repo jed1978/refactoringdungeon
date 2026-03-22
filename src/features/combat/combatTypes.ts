@@ -56,7 +56,13 @@ export type CombatEvent =
       readonly kind: "item_used";
       readonly itemId: string;
       readonly value: number;
-    };
+    }
+  | {
+      readonly kind: "companion_attack";
+      readonly damage: number;
+      readonly targetIndex: number;
+    }
+  | { readonly kind: "boss_absorb_attack"; readonly abilityName: string };
 
 export type CombatResult = {
   readonly state: CombatState;

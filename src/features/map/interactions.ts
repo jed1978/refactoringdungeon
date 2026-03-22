@@ -91,6 +91,9 @@ export function checkFacingTile(
     case TileType.Shrine:
     case TileType.Bookshelf:
     case TileType.CoffeeMachine:
+    case TileType.DebtCollector:
+    case TileType.PairProgrammer:
+    case TileType.LegacyDocs:
       return { kind: "event", tileType: tile, position: facingPos };
     case TileType.BossDoor:
       return { kind: "boss_door", position: facingPos };

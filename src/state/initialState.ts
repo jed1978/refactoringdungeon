@@ -106,4 +106,6 @@ export const INITIAL_GAME_STATE: GameState = {
   runStats: INITIAL_RUN_STATS,
   flags: { tutorialMove: false, tutorialCombat: false },
   demoMode: false,
+  skipEncounters: 0,
+  companionCombats: 0,
 };

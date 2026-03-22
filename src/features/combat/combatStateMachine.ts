@@ -58,6 +58,7 @@ export function processPlayerAction(
   playerStats: PlayerStats,
   rng: () => number,
   isDemoMode = false,
+  companionCombats = 0,
 ): CombatResult {
   const events: CombatEvent[] = [];
   const log: string[] = [];
@@ -425,6 +426,34 @@ export function processPlayerAction(
     }
   }
 
+  // Companion attack — fires after player action (if companion active and enemies remain)
+  if (companionCombats > 0 && action.type !== "flee") {
+    const companionTargetIdx = enemies.findIndex((e) => e.currentHp > 0);
+    if (companionTargetIdx >= 0) {
+      const companionDmg = Math.max(1, Math.floor(playerStats.atk * 0.5));
+      enemies = enemies.map((e, i) =>
+        i === companionTargetIdx
+          ? { ...e, currentHp: Math.max(0, e.currentHp - companionDmg) }
+          : e,
+      );
+      events.push({
+        kind: "companion_attack",
+        damage: companionDmg,
+        targetIndex: companionTargetIdx,
+      });
+      log.push(STRINGS.companionAttack.replace("{0}", String(companionDmg)));
+      if (enemies[companionTargetIdx]!.currentHp <= 0) {
+        events.push({ kind: "monster_died", index: companionTargetIdx });
+        log.push(
+          STRINGS.monsterDefeated
+            .replace("{0}", enemies[companionTargetIdx]!.def.name)
+            .replace("{1}", String(enemies[companionTargetIdx]!.def.exp))
+            .replace("{2}", String(enemies[companionTargetIdx]!.def.gold)),
+        );
+      }
+    }
+  }
+
   // Check victory
   const aliveEnemies = enemies.filter((e) => e.currentHp > 0);
   if (aliveEnemies.length === 0 && action.type !== "flee") {
@@ -632,6 +661,48 @@ export function processEnemyTurn(
     enemies = [...enemies, clone];
   }
 
+  // boss_big_ball: special ability processing
+  if (monster.def.behavior === "boss_big_ball" && aiResult.bigBallAbility) {
+    const ability = aiResult.bigBallAbility;
+    if (ability === "self_heal" || ability === "steal_heal") {
+      const healAmt = Math.floor(monster.def.hp * 0.1);
+      enemies = enemies.map((e, i) =>
+        i === enemyIndex
+          ? { ...e, currentHp: Math.min(e.def.hp, e.currentHp + healAmt) }
+          : e,
+      );
+      events.push({
+        kind: "boss_absorb_attack",
+        abilityName: STRINGS.absorbAbilityHeal,
+      });
+      log.push(STRINGS.bossAbsorbHeal.replace("{0}", String(healAmt)));
+    }
+    if (ability === "steal_heal") {
+      // Remove one player ATK buff (simplified: no ATK buff system, so just log)
+      events.push({ kind: "buff_stolen", buffId: "atk_boost" });
+      log.push(STRINGS.bossAbsorbSteal);
+    }
+    if (ability === "multi_hit") {
+      events.push({
+        kind: "boss_absorb_attack",
+        abilityName: STRINGS.absorbAbilityMultiHit,
+      });
+      log.push(
+        STRINGS.bossAbsorbAttack.replace("{0}", STRINGS.absorbAbilityMultiHit),
+      );
+    }
+    if (ability === "heavy_hit") {
+      events.push({
+        kind: "boss_absorb_attack",
+        abilityName: STRINGS.absorbAbilityHeavyHit,
+      });
+      log.push(
+        STRINGS.bossAbsorbAttack.replace("{0}", STRINGS.absorbAbilityHeavyHit),
+      );
+    }
+    newState = { ...newState, enemies };
+  }
+
   // Check player dodge
   if (state.playerDodgeTurns > 0) {
     newState = { ...newState, playerDodgeTurns: 0 };
@@ -657,26 +728,42 @@ export function processEnemyTurn(
   const isEnraged =
     currentMonster.def.behavior === "boss_god_class" && newState.bossPhase >= 3;
   const totalAttacks = isEnraged ? 2 : hitCount;
+  const heavyHitMultiplier =
+    currentMonster.def.behavior === "boss_big_ball" &&
+    aiResult.bigBallAbility === "heavy_hit"
+      ? 1.5
+      : 1.0;
 
-  if (hitCount > 1) {
-    log.push(
-      STRINGS.shotgunSurgery
-        .replace("{0}", monster.def.name)
-        .replace("{1}", String(hitCount)),
-    );
+  // boss_big_ball self_heal and steal_heal turns: no player damage
+  const bigBallHealOnly =
+    currentMonster.def.behavior === "boss_big_ball" &&
+    (aiResult.bigBallAbility === "self_heal" ||
+      aiResult.bigBallAbility === "steal_heal");
+
+  if (!bigBallHealOnly) {
+    if (hitCount > 1) {
+      log.push(
+        STRINGS.shotgunSurgery
+          .replace("{0}", monster.def.name)
+          .replace("{1}", String(hitCount)),
+      );
+    }
+    log.push(STRINGS.enemyAttacks.replace("{0}", monster.def.name));
   }
-  log.push(STRINGS.enemyAttacks.replace("{0}", monster.def.name));
 
   let totalDmg = 0;
-  for (let a = 0; a < totalAttacks; a++) {
-    const hit = resolveMonsterAttack(currentMonster, playerStats, rng);
-    totalDmg += hit.damage;
-    events.push({
-      kind: "damage_received",
-      damage: hit.damage,
-      isCrit: hit.isCrit,
-    });
-    log.push(formatEnemyDamageLog(hit.damage, hit.isCrit));
+  if (!bigBallHealOnly) {
+    for (let a = 0; a < totalAttacks; a++) {
+      const hit = resolveMonsterAttack(currentMonster, playerStats, rng);
+      const finalDmg = Math.max(1, Math.round(hit.damage * heavyHitMultiplier));
+      totalDmg += finalDmg;
+      events.push({
+        kind: "damage_received",
+        damage: finalDmg,
+        isCrit: hit.isCrit,
+      });
+      log.push(formatEnemyDamageLog(finalDmg, hit.isCrit));
+    }
   }
 
   const rawNewHp = Math.max(0, playerStats.hp - totalDmg);

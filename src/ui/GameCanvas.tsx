@@ -471,11 +471,34 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
 
               switch (interaction.kind) {
                 case "monster":
-                  dispatch({
-                    type: "TRIGGER_COMBAT",
-                    monsters: [interaction.monster],
-                    floorMonsterIndex: interaction.monsterIndex,
-                  });
+                  if (gs.skipEncounters > 0) {
+                    dispatch({ type: "DECREMENT_SKIP" });
+                    dispatch({
+                      type: "DEFEAT_MONSTER",
+                      monsterIndex: interaction.monsterIndex,
+                    });
+                    dispatch({
+                      type: "SET_INTERACTION_PROMPT",
+                      prompt: STRINGS.encounterSkipped.replace(
+                        "{0}",
+                        String(gs.skipEncounters - 1),
+                      ),
+                    });
+                    setTimeout(
+                      () =>
+                        dispatch({
+                          type: "SET_INTERACTION_PROMPT",
+                          prompt: null,
+                        }),
+                      1800,
+                    );
+                  } else {
+                    dispatch({
+                      type: "TRIGGER_COMBAT",
+                      monsters: [interaction.monster],
+                      floorMonsterIndex: interaction.monsterIndex,
+                    });
+                  }
                   break;
                 case "stairs":
                   dispatch({
@@ -495,7 +518,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
               if (facing.kind !== "none" && interaction.kind === "none") {
                 dispatch({
                   type: "SET_INTERACTION_PROMPT",
-                  prompt: getFacingPrompt(facing.kind),
+                  prompt: getFacingPrompt(facing),
                 });
               } else if (
                 interaction.kind === "none" &&
@@ -648,13 +671,21 @@ function tileTypeToEventId(tileType: TileType): string {
       return "bookshelf";
     case TileType.CoffeeMachine:
       return "coffee";
+    case TileType.DebtCollector:
+      return "debt_collector";
+    case TileType.PairProgrammer:
+      return "pair_programmer";
+    case TileType.LegacyDocs:
+      return "legacy_docs";
     default:
       return "shrine";
   }
 }
 
-function getFacingPrompt(kind: string): string {
-  switch (kind) {
+function getFacingPrompt(
+  facing: import("../features/map/interactions").InteractionResult,
+): string {
+  switch (facing.kind) {
     case "chest":
       return STRINGS.chestPrompt;
     case "door_locked":
@@ -663,6 +694,23 @@ function getFacingPrompt(kind: string): string {
       return STRINGS.bossDoorOpen;
     case "shop":
       return STRINGS.shopPrompt;
+    case "event":
+      switch (facing.tileType) {
+        case TileType.Shrine:
+          return STRINGS.shrinePrompt;
+        case TileType.Bookshelf:
+          return STRINGS.bookshelfPrompt;
+        case TileType.CoffeeMachine:
+          return STRINGS.coffeePrompt;
+        case TileType.DebtCollector:
+          return STRINGS.debtCollectorPrompt;
+        case TileType.PairProgrammer:
+          return STRINGS.pairProgrammerPrompt;
+        case TileType.LegacyDocs:
+          return STRINGS.legacyDocsPrompt;
+        default:
+          return "按 Space 互動";
+      }
     default:
       return "";
   }
