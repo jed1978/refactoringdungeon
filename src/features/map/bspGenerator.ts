@@ -215,7 +215,8 @@ function placeDoors(
     });
 
     if (isAtRoomEdge && grid[pos.y]?.[pos.x] === TileType.Floor) {
-      grid[pos.y][pos.x] = TileType.DoorLocked;
+      // DoorLocked removed — no key system exists, keep as floor
+      void pos;
     }
   }
 }
