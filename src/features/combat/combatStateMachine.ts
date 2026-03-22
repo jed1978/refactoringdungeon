@@ -227,6 +227,30 @@ export function processPlayerAction(
           revealedEnemies: [...state.revealedEnemies, result.targetIndex],
         };
       } else if (result.kind === "stun") {
+        // Apply stun buff BEFORE damage — always fires regardless of whether enemy survives
+        const stunBuff: Buff = {
+          id: "stunned",
+          name: "眩暈",
+          turnsRemaining: 1,
+          effect: "stunned",
+        };
+        enemies = enemies.map((e, i) =>
+          i === result.targetIndex
+            ? { ...e, buffs: [...e.buffs, stunBuff] }
+            : e,
+        );
+        events.push({
+          kind: "buff_applied",
+          buffId: "stunned",
+          turns: 1,
+          target: result.targetIndex,
+        });
+        log.push(
+          STRINGS.skillStun.replace(
+            "{0}",
+            enemies[result.targetIndex]?.def.name ?? "",
+          ),
+        );
         events.push({
           kind: "damage_dealt",
           targetIndex: result.targetIndex,
@@ -246,33 +270,6 @@ export function processPlayerAction(
           log,
           state,
         );
-        // Apply stun buff to the target monster (if still alive)
-        const targetAfterDamage = enemies[result.targetIndex];
-        if (targetAfterDamage && targetAfterDamage.currentHp > 0) {
-          const stunBuff: Buff = {
-            id: "stunned",
-            name: "眩暈",
-            turnsRemaining: 1,
-            effect: "stunned",
-          };
-          enemies = enemies.map((e, i) =>
-            i === result.targetIndex
-              ? { ...e, buffs: [...e.buffs, stunBuff] }
-              : e,
-          );
-          events.push({
-            kind: "buff_applied",
-            buffId: "stunned",
-            turns: 1,
-            target: result.targetIndex,
-          });
-          log.push(
-            STRINGS.skillStun.replace(
-              "{0}",
-              enemies[result.targetIndex]?.def.name ?? "",
-            ),
-          );
-        }
       } else if (result.kind === "buff_self") {
         // dodge_next: track on combat state
         newState = { ...newState, playerDodgeTurns: 1 };

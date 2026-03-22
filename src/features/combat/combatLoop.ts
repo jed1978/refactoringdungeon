@@ -331,7 +331,16 @@ function applyEvents(
         AudioSystem.play("monster_die");
         break;
       case "buff_applied":
-        if (event.target === "player") {
+        if (event.buffId === "dodge_next" || event.buffId === "dodge_active") {
+          // Dodge: white flash instead of hit reaction to distinguish from taking damage
+          loop.animState = queueAnimation(loop.animState, {
+            kind: "screen_flash_white",
+            elapsed: 0,
+          });
+          if (event.buffId === "dodge_active") {
+            AudioSystem.play("dodge");
+          }
+        } else if (event.target === "player") {
           loop.animState = queueAnimation(loop.animState, {
             kind: "hit_reaction_player",
             elapsed: 0,
@@ -339,7 +348,7 @@ function applyEvents(
         } else {
           loop.animState = queueAnimation(loop.animState, {
             kind: "hit_reaction_enemy",
-            targetIndex: event.target,
+            targetIndex: event.target as number,
             elapsed: 0,
           });
         }

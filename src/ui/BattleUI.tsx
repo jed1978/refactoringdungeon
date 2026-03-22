@@ -308,6 +308,7 @@ function BattleUIComponent({ onAction }: Props) {
           <SkillMenu
             skills={skills}
             mp={stats.mp}
+            playerAtk={stats.atk}
             onSelect={handleSkillSelect}
             onClose={() => setShowSkills(false)}
           />

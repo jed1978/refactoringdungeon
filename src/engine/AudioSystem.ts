@@ -124,6 +124,9 @@ function playSfx(sfx: string): void {
       }, 400);
       break;
     }
+    case "dodge":
+      playFreqSweep(200, 1000, "sine", 150, 0.08);
+      break;
     case "flee":
       playFreqSweep(800, 100, "sawtooth", 200, 0.1);
       break;

@@ -3,11 +3,12 @@ import { SKILLS } from '../data/skills';
 type Props = {
   skills: readonly string[];
   mp: number;
+  playerAtk: number;
   onSelect: (skillId: string) => void;
   onClose: () => void;
 };
 
-export function SkillMenu({ skills, mp, onSelect, onClose }: Props) {
+export function SkillMenu({ skills, mp, playerAtk, onSelect, onClose }: Props) {
   const available = SKILLS.filter(s => skills.includes(s.id));
 
   return (
@@ -34,31 +35,51 @@ export function SkillMenu({ skills, mp, onSelect, onClose }: Props) {
 
       {available.map(skill => {
         const canAfford = mp >= skill.mpCost;
+        const estDmg = skill.multiplier > 0 ? Math.round(playerAtk * skill.multiplier) : null;
         return (
           <button
             key={skill.id}
             onClick={() => canAfford && onSelect(skill.id)}
             disabled={!canAfford}
             className={[
-              'w-full text-left rounded mb-1 flex justify-between items-center',
+              'w-full text-left rounded mb-1',
               canAfford
                 ? 'hover:bg-gray-700 text-gray-200'
                 : 'text-gray-600 cursor-not-allowed',
             ].join(' ')}
             style={{ padding: '4px 6px' }}
           >
-            <span style={{ fontSize: '18px', fontFamily: "'Noto Sans TC', sans-serif" }}>
-              {skill.name}
-            </span>
-            <span
+            {/* Row 1: skill name + MP cost */}
+            <div className="flex justify-between items-center">
+              <span style={{ fontSize: '18px', fontFamily: "'Noto Sans TC', sans-serif" }}>
+                {skill.name}
+              </span>
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontFamily: "'Press Start 2P', monospace",
+                  color: canAfford ? '#3b82f6' : '#374151',
+                }}
+              >
+                MP {skill.mpCost}
+              </span>
+            </div>
+            {/* Row 2: damage estimate + description */}
+            <div
               style={{
-                fontSize: '15px',
-                fontFamily: "'Press Start 2P', monospace",
-                color: canAfford ? '#3b82f6' : '#374151',
+                fontSize: '14px',
+                fontFamily: "'Noto Sans TC', sans-serif",
+                color: canAfford ? '#9ca3af' : '#4b5563',
+                marginTop: '1px',
               }}
             >
-              MP {skill.mpCost}
-            </span>
+              {estDmg !== null && (
+                <span style={{ color: canAfford ? '#fbbf24' : '#4b5563', marginRight: '6px' }}>
+                  ~{estDmg} DMG ·
+                </span>
+              )}
+              {skill.description}
+            </div>
           </button>
         );
       })}
