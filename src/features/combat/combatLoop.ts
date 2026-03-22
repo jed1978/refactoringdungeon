@@ -190,8 +190,12 @@ function handlePendingAction(
   loop.lastProcessedTurnIndex = -1;
   loop.localPhase = result.state.phase;
   applyEvents(loop, result.events, combat);
+  if (pendingAction.type === "skill") {
+    dispatch({ type: "INCREMENT_SKILL_USE", skillId: pendingAction.skillId });
+  }
   if (pendingAction.type === "item") {
     dispatch({ type: "CONSUME_ITEM", itemId: pendingAction.itemId });
+    dispatch({ type: "INCREMENT_ITEMS_USED" });
   }
   if (result.newPlayerStats) {
     dispatch({

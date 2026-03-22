@@ -216,6 +216,7 @@ export function gameReducer(
               ),
             ]
           : state.player.skills;
+      const killCount = state.gameMode.combat.enemies.length;
       return {
         ...state,
         gameMode: { mode: "exploring" },
@@ -227,6 +228,10 @@ export function gameReducer(
           ...state.player,
           stats: action.newPlayerStats,
           skills: newSkills,
+        },
+        runStats: {
+          ...state.runStats,
+          monstersKilled: state.runStats.monstersKilled + killCount,
         },
         interactionPrompt: null,
       };

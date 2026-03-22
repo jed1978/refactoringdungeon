@@ -337,6 +337,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
                     }
                   : { x: 5, y: 5 };
                 dispatch({ type: "CHANGE_FLOOR", floor: newFloor, startPos });
+                dispatch({ type: "SET_FLOOR_CLEARED", floor: gs.currentFloor });
                 s.initialized = false;
               } else {
                 dispatch({
