@@ -2,6 +2,7 @@ import { useGameState, useGameDispatch } from "../state/GameContext";
 import { STRINGS } from "../data/strings";
 import { ITEMS } from "../data/items";
 import { EQUIPMENT } from "../data/equipment";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type Props = { readonly onClose: () => void };
 
@@ -40,7 +41,7 @@ export function ShopScreen({ onClose }: Props) {
           <span
             className="text-yellow-400"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               fontSize: "18px",
             }}
           >
@@ -50,7 +51,7 @@ export function ShopScreen({ onClose }: Props) {
             <span
               className="text-yellow-300"
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: FONT_PIXEL,
                 fontSize: "18px",
               }}
             >
@@ -60,7 +61,7 @@ export function ShopScreen({ onClose }: Props) {
               onClick={onClose}
               className="text-gray-400 hover:text-white"
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: FONT_PIXEL,
                 fontSize: "18px",
               }}
               title="離開商店"
@@ -76,7 +77,7 @@ export function ShopScreen({ onClose }: Props) {
           <div
             className="text-yellow-400 mb-2"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               fontSize: "14px",
             }}
           >
@@ -92,7 +93,7 @@ export function ShopScreen({ onClose }: Props) {
                     <div
                       className="text-white"
                       style={{
-                        fontFamily: "'Noto Sans TC', sans-serif",
+                        fontFamily: FONT_UI,
                         fontSize: "18px",
                       }}
                     >
@@ -106,7 +107,7 @@ export function ShopScreen({ onClose }: Props) {
                     <div
                       className="text-gray-400"
                       style={{
-                        fontFamily: "'Noto Sans TC', sans-serif",
+                        fontFamily: FONT_UI,
                         fontSize: "14px",
                       }}
                     >
@@ -120,7 +121,7 @@ export function ShopScreen({ onClose }: Props) {
                         : "border-gray-600 text-gray-600 cursor-not-allowed"
                     }`}
                     style={{
-                      fontFamily: "'Noto Sans TC', sans-serif",
+                      fontFamily: FONT_UI,
                       fontSize: "14px",
                     }}
                     disabled={!canAfford}
@@ -138,7 +139,7 @@ export function ShopScreen({ onClose }: Props) {
             <div
               className="text-yellow-400 mb-2"
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: FONT_PIXEL,
                 fontSize: "14px",
               }}
             >
@@ -153,7 +154,7 @@ export function ShopScreen({ onClose }: Props) {
                     <div
                       className="text-white"
                       style={{
-                        fontFamily: "'Noto Sans TC', sans-serif",
+                        fontFamily: FONT_UI,
                         fontSize: "18px",
                       }}
                     >
@@ -167,7 +168,7 @@ export function ShopScreen({ onClose }: Props) {
                     <div
                       className="text-gray-400"
                       style={{
-                        fontFamily: "'Noto Sans TC', sans-serif",
+                        fontFamily: FONT_UI,
                         fontSize: "14px",
                       }}
                     >
@@ -182,7 +183,7 @@ export function ShopScreen({ onClose }: Props) {
                           : "border-gray-600 text-gray-600 cursor-not-allowed"
                       }`}
                       style={{
-                        fontFamily: "'Noto Sans TC', sans-serif",
+                        fontFamily: FONT_UI,
                         fontSize: "14px",
                       }}
                       disabled={!canAfford}
@@ -201,7 +202,7 @@ export function ShopScreen({ onClose }: Props) {
             <div
               className="text-yellow-400 mb-2"
               style={{
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: FONT_PIXEL,
                 fontSize: "14px",
               }}
             >
@@ -218,7 +219,7 @@ export function ShopScreen({ onClose }: Props) {
                   <span
                     className="text-white"
                     style={{
-                      fontFamily: "'Noto Sans TC', sans-serif",
+                      fontFamily: FONT_UI,
                       fontSize: "18px",
                     }}
                   >
@@ -227,7 +228,7 @@ export function ShopScreen({ onClose }: Props) {
                   <button
                     className="border border-red-400 text-red-400 hover:bg-red-400/20 px-2 py-0.5"
                     style={{
-                      fontFamily: "'Noto Sans TC', sans-serif",
+                      fontFamily: FONT_UI,
                       fontSize: "14px",
                     }}
                     onClick={() =>
@@ -247,7 +248,7 @@ export function ShopScreen({ onClose }: Props) {
               <div
                 className="text-gray-500"
                 style={{
-                  fontFamily: "'Noto Sans TC', sans-serif",
+                  fontFamily: FONT_UI,
                   fontSize: "18px",
                 }}
               >
@@ -263,7 +264,7 @@ export function ShopScreen({ onClose }: Props) {
           <button
             className="w-full text-center text-gray-400 hover:text-white border border-gray-600 py-2"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               fontSize: "14px",
             }}
             onClick={onClose}

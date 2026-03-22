@@ -24,18 +24,3 @@ export function getMonsterPool(floorLevel: number): readonly MonsterDef[] {
       return FLOOR4_MONSTERS;
   }
 }
-
-export function getBossForFloor(floorLevel: number): MonsterDef {
-  switch (floorLevel) {
-    case 1:
-      return FLOOR1_BOSS;
-    case 2:
-      return FLOOR2_BOSS;
-    case 3:
-      return FLOOR3_BOSS;
-    case 4:
-      return FLOOR4_BOSS;
-    default:
-      return FLOOR1_BOSS;
-  }
-}

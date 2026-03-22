@@ -18,70 +18,12 @@ import { chooseMonsterAction } from "./monsterAI";
 import { SKILLS_MAP } from "../../data/skills";
 import { ITEMS_MAP } from "../../data/items";
 import { STRINGS } from "../../data/strings";
-
-export type CombatEvent =
-  | {
-      readonly kind: "damage_dealt";
-      readonly targetIndex: number;
-      readonly damage: number;
-      readonly isCrit: boolean;
-    }
-  | {
-      readonly kind: "damage_received";
-      readonly damage: number;
-      readonly isCrit: boolean;
-    }
-  | { readonly kind: "monster_died"; readonly index: number }
-  | {
-      readonly kind: "monster_split";
-      readonly sourceIndex: number;
-      readonly clone: MonsterState;
-    }
-  | {
-      readonly kind: "skill_used";
-      readonly skillId: string;
-      readonly mpCost: number;
-    }
-  | { readonly kind: "reveal"; readonly index: number }
-  | { readonly kind: "fled" }
-  | { readonly kind: "flee_failed"; readonly damage: number }
-  | {
-      readonly kind: "buff_applied";
-      readonly buffId: string;
-      readonly turns: number;
-      readonly target: "player" | number;
-    }
-  | {
-      readonly kind: "combat_won";
-      readonly expGained: number;
-      readonly goldGained: number;
-    }
-  | { readonly kind: "combat_lost" }
-  | {
-      readonly kind: "level_up";
-      readonly newLevel: number;
-      readonly unlockedSkills: readonly string[];
-    }
-  | { readonly kind: "damage_reflected"; readonly damage: number }
-  | {
-      readonly kind: "monster_summon";
-      readonly newMonster: MonsterState;
-    }
-  | { readonly kind: "buff_stolen"; readonly buffId: string }
-  | { readonly kind: "boss_phase_shift"; readonly newPhase: number }
-  | { readonly kind: "boss_enrage" }
-  | {
-      readonly kind: "item_used";
-      readonly itemId: string;
-      readonly value: number;
-    };
-
-export type CombatResult = {
-  readonly state: CombatState;
-  readonly events: readonly CombatEvent[];
-  readonly newPlayerStats?: PlayerStats;
-  readonly logEntries: readonly string[];
-};
+import {
+  formatPlayerDamageLog,
+  formatEnemyDamageLog,
+  clampHpDemoMode,
+} from "./combatHelpers";
+export type { CombatEvent, CombatResult } from "./combatTypes";
 
 export function initCombat(
   enemies: readonly MonsterState[],
@@ -145,11 +87,7 @@ export function processPlayerAction(
           enemies[targetIdx]?.def.name ?? "",
         ),
       );
-      log.push(
-        result.isCrit
-          ? STRINGS.playerDealsCrit.replace("{0}", String(result.damage))
-          : STRINGS.playerDealsNormal.replace("{0}", String(result.damage)),
-      );
+      log.push(formatPlayerDamageLog(result.damage, result.isCrit));
 
       enemies = applyDamageToEnemy(
         enemies,
@@ -197,11 +135,7 @@ export function processPlayerAction(
           damage: result.damage,
           isCrit: result.isCrit,
         });
-        log.push(
-          result.isCrit
-            ? STRINGS.playerDealsCrit.replace("{0}", String(result.damage))
-            : STRINGS.playerDealsNormal.replace("{0}", String(result.damage)),
-        );
+        log.push(formatPlayerDamageLog(result.damage, result.isCrit));
         enemies = applyDamageToEnemy(
           enemies,
           result.targetIndex,
@@ -257,11 +191,7 @@ export function processPlayerAction(
           damage: result.damage,
           isCrit: result.isCrit,
         });
-        log.push(
-          result.isCrit
-            ? STRINGS.playerDealsCrit.replace("{0}", String(result.damage))
-            : STRINGS.playerDealsNormal.replace("{0}", String(result.damage)),
-        );
+        log.push(formatPlayerDamageLog(result.damage, result.isCrit));
         enemies = applyDamageToEnemy(
           enemies,
           result.targetIndex,
@@ -289,11 +219,7 @@ export function processPlayerAction(
             damage: hit.damage,
             isCrit: hit.isCrit,
           });
-          log.push(
-            hit.isCrit
-              ? STRINGS.playerDealsCrit.replace("{0}", String(hit.damage))
-              : STRINGS.playerDealsNormal.replace("{0}", String(hit.damage)),
-          );
+          log.push(formatPlayerDamageLog(hit.damage, hit.isCrit));
           enemies = applyDamageToEnemy(
             enemies,
             hit.targetIndex,
@@ -310,11 +236,7 @@ export function processPlayerAction(
           damage: result.damage,
           isCrit: result.isCrit,
         });
-        log.push(
-          result.isCrit
-            ? STRINGS.playerDealsCrit.replace("{0}", String(result.damage))
-            : STRINGS.playerDealsNormal.replace("{0}", String(result.damage)),
-        );
+        log.push(formatPlayerDamageLog(result.damage, result.isCrit));
         enemies = applyDamageToEnemy(
           enemies,
           result.targetIndex,
@@ -359,11 +281,7 @@ export function processPlayerAction(
             damage: hit.damage,
             isCrit: hit.isCrit,
           });
-          log.push(
-            hit.isCrit
-              ? STRINGS.playerDealsCrit.replace("{0}", String(hit.damage))
-              : STRINGS.playerDealsNormal.replace("{0}", String(hit.damage)),
-          );
+          log.push(formatPlayerDamageLog(hit.damage, hit.isCrit));
           enemies = applyDamageToEnemy(
             enemies,
             hit.targetIndex,
@@ -424,13 +342,9 @@ export function processPlayerAction(
           const hit = resolveMonsterAttack(firstEnemy, playerStats, rng);
           events.push({ kind: "flee_failed", damage: hit.damage });
           log.push(STRINGS.fleeFail.replace("{0}", firstEnemy.def.name));
-          log.push(
-            hit.isCrit
-              ? STRINGS.enemyDealsCrit.replace("{0}", String(hit.damage))
-              : STRINGS.enemyDealsNormal.replace("{0}", String(hit.damage)),
-          );
+          log.push(formatEnemyDamageLog(hit.damage, hit.isCrit));
           const rawHp = Math.max(0, playerStats.hp - hit.damage);
-          const hp = isDemoMode && rawHp <= 0 ? 1 : rawHp;
+          const hp = clampHpDemoMode(rawHp, isDemoMode);
           newPlayerStats = { ...(newPlayerStats ?? playerStats), hp };
           if (hp <= 0) events.push({ kind: "combat_lost" });
         }
@@ -762,15 +676,11 @@ export function processEnemyTurn(
       damage: hit.damage,
       isCrit: hit.isCrit,
     });
-    log.push(
-      hit.isCrit
-        ? STRINGS.enemyDealsCrit.replace("{0}", String(hit.damage))
-        : STRINGS.enemyDealsNormal.replace("{0}", String(hit.damage)),
-    );
+    log.push(formatEnemyDamageLog(hit.damage, hit.isCrit));
   }
 
   const rawNewHp = Math.max(0, playerStats.hp - totalDmg);
-  const newHp = isDemoMode && rawNewHp <= 0 ? 1 : rawNewHp;
+  const newHp = clampHpDemoMode(rawNewHp, isDemoMode);
   newPlayerStats = { ...playerStats, hp: newHp };
   if (newHp <= 0) events.push({ kind: "combat_lost" });
 

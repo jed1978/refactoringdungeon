@@ -3,6 +3,7 @@ import { STRINGS } from "../data/strings";
 import { playerMapSprite } from "../sprites/player";
 import { drawSprite, getAnimationFrame } from "../engine/SpriteRenderer";
 import { hasSave, loadFromLocalStorage } from "../state/saveLoad";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type TitleScreenProps = {
   readonly onStart: () => void;
@@ -111,7 +112,7 @@ export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
   }, []);
 
   const buttonStyle = {
-    fontFamily: "'Press Start 2P', monospace",
+    fontFamily: FONT_PIXEL,
     fontSize: "12px",
     boxShadow: `
       inset -2px -2px 0 #111827,
@@ -125,13 +126,13 @@ export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
       <div className="flex flex-col items-center gap-3">
         <h1
           className="text-green-400 text-2xl tracking-widest"
-          style={{ fontFamily: "'Press Start 2P', monospace" }}
+          style={{ fontFamily: FONT_PIXEL }}
         >
           {STRINGS.title}
         </h1>
         <p
           className="text-gray-500 text-sm tracking-wider"
-          style={{ fontFamily: "'Press Start 2P', monospace" }}
+          style={{ fontFamily: FONT_PIXEL }}
         >
           {STRINGS.subtitle}
         </p>
@@ -168,7 +169,7 @@ export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
             onClick={onDemo}
             className="border border-purple-500 text-purple-400 hover:bg-purple-900/20 px-4 py-2"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               fontSize: "12px",
             }}
           >
@@ -179,7 +180,7 @@ export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
 
       <p
         className="text-gray-700 text-xs mt-8"
-        style={{ fontFamily: "'Noto Sans TC', sans-serif" }}
+        style={{ fontFamily: FONT_UI }}
       >
         WASD / 方向鍵移動 ｜ Space 互動
       </p>

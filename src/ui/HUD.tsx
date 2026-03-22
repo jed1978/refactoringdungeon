@@ -2,7 +2,8 @@ import React, { useCallback, useState } from "react";
 import { useGameState, useGameDispatch } from "../state/GameContext";
 import { FLOOR_THEMES } from "../utils/constants";
 import { AudioSystem } from "../engine/AudioSystem";
-import { MusicSystem } from "../engine/MusicSystem";
+import { setAllAudioMuted } from "../engine/audioControl";
+import { FONT_PIXEL } from "./styles";
 
 type HUDProps = {
   readonly onMenuClick?: () => void;
@@ -19,8 +20,7 @@ export const HUD = React.memo(function HUD({ onMenuClick }: HUDProps) {
 
   const toggleMute = useCallback(() => {
     const next = !AudioSystem.isMuted();
-    AudioSystem.setMuted(next);
-    MusicSystem.setMuted(next);
+    setAllAudioMuted(next);
     setLocalMuted(next);
     dispatch({ type: "TOGGLE_MUTE" });
   }, [dispatch]);
@@ -29,7 +29,7 @@ export const HUD = React.memo(function HUD({ onMenuClick }: HUDProps) {
     <div className="absolute top-0 left-0 right-0 z-10 bg-black/70 px-3 py-2 flex items-center justify-between">
       <span
         className="text-green-400 text-xs tracking-wider"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "24px" }}
+        style={{ fontFamily: FONT_PIXEL, fontSize: "24px" }}
       >
         {floorName}
       </span>
@@ -37,7 +37,7 @@ export const HUD = React.memo(function HUD({ onMenuClick }: HUDProps) {
         <span
           className="text-yellow-300 border border-yellow-400 px-2 py-0.5 rounded"
           style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: FONT_PIXEL,
             fontSize: "14px",
           }}
         >

@@ -1,7 +1,7 @@
-import type { MonsterState, PlayerStats, CombatState } from '../../utils/types';
-import { SKILLS_MAP } from '../../data/skills';
-import { calculateDamage } from './combatFormulas';
-import { getMonsterAttackMultiplier } from './monsterAI';
+import type { MonsterState, PlayerStats, CombatState } from "../../utils/types";
+import { SKILLS_MAP } from "../../data/skills";
+import { calculateDamage } from "./combatFormulas";
+import { getMonsterAttackMultiplier } from "./monsterAI";
 
 export type AttackResult = {
   readonly damage: number;
@@ -16,14 +16,29 @@ export type AoeHit = {
 };
 
 export type SkillResult =
-  | { readonly kind: 'damage'; readonly damage: number; readonly isCrit: boolean; readonly targetIndex: number }
-  | { readonly kind: 'reveal'; readonly targetIndex: number }
-  | { readonly kind: 'stun'; readonly damage: number; readonly isCrit: boolean; readonly targetIndex: number }
-  | { readonly kind: 'buff_self'; readonly buffId: string }
-  | { readonly kind: 'aoe'; readonly hits: readonly AoeHit[] }
-  | { readonly kind: 'weaken'; readonly damage: number; readonly isCrit: boolean; readonly targetIndex: number }
-  | { readonly kind: 'chain'; readonly hits: readonly AoeHit[] }
-  | { readonly kind: 'no_mp' };
+  | {
+      readonly kind: "damage";
+      readonly damage: number;
+      readonly isCrit: boolean;
+      readonly targetIndex: number;
+    }
+  | { readonly kind: "reveal"; readonly targetIndex: number }
+  | {
+      readonly kind: "stun";
+      readonly damage: number;
+      readonly isCrit: boolean;
+      readonly targetIndex: number;
+    }
+  | { readonly kind: "buff_self"; readonly buffId: string }
+  | { readonly kind: "aoe"; readonly hits: readonly AoeHit[] }
+  | {
+      readonly kind: "weaken";
+      readonly damage: number;
+      readonly isCrit: boolean;
+      readonly targetIndex: number;
+    }
+  | { readonly kind: "chain"; readonly hits: readonly AoeHit[] }
+  | { readonly kind: "no_mp" };
 
 export function resolvePlayerAttack(
   playerStats: PlayerStats,
@@ -46,72 +61,122 @@ export function resolveSkill(
   _state?: CombatState,
 ): SkillResult {
   const skill = SKILLS_MAP[skillId];
-  if (!skill) return { kind: 'no_mp' };
-  if (playerStats.mp < skill.mpCost) return { kind: 'no_mp' };
+  if (!skill) return { kind: "no_mp" };
+  if (playerStats.mp < skill.mpCost) return { kind: "no_mp" };
 
   switch (skill.effect) {
-    case 'reveal':
-      return { kind: 'reveal', targetIndex };
+    case "reveal":
+      return { kind: "reveal", targetIndex };
 
-    case 'damage':
-    case 'always_first': {
+    case "damage":
+    case "always_first": {
       const target = enemies[targetIndex];
-      if (!target) return { kind: 'no_mp' };
+      if (!target) return { kind: "no_mp" };
       let multiplier = skill.multiplier;
-      if (skillId === 'replace_magic_number' && target.def.id === 'magic_number') {
+      if (
+        skillId === "replace_magic_number" &&
+        target.def.id === "magic_number"
+      ) {
         multiplier = 2.0;
       }
-      const result = calculateDamage(playerStats.atk, target.def.def, multiplier, rng);
-      return { kind: 'damage', ...result, targetIndex };
+      const result = calculateDamage(
+        playerStats.atk,
+        target.def.def,
+        multiplier,
+        rng,
+      );
+      return { kind: "damage", ...result, targetIndex };
     }
 
-    case 'stun': {
+    case "stun": {
       const target = enemies[targetIndex];
-      if (!target) return { kind: 'no_mp' };
+      if (!target) return { kind: "no_mp" };
       let multiplier = skill.multiplier;
-      if (skillId === 'replace_magic_number' && target.def.id === 'magic_number') {
+      if (
+        skillId === "replace_magic_number" &&
+        target.def.id === "magic_number"
+      ) {
         multiplier = 2.0;
       }
-      const result = calculateDamage(playerStats.atk, target.def.def, multiplier, rng);
-      return { kind: 'stun', damage: result.damage, isCrit: result.isCrit, targetIndex };
+      const result = calculateDamage(
+        playerStats.atk,
+        target.def.def,
+        multiplier,
+        rng,
+      );
+      return {
+        kind: "stun",
+        damage: result.damage,
+        isCrit: result.isCrit,
+        targetIndex,
+      };
     }
 
-    case 'dodge_next':
-      return { kind: 'buff_self', buffId: 'dodge_next' };
+    case "dodge_next":
+      return { kind: "buff_self", buffId: "dodge_next" };
 
-    case 'aoe': {
+    case "aoe": {
       const hits: AoeHit[] = enemies
         .map((e, i) => ({ e, i }))
         .filter(({ e }) => e.currentHp > 0)
         .map(({ e, i }) => {
-          const result = calculateDamage(playerStats.atk, e.def.def, skill.multiplier, rng);
-          return { targetIndex: i, damage: result.damage, isCrit: result.isCrit };
+          const result = calculateDamage(
+            playerStats.atk,
+            e.def.def,
+            skill.multiplier,
+            rng,
+          );
+          return {
+            targetIndex: i,
+            damage: result.damage,
+            isCrit: result.isCrit,
+          };
         });
-      return { kind: 'aoe', hits };
+      return { kind: "aoe", hits };
     }
 
-    case 'weaken': {
+    case "weaken": {
       const target = enemies[targetIndex];
-      if (!target) return { kind: 'no_mp' };
-      const result = calculateDamage(playerStats.atk, target.def.def, skill.multiplier, rng);
-      return { kind: 'weaken', damage: result.damage, isCrit: result.isCrit, targetIndex };
+      if (!target) return { kind: "no_mp" };
+      const result = calculateDamage(
+        playerStats.atk,
+        target.def.def,
+        skill.multiplier,
+        rng,
+      );
+      return {
+        kind: "weaken",
+        damage: result.damage,
+        isCrit: result.isCrit,
+        targetIndex,
+      };
     }
 
-    case 'chain': {
+    case "chain": {
       const target = enemies[targetIndex];
-      if (!target) return { kind: 'no_mp' };
+      if (!target) return { kind: "no_mp" };
       const hits: AoeHit[] = Array.from({ length: 3 }, () => {
-        const result = calculateDamage(playerStats.atk, target.def.def, skill.multiplier, rng);
+        const result = calculateDamage(
+          playerStats.atk,
+          target.def.def,
+          skill.multiplier,
+          rng,
+        );
         return { targetIndex, damage: result.damage, isCrit: result.isCrit };
       });
-      return { kind: 'chain', hits };
+      return { kind: "chain", hits };
     }
 
     default: {
       const target = enemies[targetIndex];
-      if (!target) return { kind: 'no_mp' };
-      const result = calculateDamage(playerStats.atk, target.def.def, skill.multiplier, rng);
-      return { kind: 'damage', ...result, targetIndex };
+      if (!target) return { kind: "no_mp" };
+      const result = calculateDamage(
+        playerStats.atk,
+        target.def.def,
+        skill.multiplier,
+        rng,
+      );
+      return { kind: "damage", ...result, targetIndex };
     }
   }
 }
@@ -123,10 +188,4 @@ export function resolveMonsterAttack(
 ): { readonly damage: number; readonly isCrit: boolean } {
   const multiplier = getMonsterAttackMultiplier(monster, rng);
   return calculateDamage(monster.def.atk, playerStats.def, multiplier, rng);
-}
-
-export function resolveInlineTempOrder(
-  _combatState: CombatState,
-): boolean {
-  return true;
 }

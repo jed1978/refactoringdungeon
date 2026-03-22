@@ -14,23 +14,29 @@ export function createFlash(color: string, duration: number): ScreenFlash {
   return { color, duration, elapsed: 0 };
 }
 
-export function createShake(intensity: number, duration: number): ScreenShake {
+function createShake(intensity: number, duration: number): ScreenShake {
   return { intensity, duration, elapsed: 0 };
 }
 
-export function updateFlash(flash: ScreenFlash, dt: number): ScreenFlash | null {
+export function updateFlash(
+  flash: ScreenFlash,
+  dt: number,
+): ScreenFlash | null {
   const elapsed = flash.elapsed + dt;
   if (elapsed >= flash.duration) return null;
   return { ...flash, elapsed };
 }
 
-export function updateShake(shake: ScreenShake, dt: number): ScreenShake | null {
+export function updateShake(
+  shake: ScreenShake,
+  dt: number,
+): ScreenShake | null {
   const elapsed = shake.elapsed + dt;
   if (elapsed >= shake.duration) return null;
   return { ...shake, elapsed };
 }
 
-export function getFlashAlpha(flash: ScreenFlash): number {
+function getFlashAlpha(flash: ScreenFlash): number {
   // Fade out over last 50% of duration
   const t = flash.elapsed / flash.duration;
   return t < 0.5 ? 1 : 1 - (t - 0.5) * 2;

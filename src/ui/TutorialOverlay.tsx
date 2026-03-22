@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { STRINGS } from "../data/strings";
+import { FONT_UI } from "./styles";
 
 type Props = {
   readonly which: "move" | "combat";
@@ -22,7 +23,7 @@ export function TutorialOverlay({ which, onDismiss }: Props) {
       <div
         className="bg-black/75 border border-gray-600 px-6 py-3 text-center pointer-events-none"
         style={{
-          fontFamily: "'Noto Sans TC', sans-serif",
+          fontFamily: FONT_UI,
           fontSize: "16px",
           color: "#e5e7eb",
         }}

@@ -32,6 +32,21 @@ Fight Code Smell monsters with Refactoring skills, equip Design Pattern gear, an
 
 ---
 
+## 重構技能 / Refactoring Skills
+
+| 技能 | MP | 效果 | 解鎖條件 |
+|------|----|------|---------|
+| Extract Method | 2 | 單體傷害（1.5× ATK） | 初始 |
+| Rename Variable | 1 | 揭示敵人數值與弱點 | 初始 |
+| Inline Temp | 1 | 快速攻擊（0.8× ATK），先攻 | 初始 |
+| Replace Magic Number | 3 | 眩暈 1 回合 + 2× 傷害（對魔數精靈） | LV 3 |
+| Move Method | 2 | 閃避下一次攻擊 | LV 5 |
+| Parameter Object | 4 | 群體攻擊，全敵人 0.7× ATK | LV 7 |
+| Polymorphism | 5 | 削弱 Boss 當前 Phase 能力 | LV 9 |
+| Compose Method | 6 | 連鎖 3 個隨機技能（各 0.6× 威力） | LV 11 |
+
+---
+
 ## 快速開始 / Quick Start
 
 ```bash
@@ -49,7 +64,7 @@ npm run dev
 
 DEMO 模式效果：
 - 角色 LV.15，全技能解鎖，全套設計模式裝備
-- God Mode（HP 不會低於 1）
+- **God Mode（HP 不會低於 1）** — 這是設計行為，非 Bug
 - HUD 顯示黃色 `DEMO` 標記
 
 ---

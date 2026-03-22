@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { STRINGS } from "../data/strings";
 import { useGameState } from "../state/GameContext";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type StatBarProps = {
   readonly label: string;
@@ -15,7 +16,7 @@ function StatBar({ label, current, max, color }: StatBarProps) {
     <div className="flex items-center gap-2">
       <span
         className="text-white w-8 text-right"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "18px" }}
+        style={{ fontFamily: FONT_PIXEL, fontSize: "18px" }}
       >
         {label}
       </span>
@@ -27,7 +28,7 @@ function StatBar({ label, current, max, color }: StatBarProps) {
       </div>
       <span
         className="text-gray-300 w-20"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "18px" }}
+        style={{ fontFamily: FONT_PIXEL, fontSize: "18px" }}
       >
         {current}/{max}
       </span>
@@ -44,7 +45,7 @@ function BottomHUDComponent() {
       {interactionPrompt && (
         <div
           className="text-center text-yellow-300 mb-1"
-          style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: "30px" }}
+          style={{ fontFamily: FONT_UI, fontSize: "30px" }}
         >
           {interactionPrompt}
         </div>
@@ -68,7 +69,7 @@ function BottomHUDComponent() {
           <span
             className="text-yellow-300"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               fontSize: "21px",
             }}
           >
@@ -77,7 +78,7 @@ function BottomHUDComponent() {
           <span
             className="text-amber-400"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               fontSize: "21px",
             }}
           >

@@ -11,7 +11,8 @@ import type {
   BattleRenderState,
   BattleEnemy,
 } from "../../engine/BattleRenderer";
-import type { CombatEvent } from "./combatStateMachine";
+import type { CombatEvent } from "./combatTypes";
+import type { CombatResult } from "./combatTypes";
 import type { GameStateWithPrompt } from "../../state/gameReducer";
 import type { GameAction } from "../../state/gameReducer";
 import {
@@ -38,6 +39,21 @@ import {
 } from "../../engine/BattleRenderer";
 import { monsterBattleSprites } from "../../sprites/monsters/battleIndex";
 import { AudioSystem } from "../../engine/AudioSystem";
+
+function dispatchCombatResult(
+  dispatch: (action: GameAction) => void,
+  result: CombatResult,
+): void {
+  if (result.newPlayerStats) {
+    dispatch({
+      type: "APPLY_COMBAT_RESULT",
+      newCombat: result.state,
+      newPlayerStats: result.newPlayerStats,
+    });
+  } else {
+    dispatch({ type: "APPLY_COMBAT_RESULT", newCombat: result.state });
+  }
+}
 
 export type CombatLoopState = {
   animState: BattleAnimState;
@@ -197,15 +213,7 @@ function handlePendingAction(
     dispatch({ type: "CONSUME_ITEM", itemId: pendingAction.itemId });
     dispatch({ type: "INCREMENT_ITEMS_USED" });
   }
-  if (result.newPlayerStats) {
-    dispatch({
-      type: "APPLY_COMBAT_RESULT",
-      newCombat: result.state,
-      newPlayerStats: result.newPlayerStats,
-    });
-  } else {
-    dispatch({ type: "APPLY_COMBAT_RESULT", newCombat: result.state });
-  }
+  dispatchCombatResult(dispatch, result);
   return true;
 }
 
@@ -249,15 +257,7 @@ function handleAnimationComplete(
       );
       loop.localPhase = result.state.phase;
       applyEvents(loop, result.events, combat);
-      if (result.newPlayerStats) {
-        dispatch({
-          type: "APPLY_COMBAT_RESULT",
-          newCombat: result.state,
-          newPlayerStats: result.newPlayerStats,
-        });
-      } else {
-        dispatch({ type: "APPLY_COMBAT_RESULT", newCombat: result.state });
-      }
+      dispatchCombatResult(dispatch, result);
     }
   }
 }
@@ -319,7 +319,13 @@ function applyEvents(
         });
         break;
       case "skill_used":
-        // Animation handled by accompanying damage_dealt / buff_applied events
+        // Companion events (damage_dealt, buff_applied, reveal) queue the main animation.
+        // Queue a minimal flash as fallback in case no companion event fires,
+        // so frame.finished can always become true (prevents combat freeze).
+        loop.animState = queueAnimation(loop.animState, {
+          kind: "screen_flash_white",
+          elapsed: 0,
+        });
         AudioSystem.play("skill_cast");
         break;
       case "monster_died":

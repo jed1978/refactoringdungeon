@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useGameState, useGameDispatch } from "../state/GameContext";
 import { AudioSystem } from "../engine/AudioSystem";
-import { MusicSystem } from "../engine/MusicSystem";
+import { setAllAudioMuted } from "../engine/audioControl";
 import { saveToLocalStorage } from "../state/saveLoad";
 import { STRINGS } from "../data/strings";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type Props = {
   readonly onClose: () => void;
@@ -24,8 +25,7 @@ export function PauseMenu({ onClose }: Props) {
 
   const handleToggleSound = () => {
     const next = !AudioSystem.isMuted();
-    AudioSystem.setMuted(next);
-    MusicSystem.setMuted(next);
+    setAllAudioMuted(next);
     setMuted(next);
     dispatch({ type: "TOGGLE_MUTE" });
   };
@@ -44,7 +44,7 @@ export function PauseMenu({ onClose }: Props) {
         <div
           className="text-yellow-400 text-center mb-2"
           style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: FONT_PIXEL,
             fontSize: "18px",
           }}
         >
@@ -56,7 +56,7 @@ export function PauseMenu({ onClose }: Props) {
             <div
               className="text-gray-300 text-center mb-2"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "16px",
               }}
             >
@@ -66,7 +66,7 @@ export function PauseMenu({ onClose }: Props) {
               onClick={handleReturnToTitle}
               className="w-full border border-red-500 bg-red-900/60 hover:bg-red-800/60 text-red-200 rounded py-2"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "18px",
               }}
             >
@@ -76,7 +76,7 @@ export function PauseMenu({ onClose }: Props) {
               onClick={() => setConfirmingReturn(false)}
               className="w-full border border-gray-500 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded py-2"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "18px",
               }}
             >
@@ -89,7 +89,7 @@ export function PauseMenu({ onClose }: Props) {
               onClick={onClose}
               className="w-full border border-green-500 bg-green-900/60 hover:bg-green-800/60 text-green-200 rounded py-2"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "18px",
               }}
             >
@@ -100,7 +100,7 @@ export function PauseMenu({ onClose }: Props) {
               onClick={handleSave}
               className="w-full border border-gray-500 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded py-2"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "18px",
               }}
             >
@@ -111,7 +111,7 @@ export function PauseMenu({ onClose }: Props) {
               onClick={handleToggleSound}
               className="w-full border border-gray-500 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded py-2"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "18px",
               }}
             >
@@ -122,7 +122,7 @@ export function PauseMenu({ onClose }: Props) {
               onClick={() => setConfirmingReturn(true)}
               className="w-full border border-gray-500 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded py-2"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "18px",
               }}
             >

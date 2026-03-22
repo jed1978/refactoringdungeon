@@ -42,7 +42,3 @@ export const EQUIPMENT: readonly Equipment[] = [
     effect: "adapter_pattern",
   },
 ];
-
-export const EQUIPMENT_MAP: Record<string, Equipment> = Object.fromEntries(
-  EQUIPMENT.map((e) => [e.id, e]),
-);

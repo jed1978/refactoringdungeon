@@ -1,12 +1,9 @@
-import type { Position } from '../../utils/types';
-import { LIGHT_RADIUS_BRIGHT, LIGHT_RADIUS_DIM } from '../../utils/constants';
+import type { Position } from "../../utils/types";
+import { LIGHT_RADIUS_BRIGHT, LIGHT_RADIUS_DIM } from "../../utils/constants";
 
 const VISIBILITY_RADIUS = LIGHT_RADIUS_BRIGHT + LIGHT_RADIUS_DIM;
 
-export function getVisibleTiles(
-  playerX: number,
-  playerY: number,
-): Position[] {
+export function getVisibleTiles(playerX: number, playerY: number): Position[] {
   const tiles: Position[] = [];
   const r = VISIBILITY_RADIUS;
 
@@ -30,7 +27,8 @@ export function updateExplored(
   let changed = false;
 
   for (const tile of visibleTiles) {
-    if (tile.x < 0 || tile.x >= mapWidth || tile.y < 0 || tile.y >= mapHeight) continue;
+    if (tile.x < 0 || tile.x >= mapWidth || tile.y < 0 || tile.y >= mapHeight)
+      continue;
     if (!explored[tile.y][tile.x]) {
       changed = true;
       break;
@@ -42,20 +40,14 @@ export function updateExplored(
   return explored.map((row, y) =>
     row.map((val, x) => {
       if (val) return true;
-      return visibleTiles.some(t => t.x === x && t.y === y);
+      return visibleTiles.some((t) => t.x === x && t.y === y);
     }),
   );
 }
 
-export function isVisible(
-  visibleSet: ReadonlySet<string>,
-  x: number,
-  y: number,
-): boolean {
-  return visibleSet.has(`${x},${y}`);
-}
-
-export function buildVisibleSet(visibleTiles: readonly Position[]): Set<string> {
+export function buildVisibleSet(
+  visibleTiles: readonly Position[],
+): Set<string> {
   const set = new Set<string>();
   for (const t of visibleTiles) {
     set.add(`${t.x},${t.y}`);

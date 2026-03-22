@@ -9,7 +9,7 @@ import { Direction, TileType } from "../utils/types";
 import { FLOOR_THEMES } from "../utils/constants";
 import { EQUIPMENT } from "../data/equipment";
 
-export const STARTING_STATS: PlayerStats = {
+const STARTING_STATS: PlayerStats = {
   hp: 100,
   maxHp: 100,
   mp: 50,

@@ -1,4 +1,4 @@
-import type { SpriteFrame, SpriteSheet } from '../utils/types';
+import type { SpriteFrame, SpriteSheet } from "../utils/types";
 
 // Cache pre-rendered sprites as ImageBitmap for performance
 const spriteCache = new Map<SpriteFrame, ImageData>();
@@ -47,7 +47,7 @@ function getFrameCanvas(
   if (cached) return cached;
 
   const offscreen = new OffscreenCanvas(width, height);
-  const octx = offscreen.getContext('2d')!;
+  const octx = offscreen.getContext("2d")!;
   const imageData = renderFrameToImageData(frame, width, height);
   octx.putImageData(imageData, 0, 0);
   canvasCache.set(frame, offscreen);
@@ -84,9 +84,4 @@ export function getAnimationFrame(
   const loopTime = elapsedMs % totalDuration;
   const frameIndex = Math.floor(loopTime / sheet.frameDuration);
   return sheet.frames[frameIndex];
-}
-
-export function clearSpriteCache(): void {
-  spriteCache.clear();
-  canvasCache.clear();
 }

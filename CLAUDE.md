@@ -619,6 +619,8 @@ Additionally:
 
 ### 10. MusicSystem Mute Must Sync Both Systems (CRITICAL)
 
+
+
 There are two independent audio systems: `AudioSystem` (SFX) and `MusicSystem` (BGM). Both must be muted/unmuted together. Muting only one silences one channel but leaves the other playing.
 
 ```ts
@@ -644,6 +646,67 @@ AudioSystem.setMuted(next);
 - `game_over` → `"game_over"` (one-shot, no loop)
 
 **MusicSystem exception to engine purity rule:** `MusicSystem.ts` imports `getCtx()` from `AudioSystem.ts` to share the same `AudioContext`. This is the only allowed cross-import within `src/engine/` — it avoids creating duplicate `AudioContext` instances (browsers limit their count).
+
+### 11. SkillMenu Must Not Use `absolute bottom-full` Positioning
+
+`SkillMenu` must be rendered as a **normal block element in DOM flow**, positioned **before** the action panel div in `BattleUI.tsx`. Do NOT give it `position: absolute` or `bottom: 100%`.
+
+**Why:** The battle UI sits at the bottom of the canvas (`absolute bottom-0`). If SkillMenu uses `absolute bottom-full`, it grows upward relative to its positioned ancestor and overflows the top of the canvas when many skills are unlocked.
+
+**Correct pattern in `BattleUI.tsx`:**
+```tsx
+<div className="absolute bottom-0 left-0 right-0" style={{ padding: "4px 6px 6px" }}>
+  {/* Combat log */}
+  <div>...</div>
+  {/* Skill submenu — must come BEFORE action panel in DOM order */}
+  {showSkills && <SkillMenu ... />}
+  {/* Action panel */}
+  <div className="bg-black bg-opacity-80 ...">...</div>
+</div>
+```
+
+**Correct pattern in `SkillMenu.tsx`:**
+```tsx
+<div
+  className="bg-black bg-opacity-90 border border-gray-500 rounded"
+  style={{ padding: '6px', marginBottom: '4px', maxHeight: '45vh', overflowY: 'auto' }}
+>
+```
+
+`maxHeight: '45vh'` + `overflowY: 'auto'` ensures the menu is scrollable if skills overflow, never escaping the viewport.
+
+### 12. Stun Buff Must Be Applied Before Damage (CRITICAL)
+
+In `combatStateMachine.ts`, when a skill applies both a stun and damage (e.g. Replace Magic Number / 常數替換), **push the buff event and update enemy buffs BEFORE calling `applyDamageToEnemy`**.
+
+**Why:** `applyDamageToEnemy` may kill the target. The original pattern checked `targetAfterDamage.currentHp > 0` before applying stun — if the attack killed the enemy, the stun event was never emitted and the combat log showed no stun, confusing players.
+
+**Correct order:**
+```ts
+// 1. Apply stun buff to enemy state
+enemies = enemies.map((e, i) =>
+  i === result.targetIndex ? { ...e, buffs: [...e.buffs, stunBuff] } : e
+);
+// 2. Emit buff_applied event (so animation queues correctly)
+events.push({ kind: "buff_applied", buffId: "stunned", turns: 1, target: result.targetIndex });
+// 3. Log the stun
+log.push(STRINGS.skillStun.replace("{0}", enemies[result.targetIndex]?.def.name ?? ""));
+// 4. Apply damage (may kill — that's fine, stun is already recorded)
+enemies = applyDamageToEnemy(enemies, result.targetIndex, result.damage, events, log, state);
+```
+
+### 13. Demo Mode HP Protection Is Intentional (Not a Bug)
+
+When Demo Mode is active (triggered by Konami Code ↑↑↓↓←→←→BA), the player's HP cannot drop below 1. This is implemented in `processEnemyTurn` in `combatStateMachine.ts`:
+
+```ts
+const rawNewHp = /* calculated damage result */;
+const newHp = isDemoMode && rawNewHp <= 0 ? 1 : rawNewHp;
+```
+
+**Visual indicator:** The HUD displays a yellow `DEMO` badge in the top-left corner while Demo Mode is active.
+
+**Not a bug:** Players who report "HP stays at 1 even when taking lethal damage" are running Demo Mode. No code change is needed. Verify by checking `gameState.demoMode === true` or looking for the `DEMO` badge on screen.
 
 ---
 

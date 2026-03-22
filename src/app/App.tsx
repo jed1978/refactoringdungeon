@@ -13,7 +13,7 @@ import { PauseMenu } from "../ui/PauseMenu";
 import { ShopScreen } from "../ui/ShopScreen";
 import { DialogueBox } from "../ui/DialogueBox";
 import { TutorialOverlay } from "../ui/TutorialOverlay";
-import { generateFloor } from "../features/map/bspGenerator";
+import { createNewFloorStart } from "../features/game/newFloorStart";
 import { loadFromLocalStorage } from "../state/saveLoad";
 import { useGameDispatch } from "../state/GameContext";
 import { EVENTS } from "../data/events";
@@ -43,15 +43,7 @@ function AppContent() {
   }, [gameState.gameMode.mode, showInventory]);
 
   const handleStart = () => {
-    const seed = Date.now();
-    const floor = generateFloor(1, seed);
-    const startRoom = floor.rooms.find((r) => r.type === "start");
-    const startPos = startRoom
-      ? {
-          x: Math.floor(startRoom.x + startRoom.width / 2),
-          y: Math.floor(startRoom.y + startRoom.height / 2),
-        }
-      : { x: 5, y: 5 };
+    const { floor, startPos } = createNewFloorStart();
     dispatch({ type: "START_GAME", floor, startPos });
   };
 
@@ -63,15 +55,7 @@ function AppContent() {
   };
 
   const handleDemo = () => {
-    const seed = Date.now();
-    const floor = generateFloor(1, seed);
-    const startRoom = floor.rooms.find((r) => r.type === "start");
-    const startPos = startRoom
-      ? {
-          x: Math.floor(startRoom.x + startRoom.width / 2),
-          y: Math.floor(startRoom.y + startRoom.height / 2),
-        }
-      : { x: 5, y: 5 };
+    const { floor, startPos } = createNewFloorStart();
     dispatch({ type: "START_DEMO", floor, startPos });
   };
 

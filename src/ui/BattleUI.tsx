@@ -5,6 +5,7 @@ import { SkillMenu } from "./SkillMenu";
 import { STRINGS } from "../data/strings";
 import { getDefaultEnemyPositions, MONSTER_Y } from "../engine/BattleRenderer";
 import { VIEWPORT } from "../utils/constants";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type Props = {
   onAction: (action: CombatAction) => void;
@@ -135,7 +136,7 @@ function BattleUIComponent({ onAction }: Props) {
               padding: "2px 5px",
               borderRadius: "2px",
               fontSize: "18px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
               color: isClickable ? "#1a1100" : "#fde68a",
               whiteSpace: "nowrap",
               cursor: isClickable ? "pointer" : "default",
@@ -160,7 +161,7 @@ function BattleUIComponent({ onAction }: Props) {
             padding: "4px 10px",
             borderRadius: "3px",
             fontSize: "13px",
-            fontFamily: "'Noto Sans TC', sans-serif",
+            fontFamily: FONT_UI,
             color: "#eab308",
             whiteSpace: "nowrap",
           }}
@@ -192,7 +193,7 @@ function BattleUIComponent({ onAction }: Props) {
                 className="text-white leading-tight"
                 style={{
                   fontSize: "14px",
-                  fontFamily: "'Noto Sans TC', sans-serif",
+                  fontFamily: FONT_UI,
                   lineHeight: "1.4",
                 }}
               >
@@ -201,6 +202,17 @@ function BattleUIComponent({ onAction }: Props) {
             ))}
           </div>
         </div>
+
+        {/* Skill submenu — above action panel so it never overflows top */}
+        {showSkills && (
+          <SkillMenu
+            skills={skills}
+            mp={stats.mp}
+            playerAtk={stats.atk}
+            onSelect={handleSkillSelect}
+            onClose={() => setShowSkills(false)}
+          />
+        )}
 
         {/* Action panel */}
         <div
@@ -214,7 +226,7 @@ function BattleUIComponent({ onAction }: Props) {
                 <span
                   style={{
                     fontSize: "15px",
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: FONT_PIXEL,
                     color: "#9ca3af",
                   }}
                 >
@@ -223,7 +235,7 @@ function BattleUIComponent({ onAction }: Props) {
                 <span
                   style={{
                     fontSize: "15px",
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: FONT_PIXEL,
                     color: "#9ca3af",
                   }}
                 >
@@ -245,7 +257,7 @@ function BattleUIComponent({ onAction }: Props) {
                 <span
                   style={{
                     fontSize: "15px",
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: FONT_PIXEL,
                     color: "#9ca3af",
                   }}
                 >
@@ -254,7 +266,7 @@ function BattleUIComponent({ onAction }: Props) {
                 <span
                   style={{
                     fontSize: "15px",
-                    fontFamily: "'Press Start 2P', monospace",
+                    fontFamily: FONT_PIXEL,
                     color: "#9ca3af",
                   }}
                 >
@@ -303,17 +315,6 @@ function BattleUIComponent({ onAction }: Props) {
           </div>
         </div>
 
-        {/* Skill submenu */}
-        {showSkills && (
-          <SkillMenu
-            skills={skills}
-            mp={stats.mp}
-            playerAtk={stats.atk}
-            onSelect={handleSkillSelect}
-            onClose={() => setShowSkills(false)}
-          />
-        )}
-
         {/* Item submenu */}
         {showItems && (
           <div
@@ -324,7 +325,7 @@ function BattleUIComponent({ onAction }: Props) {
               <div
                 style={{
                   fontSize: "14px",
-                  fontFamily: "'Noto Sans TC', sans-serif",
+                  fontFamily: FONT_UI,
                   color: "#6b7280",
                   padding: "2px 0",
                 }}
@@ -339,7 +340,7 @@ function BattleUIComponent({ onAction }: Props) {
                   className="w-full text-left hover:bg-gray-700 rounded px-2 py-1 flex justify-between items-center"
                   style={{
                     fontSize: "14px",
-                    fontFamily: "'Noto Sans TC', sans-serif",
+                    fontFamily: FONT_UI,
                     color: "#e5e7eb",
                   }}
                 >
@@ -353,7 +354,7 @@ function BattleUIComponent({ onAction }: Props) {
               className="w-full text-center text-gray-500 hover:text-gray-300 mt-1"
               style={{
                 fontSize: "12px",
-                fontFamily: "'Press Start 2P', monospace",
+                fontFamily: FONT_PIXEL,
                 paddingTop: "4px",
                 borderTop: "1px solid #374151",
               }}
@@ -396,7 +397,7 @@ function BattleButtonComponent({
       style={{
         padding: "6px 4px",
         fontSize: "21px",
-        fontFamily: "'Noto Sans TC', sans-serif",
+        fontFamily: FONT_UI,
       }}
     >
       {label}

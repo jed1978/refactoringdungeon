@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type Choice = {
   readonly label: string;
@@ -51,7 +52,7 @@ export function DialogueBox({ portrait, title, text, choices, onClose }: Props) 
           <span className="text-2xl">{portrait}</span>
           <span
             className="text-yellow-400"
-            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '11px' }}
+            style={{ fontFamily: FONT_PIXEL, fontSize: '11px' }}
           >
             {title}
           </span>
@@ -60,7 +61,7 @@ export function DialogueBox({ portrait, title, text, choices, onClose }: Props) 
         {/* Text area */}
         <div
           className="text-white min-h-[48px] mb-3 cursor-pointer"
-          style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: '13px', lineHeight: 1.6, whiteSpace: 'pre-line' }}
+          style={{ fontFamily: FONT_UI, fontSize: '13px', lineHeight: 1.6, whiteSpace: 'pre-line' }}
         >
           {displayed}
           {!done && <span className="animate-pulse">▋</span>}
@@ -73,7 +74,7 @@ export function DialogueBox({ portrait, title, text, choices, onClose }: Props) 
               <button
                 key={i}
                 className="text-left text-white hover:text-yellow-300 hover:bg-yellow-400/10 px-2 py-1 border border-gray-600 hover:border-yellow-400 transition-colors"
-                style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: '12px' }}
+                style={{ fontFamily: FONT_UI, fontSize: '12px' }}
                 onClick={choice.onSelect}
               >
                 ▶ {choice.label}
@@ -82,7 +83,7 @@ export function DialogueBox({ portrait, title, text, choices, onClose }: Props) 
             {onClose && choices.length === 0 && (
               <button
                 className="text-center text-gray-400 hover:text-white border border-gray-600 py-1"
-                style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: '12px' }}
+                style={{ fontFamily: FONT_UI, fontSize: '12px' }}
                 onClick={onClose}
               >
                 關閉

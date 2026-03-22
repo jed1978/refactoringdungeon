@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import { useGameState, useGameDispatch } from "../state/GameContext";
 import { clearSave } from "../state/saveLoad";
-import { generateFloor } from "../features/map/bspGenerator";
+import { createNewFloorStart } from "../features/game/newFloorStart";
 import { STRINGS, EPITAPHS } from "../data/strings";
 import type { RunStats, PlayerState } from "../utils/types";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type OverlayProps = {
   readonly player: PlayerState;
@@ -78,15 +79,7 @@ function GameOverScreen({ player, runStats }: OverlayProps) {
   }, []);
 
   const handleRestart = () => {
-    const seed = Date.now();
-    const floor = generateFloor(1, seed);
-    const startRoom = floor.rooms.find((r) => r.type === "start");
-    const startPos = startRoom
-      ? {
-          x: Math.floor(startRoom.x + startRoom.width / 2),
-          y: Math.floor(startRoom.y + startRoom.height / 2),
-        }
-      : { x: 5, y: 5 };
+    const { floor, startPos } = createNewFloorStart();
     dispatch({ type: "START_GAME", floor, startPos });
   };
 
@@ -118,7 +111,7 @@ function GameOverScreen({ player, runStats }: OverlayProps) {
             className="mb-3"
             style={{
               fontSize: "30px",
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               color: "#ef4444",
             }}
           >
@@ -128,7 +121,7 @@ function GameOverScreen({ player, runStats }: OverlayProps) {
             className="mb-3"
             style={{
               fontSize: "16px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
               color: "#9ca3af",
               lineHeight: 1.8,
             }}
@@ -139,7 +132,7 @@ function GameOverScreen({ player, runStats }: OverlayProps) {
             className="mb-4 flex flex-col gap-1"
             style={{
               fontSize: "14px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
               color: "#6b7280",
             }}
           >
@@ -160,7 +153,7 @@ function GameOverScreen({ player, runStats }: OverlayProps) {
             style={{
               padding: "8px 16px",
               fontSize: "21px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
             }}
           >
             {STRINGS.newGame}
@@ -271,7 +264,7 @@ function VictoryScreen({ player, runStats }: OverlayProps) {
             className="mb-3"
             style={{
               fontSize: "24px",
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               color: "#ffd700",
             }}
           >
@@ -281,7 +274,7 @@ function VictoryScreen({ player, runStats }: OverlayProps) {
             className="mb-3"
             style={{
               fontSize: "18px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
               color: "#d1fae5",
               lineHeight: 1.6,
             }}
@@ -292,7 +285,7 @@ function VictoryScreen({ player, runStats }: OverlayProps) {
             className="mb-3 flex flex-col gap-1"
             style={{
               fontSize: "14px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
               color: "#a3e635",
             }}
           >
@@ -315,7 +308,7 @@ function VictoryScreen({ player, runStats }: OverlayProps) {
             className="w-full mb-3 bg-gray-900 border border-gray-600 text-gray-300 rounded p-2 text-center resize-none"
             style={{
               fontSize: "12px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
             }}
           />
           <button
@@ -324,7 +317,7 @@ function VictoryScreen({ player, runStats }: OverlayProps) {
             style={{
               padding: "8px 16px",
               fontSize: "21px",
-              fontFamily: "'Noto Sans TC', sans-serif",
+              fontFamily: FONT_UI,
             }}
           >
             回到選單

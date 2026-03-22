@@ -1,4 +1,5 @@
-import { SKILLS } from '../data/skills';
+import { SKILLS } from "../data/skills";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type Props = {
   skills: readonly string[];
@@ -9,56 +10,83 @@ type Props = {
 };
 
 export function SkillMenu({ skills, mp, playerAtk, onSelect, onClose }: Props) {
-  const available = SKILLS.filter(s => skills.includes(s.id));
+  const available = SKILLS.filter((s) => skills.includes(s.id));
 
   return (
     <div
-      className="absolute bottom-full left-0 right-0 mb-1 bg-black bg-opacity-90 border border-gray-500 rounded"
-      style={{ padding: '6px' }}
+      className="bg-black bg-opacity-90 border border-gray-500 rounded"
+      style={{
+        padding: "6px",
+        marginBottom: "4px",
+        maxHeight: "45vh",
+        overflowY: "auto",
+      }}
     >
       <div className="flex justify-between items-center mb-2">
-        <span style={{ fontSize: '18px', fontFamily: "'Press Start 2P', monospace", color: '#9ca3af' }}>技能</span>
+        <span
+          style={{
+            fontSize: "18px",
+            fontFamily: FONT_PIXEL,
+            color: "#9ca3af",
+          }}
+        >
+          技能
+        </span>
         <button
           onClick={onClose}
           className="text-gray-500 hover:text-gray-300"
-          style={{ fontSize: '24px', lineHeight: 1 }}
+          style={{ fontSize: "24px", lineHeight: 1 }}
         >
           ✕
         </button>
       </div>
 
       {available.length === 0 && (
-        <div style={{ fontSize: '18px', fontFamily: "'Noto Sans TC', sans-serif", color: '#6b7280' }}>
+        <div
+          style={{
+            fontSize: "18px",
+            fontFamily: FONT_UI,
+            color: "#6b7280",
+          }}
+        >
           沒有技能
         </div>
       )}
 
-      {available.map(skill => {
+      {available.map((skill) => {
         const canAfford = mp >= skill.mpCost;
-        const estDmg = skill.multiplier > 0 ? Math.round(playerAtk * skill.multiplier) : null;
+        const estDmg =
+          skill.multiplier > 0
+            ? Math.round(playerAtk * skill.multiplier)
+            : null;
         return (
           <button
             key={skill.id}
             onClick={() => canAfford && onSelect(skill.id)}
             disabled={!canAfford}
             className={[
-              'w-full text-left rounded mb-1',
+              "w-full text-left rounded mb-1",
               canAfford
-                ? 'hover:bg-gray-700 text-gray-200'
-                : 'text-gray-600 cursor-not-allowed',
-            ].join(' ')}
-            style={{ padding: '4px 6px' }}
+                ? "hover:bg-gray-700 text-gray-200"
+                : "text-gray-600 cursor-not-allowed",
+            ].join(" ")}
+            style={{ padding: "4px 6px" }}
           >
             {/* Row 1: skill name + MP cost */}
             <div className="flex justify-between items-center">
-              <span style={{ fontSize: '18px', fontFamily: "'Noto Sans TC', sans-serif" }}>
+              <span
+                style={{
+                  fontSize: "18px",
+                  fontFamily: FONT_UI,
+                }}
+              >
                 {skill.name}
               </span>
               <span
                 style={{
-                  fontSize: '15px',
-                  fontFamily: "'Press Start 2P', monospace",
-                  color: canAfford ? '#3b82f6' : '#374151',
+                  fontSize: "15px",
+                  fontFamily: FONT_PIXEL,
+                  color: canAfford ? "#3b82f6" : "#374151",
                 }}
               >
                 MP {skill.mpCost}
@@ -67,14 +95,19 @@ export function SkillMenu({ skills, mp, playerAtk, onSelect, onClose }: Props) {
             {/* Row 2: damage estimate + description */}
             <div
               style={{
-                fontSize: '14px',
-                fontFamily: "'Noto Sans TC', sans-serif",
-                color: canAfford ? '#9ca3af' : '#4b5563',
-                marginTop: '1px',
+                fontSize: "14px",
+                fontFamily: FONT_UI,
+                color: canAfford ? "#9ca3af" : "#4b5563",
+                marginTop: "1px",
               }}
             >
               {estDmg !== null && (
-                <span style={{ color: canAfford ? '#fbbf24' : '#4b5563', marginRight: '6px' }}>
+                <span
+                  style={{
+                    color: canAfford ? "#fbbf24" : "#4b5563",
+                    marginRight: "6px",
+                  }}
+                >
                   ~{estDmg} DMG ·
                 </span>
               )}

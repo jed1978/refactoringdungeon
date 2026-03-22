@@ -1,5 +1,6 @@
 import { useGameState, useGameDispatch } from "../state/GameContext";
 import { STRINGS } from "../data/strings";
+import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type Props = { readonly onClose: () => void };
 
@@ -25,7 +26,7 @@ export function InventoryScreen({ onClose }: Props) {
         <div
           className="flex justify-between items-center mb-3"
           style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: FONT_PIXEL,
             fontSize: "18px",
           }}
         >
@@ -42,7 +43,7 @@ export function InventoryScreen({ onClose }: Props) {
                 key={slot}
                 className="flex items-center gap-2"
                 style={{
-                  fontFamily: "'Noto Sans TC', sans-serif",
+                  fontFamily: FONT_UI,
                   fontSize: "16px",
                 }}
               >
@@ -57,7 +58,7 @@ export function InventoryScreen({ onClose }: Props) {
                     className="text-red-400 hover:text-red-300 shrink-0 px-1"
                     onClick={() => dispatch({ type: "UNEQUIP", slot })}
                     style={{
-                      fontFamily: "'Noto Sans TC', sans-serif",
+                      fontFamily: FONT_UI,
                       fontSize: "16px",
                     }}
                   >
@@ -74,7 +75,7 @@ export function InventoryScreen({ onClose }: Props) {
           <div
             className="text-yellow-400 mb-2"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
+              fontFamily: FONT_PIXEL,
               fontSize: "14px",
             }}
           >
@@ -84,7 +85,7 @@ export function InventoryScreen({ onClose }: Props) {
             <div
               className="text-gray-500"
               style={{
-                fontFamily: "'Noto Sans TC', sans-serif",
+                fontFamily: FONT_UI,
                 fontSize: "18px",
               }}
             >
@@ -99,7 +100,7 @@ export function InventoryScreen({ onClose }: Props) {
                 <span
                   className="text-white"
                   style={{
-                    fontFamily: "'Noto Sans TC', sans-serif",
+                    fontFamily: FONT_UI,
                     fontSize: "18px",
                   }}
                 >
@@ -108,7 +109,7 @@ export function InventoryScreen({ onClose }: Props) {
                 <button
                   className="text-green-400 hover:text-green-300 px-1"
                   style={{
-                    fontFamily: "'Noto Sans TC', sans-serif",
+                    fontFamily: FONT_UI,
                     fontSize: "16px",
                   }}
                   onClick={() =>
@@ -125,7 +126,7 @@ export function InventoryScreen({ onClose }: Props) {
         <button
           className="w-full text-center text-gray-400 hover:text-white border border-gray-600 py-1"
           style={{
-            fontFamily: "'Press Start 2P', monospace",
+            fontFamily: FONT_PIXEL,
             fontSize: "14px",
           }}
           onClick={onClose}
