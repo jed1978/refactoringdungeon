@@ -88,7 +88,9 @@ const SLIME_FRAME: SpriteFrame = [
 每層地城使用 **Binary Space Partition** 演算法自動生成：
 - 遞迴分割空間 → 建立房間 → 走廊連接
 - 房間類型隨機分配（怪物、事件、寶箱、商店）
+- **保證每層至少 1 個 Event 房間 + 1 個 Shop 房間**
 - Boss 房間永遠是最大且距出生點最遠的房間
+- Boss 房間只保留**一個入口**，其餘通道封牆 → 確保 BossDoor 不會切斷走廊
 
 ### Two-Tier State Architecture
 
@@ -122,6 +124,20 @@ Monster died
 
 零音訊檔案，全部使用 Web Audio API `OscillatorNode` + `GainNode` 合成：
 14 種音效包含攻擊音、暴擊、怪物死亡、升級琶音、勝利和弦等。
+
+### 樓層推進邏輯
+
+```
+清除該層所有小怪
+      ↓
+BossDoor 解鎖（按 Space 開門）
+      ↓
+進入 Boss 房間，擊敗 Boss
+      ↓
+下樓梯（StairsDown）解鎖
+      ↓
+進入下一層
+```
 
 ---
 

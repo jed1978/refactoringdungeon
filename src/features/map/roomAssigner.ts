@@ -1,5 +1,5 @@
-import type { Room } from '../../utils/types';
-import { RoomType } from '../../utils/types';
+import type { Room } from "../../utils/types";
+import { RoomType } from "../../utils/types";
 
 function roomArea(room: Room): number {
   return room.width * room.height;
@@ -18,7 +18,7 @@ export function assignRoomTypes(
   rng: () => number,
 ): Room[] {
   if (rooms.length < 2) {
-    return rooms.map(r => ({ ...r, type: RoomType.Start }));
+    return rooms.map((r) => ({ ...r, type: RoomType.Start }));
   }
 
   // Boss room: largest area
@@ -32,17 +32,50 @@ export function assignRoomTypes(
   );
 
   // Assign remaining rooms
-  const result: Room[] = rooms.map(room => {
+  const result: Room[] = rooms.map((room) => {
     if (room === bossRoom) return { ...room, type: RoomType.Boss };
     if (room === startRoom) return { ...room, type: RoomType.Start };
 
     const roll = rng();
-    if (roll < 0.50) return { ...room, type: RoomType.Monster };
+    if (roll < 0.5) return { ...room, type: RoomType.Monster };
     if (roll < 0.65) return { ...room, type: RoomType.Event };
     if (roll < 0.75) return { ...room, type: RoomType.Treasure };
-    if (roll < 0.80) return { ...room, type: RoomType.Shop };
+    if (roll < 0.8) return { ...room, type: RoomType.Shop };
     return { ...room, type: RoomType.Empty };
   });
 
-  return result;
+  // Guarantee at least 1 Event and 1 Shop room
+  const PROTECTED = new Set([RoomType.Start, RoomType.Boss, RoomType.Treasure]);
+  const convertable = (type: RoomType) => !PROTECTED.has(type);
+
+  function ensureRoomType(
+    rooms: Room[],
+    target: RoomType,
+    rng: () => number,
+  ): Room[] {
+    if (rooms.some((r) => r.type === target)) return rooms;
+    // Prefer Empty → Monster
+    const emptyIdx = rooms.findIndex(
+      (r) => r.type === RoomType.Empty && convertable(r.type),
+    );
+    const idx =
+      emptyIdx >= 0
+        ? emptyIdx
+        : rooms.findIndex(
+            (r) => r.type === RoomType.Monster && convertable(r.type),
+          );
+    if (idx < 0) return rooms;
+    // Pick a random room among same-type candidates
+    const candidates = rooms
+      .map((r, i) => ({ r, i }))
+      .filter(({ r }) =>
+        emptyIdx >= 0 ? r.type === RoomType.Empty : r.type === RoomType.Monster,
+      );
+    const pick = candidates[Math.floor(rng() * candidates.length)];
+    return rooms.map((r, i) => (i === pick.i ? { ...r, type: target } : r));
+  }
+
+  const withEvent = ensureRoomType(result, RoomType.Event, rng);
+  const withShop = ensureRoomType(withEvent, RoomType.Shop, rng);
+  return withShop;
 }

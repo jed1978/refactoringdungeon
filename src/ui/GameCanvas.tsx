@@ -204,10 +204,10 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
               });
               break;
             case "boss_door": {
-              const bossAlive = gs.floor.monsters.some((m) =>
-                m.def.behavior.startsWith("boss_"),
+              const nonBossAlive = gs.floor.monsters.some(
+                (m) => !m.def.behavior.startsWith("boss_"),
               );
-              if (bossAlive) {
+              if (nonBossAlive) {
                 dispatch({
                   type: "SET_INTERACTION_PROMPT",
                   prompt: STRINGS.bossDoorLocked,

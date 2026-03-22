@@ -51,7 +51,6 @@ export type GameAction =
     }
   | {
       readonly type: "COMBAT_END_VICTORY";
-      readonly newPlayerStats: PlayerStats;
       readonly unlockedSkills?: readonly string[];
     }
   | { readonly type: "COMBAT_END_DEFEAT" }
@@ -240,7 +239,6 @@ export function gameReducer(
         },
         player: {
           ...state.player,
-          stats: action.newPlayerStats,
           skills: newSkills,
         },
         runStats: {

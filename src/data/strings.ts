@@ -22,7 +22,7 @@ export const STRINGS = {
   chestOpened: "獲得 15 金幣！",
   combatTriggered: "遭遇了 {0}！",
   floorTransition: "{0}F {1}",
-  bossDoorLocked: "消滅 Boss 才能通過！",
+  bossDoorLocked: "消滅所有小怪才能進入 Boss 房！",
   bossAliveNoStairs: "消滅 Boss 才能下樓！",
   bossDoorOpen: "前方是 Boss 房間...",
   // Combat actions

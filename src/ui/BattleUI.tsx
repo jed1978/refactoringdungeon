@@ -182,7 +182,7 @@ function BattleUIComponent({ onAction }: Props) {
               width: "65%",
               padding: "4px 8px",
               minHeight: "32px",
-              maxHeight: "52px",
+              maxHeight: "130px",
               overflow: "hidden",
             }}
           >

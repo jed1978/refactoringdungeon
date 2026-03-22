@@ -570,6 +570,50 @@ if (fleeFailed) {
 
 **Past incident:** `flee_failed` was correctly handled in `applyEvents()` (no combat lock), but `processPlayerAction` fell through to advance `isPlayerTurn → false`, giving the enemy a free attack after a failed flee — effectively two enemy turns in one round.
 
+### 7. COMBAT_END_VICTORY Must NOT Pass newPlayerStats (CRITICAL)
+
+`APPLY_COMBAT_RESULT` already writes the correct final stats (exp, gold, level-up, HP/MP) to `state.player.stats` during combat. `COMBAT_END_VICTORY` must **not** accept or apply a `newPlayerStats` payload from the 60fps loop.
+
+```ts
+// ✅ CORRECT — reducer uses state.player.stats already set by APPLY_COMBAT_RESULT
+case "COMBAT_END_VICTORY":
+  return { ...state, player: { ...state.player, skills: newSkills }, ... };
+
+// ❌ WRONG — snapshot may be stale, overwrites correctly updated stats
+case "COMBAT_END_VICTORY":
+  return { ...state, player: { ...state.player, stats: action.newPlayerStats, skills: newSkills }, ... };
+```
+
+**Why:** `gameStateRef.current` in the 60fps loop is updated by `useEffect` (after React renders). If `COMBAT_END_VICTORY` fires before `useEffect` has reflected the latest `APPLY_COMBAT_RESULT`, `action.newPlayerStats` is a stale snapshot — it overwrites the correct HP/exp/gold with pre-combat values.
+
+**Past incident:** Combat "felt like it didn't happen" — player's HP appeared unchanged, exp/gold showed no gain, because the stale snapshot reset the React state that `APPLY_COMBAT_RESULT` had correctly updated.
+
+### 8. BossDoor Must Have Exactly One Entrance (CRITICAL)
+
+`placeBossDoor` in `bspGenerator.ts` must:
+1. Collect Floor tiles just outside the boss room boundary
+2. BFS-group them into contiguous entrance clusters
+3. Keep ONE cluster → `TileType.BossDoor`
+4. Seal all other clusters → `TileType.Wall`
+
+Additionally:
+- `validateMap` must be called **after** `placeBossDoor` (not before)
+- `isPassable()` in `mapValidator.ts` must include `TileType.BossDoor` so the validator can reach `bossPos` through the door
+
+**Why:** BSP corridors can pass through the boss room, creating entrances on multiple sides. If all are converted to BossDoor, the corridors are cut — other rooms become unreachable and the dungeon is unbeatable.
+
+**Past incident:** Screenshot showed two BossDoor tiles blocking a corridor, making the dungeon unplayable because both sides were sealed.
+
+### 9. BossDoor and Stairs Progression Logic
+
+- **BossDoor** (entering boss room): opens when ALL **non-boss** monsters are cleared
+  - Check: `floor.monsters.some(m => !m.def.behavior.startsWith("boss_"))`
+  - If true → show "消滅所有小怪才能進入 Boss 房！", block
+- **StairsDown** (descending to next floor): requires the **boss** to be dead
+  - Check: `floor.monsters.some(m => m.def.behavior.startsWith("boss_"))`
+  - If true → show "消滅 Boss 才能下樓！", block
+- `behavior.startsWith("boss_")` is the canonical way to identify boss monsters (there is no `isBoss` field on `MonsterDef`)
+
 ---
 
 ## CODING STANDARDS

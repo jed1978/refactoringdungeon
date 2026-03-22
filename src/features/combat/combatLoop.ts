@@ -218,7 +218,6 @@ function handleAnimationComplete(
   if (loop.outcome === "victory") {
     dispatch({
       type: "COMBAT_END_VICTORY",
-      newPlayerStats: gameState.player.stats,
       unlockedSkills: loop.pendingUnlockedSkills,
     });
     return;

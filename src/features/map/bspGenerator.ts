@@ -223,20 +223,63 @@ function placeDoors(
 
 function placeBossDoor(grid: TileType[][], bossRoom: Room): void {
   const { x, y, width, height } = bossRoom;
-  // Scan tiles just outside the boss room boundary
-  const candidates: Position[] = [];
+
+  // Collect Floor tiles just outside the boss room boundary
+  const borderFloor: Position[] = [];
   for (let col = x - 1; col <= x + width; col++) {
-    candidates.push({ x: col, y: y - 1 });
-    candidates.push({ x: col, y: y + height });
+    if (grid[y - 1]?.[col] === TileType.Floor)
+      borderFloor.push({ x: col, y: y - 1 });
+    if (grid[y + height]?.[col] === TileType.Floor)
+      borderFloor.push({ x: col, y: y + height });
   }
   for (let row = y; row < y + height; row++) {
-    candidates.push({ x: x - 1, y: row });
-    candidates.push({ x: x + width, y: row });
+    if (grid[row]?.[x - 1] === TileType.Floor)
+      borderFloor.push({ x: x - 1, y: row });
+    if (grid[row]?.[x + width] === TileType.Floor)
+      borderFloor.push({ x: x + width, y: row });
   }
-  for (const pos of candidates) {
-    if (grid[pos.y]?.[pos.x] === TileType.Floor) {
-      grid[pos.y][pos.x] = TileType.BossDoor;
+
+  if (borderFloor.length === 0) return;
+
+  // Group contiguous border tiles into separate entrance groups via BFS
+  const visited = new Set<string>();
+  const key = (p: Position) => `${p.x},${p.y}`;
+  const groups: Position[][] = [];
+
+  for (const start of borderFloor) {
+    if (visited.has(key(start))) continue;
+    const group: Position[] = [];
+    const queue: Position[] = [start];
+    visited.add(key(start));
+    while (queue.length > 0) {
+      const p = queue.shift()!;
+      group.push(p);
+      for (const nb of [
+        { x: p.x + 1, y: p.y },
+        { x: p.x - 1, y: p.y },
+        { x: p.x, y: p.y + 1 },
+        { x: p.x, y: p.y - 1 },
+      ]) {
+        if (
+          !visited.has(key(nb)) &&
+          borderFloor.some((f) => f.x === nb.x && f.y === nb.y)
+        ) {
+          visited.add(key(nb));
+          queue.push(nb);
+        }
+      }
     }
+    groups.push(group);
+  }
+
+  // Keep the first group as the BossDoor entrance; seal all others with Wall
+  groups[0].forEach((p) => {
+    grid[p.y][p.x] = TileType.BossDoor;
+  });
+  for (let i = 1; i < groups.length; i++) {
+    groups[i].forEach((p) => {
+      grid[p.y][p.x] = TileType.Wall;
+    });
   }
 }
 
@@ -304,13 +347,14 @@ export function generateFloor(floorLevel: number, seed: number): FloorState {
       y: Math.floor(bossRoom.y + bossRoom.height / 2),
     };
 
-    if (!validateMap(tileMap, startPos, bossPos)) continue;
-
     // Place stairs in boss room
     tileMap[bossPos.y][bossPos.x] = TileType.StairsDown;
 
-    // Place BossDoor at boss room entrance (floor tiles adjacent to but outside the room)
+    // Place BossDoor at boss room entrance (one entrance kept, extras sealed with Wall)
     placeBossDoor(tileMap, bossRoom);
+
+    // Validate after BossDoor placement (BossDoor is now passable in validator)
+    if (!validateMap(tileMap, startPos, bossPos)) continue;
 
     // Populate rooms with content
     const populated = populateRooms(tileMap, typedRooms, floorLevel, rng);

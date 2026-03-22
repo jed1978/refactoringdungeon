@@ -1,18 +1,21 @@
-import type { Position } from '../../utils/types';
-import { TileType } from '../../utils/types';
+import type { Position } from "../../utils/types";
+import { TileType } from "../../utils/types";
 
 function isPassable(tile: TileType): boolean {
-  return tile === TileType.Floor
-    || tile === TileType.DoorLocked
-    || tile === TileType.DoorOpen
-    || tile === TileType.StairsDown
-    || tile === TileType.ChestClosed
-    || tile === TileType.ChestOpen
-    || tile === TileType.Shrine
-    || tile === TileType.Bookshelf
-    || tile === TileType.CoffeeMachine
-    || tile === TileType.NpcMarker
-    || tile === TileType.ShopCounter;
+  return (
+    tile === TileType.Floor ||
+    tile === TileType.DoorLocked ||
+    tile === TileType.DoorOpen ||
+    tile === TileType.StairsDown ||
+    tile === TileType.ChestClosed ||
+    tile === TileType.ChestOpen ||
+    tile === TileType.Shrine ||
+    tile === TileType.Bookshelf ||
+    tile === TileType.CoffeeMachine ||
+    tile === TileType.NpcMarker ||
+    tile === TileType.ShopCounter ||
+    tile === TileType.BossDoor
+  );
 }
 
 export function validateMap(
