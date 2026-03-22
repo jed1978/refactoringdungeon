@@ -38,7 +38,10 @@ export function ShopScreen({ onClose }: Props) {
         {/* Header */}
         <div
           className="flex justify-between items-center mb-3"
-          style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "12px" }}
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: "18px",
+          }}
         >
           <span className="text-yellow-400">{STRINGS.shopTitle}</span>
           <span className="text-yellow-300">💰 {stats.gold}</span>
@@ -47,7 +50,10 @@ export function ShopScreen({ onClose }: Props) {
         {/* Buy consumable items */}
         <div
           className="text-yellow-400 mb-2"
-          style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "10px" }}
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: "14px",
+          }}
         >
           道具
         </div>
@@ -62,19 +68,21 @@ export function ShopScreen({ onClose }: Props) {
                     className="text-white"
                     style={{
                       fontFamily: "'Noto Sans TC', sans-serif",
-                      fontSize: "12px",
+                      fontSize: "18px",
                     }}
                   >
                     {item.name}
                     {owned ? (
-                      <span className="text-gray-400 ml-1">×{owned.quantity}</span>
+                      <span className="text-gray-400 ml-1">
+                        ×{owned.quantity}
+                      </span>
                     ) : null}
                   </div>
                   <div
                     className="text-gray-400"
                     style={{
                       fontFamily: "'Noto Sans TC', sans-serif",
-                      fontSize: "10px",
+                      fontSize: "14px",
                     }}
                   >
                     {item.description}
@@ -88,7 +96,7 @@ export function ShopScreen({ onClose }: Props) {
                   }`}
                   style={{
                     fontFamily: "'Noto Sans TC', sans-serif",
-                    fontSize: "10px",
+                    fontSize: "14px",
                   }}
                   disabled={!canAfford}
                   onClick={() => handleBuy(item.id, item.price)}
@@ -106,7 +114,7 @@ export function ShopScreen({ onClose }: Props) {
             className="text-yellow-400 mb-2"
             style={{
               fontFamily: "'Press Start 2P', monospace",
-              fontSize: "10px",
+              fontSize: "14px",
             }}
           >
             裝備（各 40💰）
@@ -115,16 +123,13 @@ export function ShopScreen({ onClose }: Props) {
             const alreadyEquipped = equipment[eq.slot]?.id === eq.id;
             const canAfford = stats.gold >= 40;
             return (
-              <div
-                key={eq.id}
-                className="flex items-center gap-2 mb-1"
-              >
+              <div key={eq.id} className="flex items-center gap-2 mb-1">
                 <div className="flex-1">
                   <div
                     className="text-white"
                     style={{
                       fontFamily: "'Noto Sans TC', sans-serif",
-                      fontSize: "12px",
+                      fontSize: "18px",
                     }}
                   >
                     {eq.name}
@@ -138,7 +143,7 @@ export function ShopScreen({ onClose }: Props) {
                     className="text-gray-400"
                     style={{
                       fontFamily: "'Noto Sans TC', sans-serif",
-                      fontSize: "10px",
+                      fontSize: "14px",
                     }}
                   >
                     {eq.description}
@@ -153,7 +158,7 @@ export function ShopScreen({ onClose }: Props) {
                     }`}
                     style={{
                       fontFamily: "'Noto Sans TC', sans-serif",
-                      fontSize: "10px",
+                      fontSize: "14px",
                     }}
                     disabled={!canAfford}
                     onClick={() => handleBuyEquip(eq)}
@@ -172,7 +177,7 @@ export function ShopScreen({ onClose }: Props) {
             className="text-yellow-400 mb-2"
             style={{
               fontFamily: "'Press Start 2P', monospace",
-              fontSize: "10px",
+              fontSize: "14px",
             }}
           >
             {STRINGS.sell}（各 +{SELL_PRICE}💰）
@@ -181,12 +186,15 @@ export function ShopScreen({ onClose }: Props) {
             const eq = equipment[slot];
             if (!eq) return null;
             return (
-              <div key={slot} className="flex justify-between items-center mb-1">
+              <div
+                key={slot}
+                className="flex justify-between items-center mb-1"
+              >
                 <span
                   className="text-white"
                   style={{
                     fontFamily: "'Noto Sans TC', sans-serif",
-                    fontSize: "12px",
+                    fontSize: "18px",
                   }}
                 >
                   {eq.name}
@@ -195,7 +203,7 @@ export function ShopScreen({ onClose }: Props) {
                   className="border border-red-400 text-red-400 hover:bg-red-400/20 px-2 py-0.5"
                   style={{
                     fontFamily: "'Noto Sans TC', sans-serif",
-                    fontSize: "10px",
+                    fontSize: "14px",
                   }}
                   onClick={() =>
                     dispatch({
@@ -215,7 +223,7 @@ export function ShopScreen({ onClose }: Props) {
               className="text-gray-500"
               style={{
                 fontFamily: "'Noto Sans TC', sans-serif",
-                fontSize: "12px",
+                fontSize: "18px",
               }}
             >
               沒有裝備可出售
@@ -225,7 +233,10 @@ export function ShopScreen({ onClose }: Props) {
 
         <button
           className="w-full text-center text-gray-400 hover:text-white border border-gray-600 py-1"
-          style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "10px" }}
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: "14px",
+          }}
           onClick={onClose}
         >
           {STRINGS.close}

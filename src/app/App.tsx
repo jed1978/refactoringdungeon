@@ -81,10 +81,11 @@ function AppContent() {
         {/* Inventory toggle button — only in exploring mode */}
         {isExploring && (
           <button
-            className="absolute bottom-16 right-2 z-20 bg-gray-800/80 border border-yellow-600 text-yellow-300 hover:bg-gray-700/80 px-2 py-1 leading-none"
+            className="absolute bottom-16 right-2 z-20 bg-gray-800/80 border-2 border-yellow-600 text-yellow-300 hover:bg-gray-700/80"
             style={{
-              fontFamily: "'Press Start 2P', monospace",
-              fontSize: "18px",
+              fontSize: "36px",
+              lineHeight: 1,
+              padding: "6px 10px",
             }}
             onClick={() => setShowInventory(true)}
             title="開啟背包"

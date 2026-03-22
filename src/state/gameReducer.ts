@@ -13,6 +13,7 @@ import type {
 import { TileType } from "../utils/types";
 import { initCombat } from "../features/combat/combatStateMachine";
 import { ITEMS_MAP } from "../data/items";
+import { STARTING_PLAYER } from "./initialState";
 
 export type GameAction =
   | {
@@ -94,7 +95,7 @@ export function gameReducer(
         ...state,
         gameMode: { mode: "exploring" },
         floor: action.floor,
-        player: { ...state.player, position: action.startPos },
+        player: { ...STARTING_PLAYER, position: action.startPos },
         currentFloor: action.floor.level,
         interactionPrompt: null,
       };

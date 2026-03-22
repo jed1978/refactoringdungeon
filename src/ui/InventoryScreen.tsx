@@ -24,7 +24,10 @@ export function InventoryScreen({ onClose }: Props) {
         {/* Header */}
         <div
           className="flex justify-between items-center mb-3"
-          style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "12px" }}
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: "18px",
+          }}
         >
           <span className="text-yellow-400">{STRINGS.equipmentTitle}</span>
           <span className="text-yellow-300">💰 {stats.gold}</span>
@@ -40,7 +43,7 @@ export function InventoryScreen({ onClose }: Props) {
                 className="flex items-center gap-2"
                 style={{
                   fontFamily: "'Noto Sans TC', sans-serif",
-                  fontSize: "11px",
+                  fontSize: "16px",
                 }}
               >
                 <span className="text-gray-400 w-10 shrink-0">
@@ -55,7 +58,7 @@ export function InventoryScreen({ onClose }: Props) {
                     onClick={() => dispatch({ type: "UNEQUIP", slot })}
                     style={{
                       fontFamily: "'Noto Sans TC', sans-serif",
-                      fontSize: "11px",
+                      fontSize: "16px",
                     }}
                   >
                     {STRINGS.unequip}
@@ -70,7 +73,10 @@ export function InventoryScreen({ onClose }: Props) {
         <div className="border-t border-gray-600 pt-2 mb-3">
           <div
             className="text-yellow-400 mb-2"
-            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "10px" }}
+            style={{
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: "14px",
+            }}
           >
             {STRINGS.inventoryTitle}
           </div>
@@ -79,7 +85,7 @@ export function InventoryScreen({ onClose }: Props) {
               className="text-gray-500"
               style={{
                 fontFamily: "'Noto Sans TC', sans-serif",
-                fontSize: "12px",
+                fontSize: "18px",
               }}
             >
               {STRINGS.noItems}
@@ -94,7 +100,7 @@ export function InventoryScreen({ onClose }: Props) {
                   className="text-white"
                   style={{
                     fontFamily: "'Noto Sans TC', sans-serif",
-                    fontSize: "12px",
+                    fontSize: "18px",
                   }}
                 >
                   {item.name} ×{item.quantity}
@@ -103,7 +109,7 @@ export function InventoryScreen({ onClose }: Props) {
                   className="text-green-400 hover:text-green-300 px-1"
                   style={{
                     fontFamily: "'Noto Sans TC', sans-serif",
-                    fontSize: "11px",
+                    fontSize: "16px",
                   }}
                   onClick={() =>
                     dispatch({ type: "USE_ITEM", itemId: item.id })
@@ -118,7 +124,10 @@ export function InventoryScreen({ onClose }: Props) {
 
         <button
           className="w-full text-center text-gray-400 hover:text-white border border-gray-600 py-1"
-          style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "10px" }}
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: "14px",
+          }}
           onClick={onClose}
         >
           {STRINGS.close}
