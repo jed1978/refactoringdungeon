@@ -120,10 +120,24 @@ Monster died
   → animate 800ms: pixels scatter outward + fade alpha
 ```
 
-### Web Audio Synthesized SFX
+### Web Audio Synthesized SFX & BGM
 
 零音訊檔案，全部使用 Web Audio API `OscillatorNode` + `GainNode` 合成：
-14 種音效包含攻擊音、暴擊、怪物死亡、升級琶音、勝利和弦等。
+
+- **SFX（`AudioSystem.ts`）**：14 種一次性音效，包含攻擊音、暴擊、怪物死亡、升級琶音、勝利和弦等。
+- **BGM（`MusicSystem.ts` + `MusicTracks.ts`）**：9 首合成背景音樂，依 GameMode 自動切換，300ms crossfade：
+
+| 場景 | 音樂 | 特性 |
+|------|------|------|
+| Title Screen | C minor 神秘琶音 | 100 BPM，loop |
+| 1F 前端泥沼 | A minor 低調氛圍 | 80 BPM，loop |
+| 2F 後端迷宮 | D minor 機械節奏 | 80 BPM，loop |
+| 3F 資料庫深淵 | G minor 深沉低音 | 70 BPM，loop |
+| 4F 神類聖殿 | D minor 壓迫和弦 | 80 BPM，loop |
+| 一般戰鬥 | A minor 快節奏 | 140 BPM，loop |
+| Boss 戰 | D minor 高速連奏 | 160 BPM，loop |
+| 勝利 | C major fanfare | 120 BPM，一次性 |
+| 遊戲結束 | A minor 下行旋律 | 60 BPM，一次性 |
 
 ### 樓層推進邏輯
 
@@ -147,7 +161,8 @@ BossDoor 解鎖（按 Space 開門）
 2. **Pixel Dissolve** — `src/engine/PixelDissolve.ts`：每個像素都是獨立粒子，800ms 飛散效果，純數學無圖片。
 3. **BSP Generator** — `src/features/map/bspGenerator.ts`：Binary Space Partition 演算法生成無限不重複地城。
 4. **Two-Tier State** — 60fps 遊戲循環（`useRef`）與 React 狀態（`useReducer`）分離，各司其職。
-5. **Zero Dependencies** — 無後端、無外部 API、無圖片、無音效檔。整個遊戲就是 TypeScript + Canvas + React。
+5. **Zero Dependencies** — 無後端、無外部 API、無圖片、無音效檔、無音樂檔。整個遊戲就是 TypeScript + Canvas + React。
+6. **Synthesized BGM** — `src/engine/MusicSystem.ts`：9 首背景音樂用 Web Audio OscillatorNode 合成，依遊戲模式自動切換，300ms crossfade，零音檔。
 
 ---
 
@@ -157,7 +172,9 @@ BossDoor 解鎖（按 Space 開門）
 src/
 ├── app/              # React root、providers
 ├── engine/           # Canvas 渲染引擎（零 React 依賴）
-│   ├── AudioSystem.ts      # Web Audio 合成音效
+│   ├── AudioSystem.ts      # Web Audio 合成音效（14 種 SFX）
+│   ├── MusicSystem.ts      # BGM 引擎（切換、淡入淡出、loop）
+│   ├── MusicTracks.ts      # BGM 音符序列資料（9 首曲目）
 │   ├── BattleAnimator.ts   # 戰鬥動畫佇列
 │   ├── BattleRenderer.ts   # 戰鬥場景繪製
 │   ├── LightingSystem.ts   # 火炬光照效果

@@ -377,7 +377,10 @@ src/
 │   ├── SpriteRenderer.ts   # Draw sprite frames to canvas
 │   ├── ParticleSystem.ts   # Pixel dissolve, sparkles, damage numbers
 │   ├── LightingSystem.ts   # Torch light radial gradient + flicker
-│   └── TileRenderer.ts     # Draw tile map (only visible tiles)
+│   ├── TileRenderer.ts     # Draw tile map (only visible tiles)
+│   ├── AudioSystem.ts      # Web Audio synthesized SFX (14 sounds)
+│   ├── MusicSystem.ts      # BGM engine: track switching, loop, fade
+│   └── MusicTracks.ts      # BGM note sequence data (9 tracks)
 ├── sprites/                # All sprite data (pure data, no logic)
 │   ├── player.ts           # Player sprite frames
 │   ├── monsters/           # One file per monster
@@ -613,6 +616,34 @@ Additionally:
   - Check: `floor.monsters.some(m => m.def.behavior.startsWith("boss_"))`
   - If true → show "消滅 Boss 才能下樓！", block
 - `behavior.startsWith("boss_")` is the canonical way to identify boss monsters (there is no `isBoss` field on `MonsterDef`)
+
+### 10. MusicSystem Mute Must Sync Both Systems (CRITICAL)
+
+There are two independent audio systems: `AudioSystem` (SFX) and `MusicSystem` (BGM). Both must be muted/unmuted together. Muting only one silences one channel but leaves the other playing.
+
+```ts
+// ✅ CORRECT — in every mute toggle handler (HUD.tsx, PauseMenu.tsx)
+AudioSystem.setMuted(next);
+MusicSystem.setMuted(next);
+
+// ❌ WRONG — BGM keeps playing after player hits mute
+AudioSystem.setMuted(next);
+```
+
+`MusicSystem` does NOT call `AudioSystem.setMuted` internally (that would create a circular import). Each component that exposes a mute toggle is responsible for calling both.
+
+**MusicSystem files:**
+- `src/engine/MusicSystem.ts` — engine logic (track switching, fade, loop scheduling)
+- `src/engine/MusicTracks.ts` — note sequence data (`// prettier-ignore` to keep arrays compact)
+
+**Track → GameMode mapping** (in `computeMusicTrack`, `GameCanvas.tsx`):
+- `title` → `"title"`
+- `exploring` / `event` / `shop` → `"explore_{currentFloor}"` (clamped to 4)
+- `combat` → `"combat_boss"` if any enemy has `behavior.startsWith("boss_")`, else `"combat"`
+- `victory` → `"victory"` (one-shot, no loop)
+- `game_over` → `"game_over"` (one-shot, no loop)
+
+**MusicSystem exception to engine purity rule:** `MusicSystem.ts` imports `getCtx()` from `AudioSystem.ts` to share the same `AudioContext`. This is the only allowed cross-import within `src/engine/` — it avoids creating duplicate `AudioContext` instances (browsers limit their count).
 
 ---
 
