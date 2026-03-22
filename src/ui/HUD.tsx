@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import { useGameState, useGameDispatch } from "../state/GameContext";
 import { FLOOR_THEMES } from "../utils/constants";
 import { AudioSystem } from "../engine/AudioSystem";
+import { MusicSystem } from "../engine/MusicSystem";
 
 type HUDProps = {
   readonly onMenuClick?: () => void;
@@ -19,6 +20,7 @@ export const HUD = React.memo(function HUD({ onMenuClick }: HUDProps) {
   const toggleMute = useCallback(() => {
     const next = !AudioSystem.isMuted();
     AudioSystem.setMuted(next);
+    MusicSystem.setMuted(next);
     setLocalMuted(next);
     dispatch({ type: "TOGGLE_MUTE" });
   }, [dispatch]);

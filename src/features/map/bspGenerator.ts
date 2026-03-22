@@ -1,4 +1,4 @@
-import type { Position, FloorState } from "../../utils/types";
+import type { Position, FloorState, Room } from "../../utils/types";
 import { TileType, RoomType } from "../../utils/types";
 import { FLOOR_THEMES } from "../../utils/constants";
 import { createRng, randomInt } from "../../utils/random";

@@ -1,7 +1,7 @@
 let ctx: AudioContext | null = null;
 let muted = false;
 
-function getCtx(): AudioContext {
+export function getCtx(): AudioContext {
   if (!ctx) ctx = new AudioContext();
   if (ctx.state === "suspended") void ctx.resume();
   return ctx;
@@ -51,11 +51,7 @@ function playFreqSweep(
   osc.stop(c.currentTime + durationMs / 1000 + 0.05);
 }
 
-function playNoise(
-  durationMs: number,
-  filterFreq = 300,
-  volume = 0.1,
-): void {
+function playNoise(durationMs: number, filterFreq = 300, volume = 0.1): void {
   const c = getCtx();
   const bufLen = Math.ceil((c.sampleRate * durationMs) / 1000);
   const buf = c.createBuffer(1, bufLen, c.sampleRate);

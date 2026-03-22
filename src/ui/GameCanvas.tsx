@@ -6,7 +6,9 @@ import {
   useImperativeHandle,
 } from "react";
 import { Direction, TileType } from "../utils/types";
-import type { CameraState, CombatAction } from "../utils/types";
+import type { CameraState, CombatAction, GameMode } from "../utils/types";
+import { MusicSystem } from "../engine/MusicSystem";
+import type { MusicTrack } from "../engine/MusicSystem";
 import { TILE_SIZE, VIEWPORT } from "../utils/constants";
 import { createGameLoop } from "../engine/GameLoop";
 import type { GameLoopHandle } from "../engine/GameLoop";
@@ -49,6 +51,29 @@ export type GameCanvasHandle = {
   submitCombatAction: (action: CombatAction) => void;
 };
 
+function computeMusicTrack(gameMode: GameMode, floor: number): MusicTrack {
+  switch (gameMode.mode) {
+    case "title":
+      return "title";
+    case "exploring":
+    case "event":
+    case "shop":
+      return `explore_${Math.min(floor, 4)}` as MusicTrack;
+    case "combat":
+      return gameMode.combat.enemies.some((e) =>
+        e.def.behavior.startsWith("boss_"),
+      )
+        ? "combat_boss"
+        : "combat";
+    case "victory":
+      return "victory";
+    case "game_over":
+      return "game_over";
+    default:
+      return "silence";
+  }
+}
+
 export const GameCanvas = forwardRef<GameCanvasHandle, object>(
   function GameCanvas(_, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,6 +84,14 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
     useEffect(() => {
       gameStateRef.current = gameState;
     }, [gameState]);
+
+    const musicTrack = computeMusicTrack(
+      gameState.gameMode,
+      gameState.currentFloor,
+    );
+    useEffect(() => {
+      MusicSystem.setTrack(musicTrack);
+    }, [musicTrack]);
 
     const stateRef = useRef({
       playerTileX: 0,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameState, useGameDispatch } from "../state/GameContext";
 import { AudioSystem } from "../engine/AudioSystem";
+import { MusicSystem } from "../engine/MusicSystem";
 import { saveToLocalStorage } from "../state/saveLoad";
 import { STRINGS } from "../data/strings";
 
@@ -24,6 +25,7 @@ export function PauseMenu({ onClose }: Props) {
   const handleToggleSound = () => {
     const next = !AudioSystem.isMuted();
     AudioSystem.setMuted(next);
+    MusicSystem.setMuted(next);
     setMuted(next);
     dispatch({ type: "TOGGLE_MUTE" });
   };
