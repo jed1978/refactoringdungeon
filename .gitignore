@@ -29,3 +29,6 @@ screenshots/
 # Claude Code
 .claude/
 .playwright-mcp/
+
+# Browser test screenshots
+*.png
