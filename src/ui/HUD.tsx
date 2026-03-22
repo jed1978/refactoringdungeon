@@ -4,7 +4,7 @@ import { FLOOR_THEMES } from "../utils/constants";
 import { AudioSystem } from "../engine/AudioSystem";
 
 export const HUD = React.memo(function HUD() {
-  const { currentFloor, settings } = useGameState();
+  const { currentFloor, settings, demoMode } = useGameState();
   const dispatch = useGameDispatch();
   const [localMuted, setLocalMuted] = useState(settings.muted);
 
@@ -27,6 +27,17 @@ export const HUD = React.memo(function HUD() {
       >
         {floorName}
       </span>
+      {demoMode && (
+        <span
+          className="text-yellow-300 border border-yellow-400 px-2 py-0.5 rounded"
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: "14px",
+          }}
+        >
+          DEMO
+        </span>
+      )}
       <button
         onClick={toggleMute}
         className="text-white text-2xl px-2 py-1 hover:opacity-70 transition-opacity"
