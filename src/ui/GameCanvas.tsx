@@ -203,6 +203,29 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
                 },
               });
               break;
+            case "boss_door": {
+              const bossAlive = gs.floor.monsters.some((m) =>
+                m.def.behavior.startsWith("boss_"),
+              );
+              if (bossAlive) {
+                dispatch({
+                  type: "SET_INTERACTION_PROMPT",
+                  prompt: STRINGS.bossDoorLocked,
+                });
+                setTimeout(
+                  () =>
+                    dispatch({ type: "SET_INTERACTION_PROMPT", prompt: null }),
+                  1500,
+                );
+              } else {
+                dispatch({
+                  type: "OPEN_BOSS_DOOR",
+                  position: facing.position,
+                });
+                AudioSystem.play("door_open");
+              }
+              break;
+            }
             case "shop":
               dispatch({
                 type: "SET_GAME_MODE",
@@ -220,7 +243,22 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
             { x: s.playerTileX, y: s.playerTileY },
           );
           if (standing.kind === "stairs" && s.transition.kind === "idle") {
-            s.transition = startTransition();
+            const bossAlive = gs.floor.monsters.some((m) =>
+              m.def.behavior.startsWith("boss_"),
+            );
+            if (bossAlive) {
+              dispatch({
+                type: "SET_INTERACTION_PROMPT",
+                prompt: STRINGS.bossAliveNoStairs,
+              });
+              setTimeout(
+                () =>
+                  dispatch({ type: "SET_INTERACTION_PROMPT", prompt: null }),
+                1500,
+              );
+            } else {
+              s.transition = startTransition();
+            }
           }
         }
       },
@@ -588,6 +626,8 @@ function getFacingPrompt(kind: string): string {
       return STRINGS.chestPrompt;
     case "door_locked":
       return STRINGS.doorLockedPrompt;
+    case "boss_door":
+      return STRINGS.bossDoorOpen;
     case "shop":
       return STRINGS.shopPrompt;
     default:

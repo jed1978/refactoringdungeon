@@ -221,6 +221,25 @@ function placeDoors(
   }
 }
 
+function placeBossDoor(grid: TileType[][], bossRoom: Room): void {
+  const { x, y, width, height } = bossRoom;
+  // Scan tiles just outside the boss room boundary
+  const candidates: Position[] = [];
+  for (let col = x - 1; col <= x + width; col++) {
+    candidates.push({ x: col, y: y - 1 });
+    candidates.push({ x: col, y: y + height });
+  }
+  for (let row = y; row < y + height; row++) {
+    candidates.push({ x: x - 1, y: row });
+    candidates.push({ x: x + width, y: row });
+  }
+  for (const pos of candidates) {
+    if (grid[pos.y]?.[pos.x] === TileType.Floor) {
+      grid[pos.y][pos.x] = TileType.BossDoor;
+    }
+  }
+}
+
 function buildGrid(rng: () => number): {
   tileMap: TileType[][];
   rooms: { x: number; y: number; w: number; h: number }[];
@@ -289,6 +308,9 @@ export function generateFloor(floorLevel: number, seed: number): FloorState {
 
     // Place stairs in boss room
     tileMap[bossPos.y][bossPos.x] = TileType.StairsDown;
+
+    // Place BossDoor at boss room entrance (floor tiles adjacent to but outside the room)
+    placeBossDoor(tileMap, bossRoom);
 
     // Populate rooms with content
     const populated = populateRooms(tileMap, typedRooms, floorLevel, rng);

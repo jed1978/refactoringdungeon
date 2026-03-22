@@ -1,14 +1,14 @@
-import type { Room, MonsterState, Position } from '../../utils/types';
-import { TileType, RoomType } from '../../utils/types';
-import { randomInt } from '../../utils/random';
-import { getMonsterPool } from './monsterPools';
+import type { Room, MonsterState, Position } from "../../utils/types";
+import { TileType, RoomType } from "../../utils/types";
+import { randomInt } from "../../utils/random";
+import { getMonsterPool } from "./monsterPools";
 import {
   FLOOR1_BOSS,
   FLOOR2_BOSS,
   FLOOR3_BOSS,
   FLOOR4_BOSS,
-} from '../../data/monsters';
-import type { MonsterDef } from '../../utils/types';
+} from "../../data/monsters";
+import type { MonsterDef } from "../../utils/types";
 
 type PopulateResult = {
   readonly tileMap: TileType[][];
@@ -57,6 +57,12 @@ export function getBossForFloor(floorLevel: number): MonsterDef {
   }
 }
 
+const ALL_EVENT_TILES = [
+  TileType.Shrine,
+  TileType.Bookshelf,
+  TileType.CoffeeMachine,
+] as const;
+
 export function populateRooms(
   tileMap: TileType[][],
   rooms: readonly Room[],
@@ -66,6 +72,7 @@ export function populateRooms(
   const monsters: MonsterState[] = [];
   const pool = getMonsterPool(floorLevel);
   const occupied = new Set<string>();
+  const usedEvents = new Set<TileType>();
 
   for (const room of rooms) {
     const center = roomCenter(room);
@@ -88,15 +95,12 @@ export function populateRooms(
       }
 
       case RoomType.Event: {
-        // Place a random event object at center
-        const eventTiles = [
-          TileType.Shrine,
-          TileType.Bookshelf,
-          TileType.CoffeeMachine,
-        ];
-        const tile = eventTiles[randomInt(rng, 0, eventTiles.length - 1)];
+        const remaining = ALL_EVENT_TILES.filter((t) => !usedEvents.has(t));
+        if (remaining.length === 0) break; // all 3 used, leave as empty
+        const tile = remaining[randomInt(rng, 0, remaining.length - 1)];
         if (tileMap[center.y]?.[center.x] === TileType.Floor) {
           tileMap[center.y][center.x] = tile;
+          usedEvents.add(tile);
         }
         break;
       }

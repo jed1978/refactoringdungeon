@@ -37,6 +37,7 @@ export type GameAction =
       readonly explored: readonly (readonly boolean[])[];
     }
   | { readonly type: "OPEN_CHEST"; readonly position: Position }
+  | { readonly type: "OPEN_BOSS_DOOR"; readonly position: Position }
   | { readonly type: "DEFEAT_MONSTER"; readonly monsterIndex: number }
   | {
       readonly type: "TRIGGER_COMBAT";
@@ -157,6 +158,19 @@ export function gameReducer(
           stats: { ...state.player.stats, gold: state.player.stats.gold + 15 },
         },
       };
+    }
+
+    case "OPEN_BOSS_DOOR": {
+      const newTileMap = state.floor.tileMap.map((row, y) =>
+        y === action.position.y
+          ? row.map((tile, x) =>
+              x === action.position.x && tile === TileType.BossDoor
+                ? TileType.DoorOpen
+                : tile,
+            )
+          : row,
+      );
+      return { ...state, floor: { ...state.floor, tileMap: newTileMap } };
     }
 
     case "DEFEAT_MONSTER": {
