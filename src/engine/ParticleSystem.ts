@@ -5,10 +5,10 @@ export type Particle = {
   vy: number;
   color: string;
   alpha: number;
-  life: number;     // total life in ms
-  elapsed: number;  // elapsed ms
-  gravity: number;  // pixels/s^2
-  size: number;     // pixels
+  life: number; // total life in ms
+  elapsed: number; // elapsed ms
+  gravity: number; // pixels/s^2
+  size: number; // pixels
 };
 
 export type ParticleSystem = {
@@ -48,7 +48,12 @@ export function updateParticles(
     });
   }
 
-  return { particles: alive };
+  const MAX_PARTICLES = 500;
+  const capped =
+    alive.length > MAX_PARTICLES
+      ? alive.slice(alive.length - MAX_PARTICLES)
+      : alive;
+  return { particles: capped };
 }
 
 export function renderParticles(

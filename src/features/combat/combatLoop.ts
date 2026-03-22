@@ -37,6 +37,7 @@ import {
   BATTLE_PLAYER_Y,
 } from "../../engine/BattleRenderer";
 import { monsterBattleSprites } from "../../sprites/monsters/battleIndex";
+import { AudioSystem } from "../../engine/AudioSystem";
 
 export type CombatLoopState = {
   animState: BattleAnimState;
@@ -183,6 +184,7 @@ function handlePendingAction(
     pendingAction,
     gameState.player.stats,
     loop.rng,
+    gameState.demoMode ?? false,
   );
   onActionConsumed();
   loop.lastProcessedTurnIndex = -1;
@@ -240,6 +242,7 @@ function handleAnimationComplete(
         entry.index,
         gameState.player.stats,
         loop.rng,
+        gameState.demoMode ?? false,
       );
       loop.localPhase = result.state.phase;
       applyEvents(loop, result.events, combat);
@@ -284,6 +287,7 @@ function applyEvents(
             ),
           ];
         }
+        AudioSystem.play(event.isCrit ? "critical" : "attack_hit");
         break;
       }
       case "flee_failed":
@@ -301,6 +305,7 @@ function applyEvents(
             false,
           ),
         ];
+        AudioSystem.play("enemy_hit");
         break;
       case "reveal":
         // Flash the revealed enemy to show the reveal effect
@@ -312,6 +317,7 @@ function applyEvents(
         break;
       case "skill_used":
         // Animation handled by accompanying damage_dealt / buff_applied events
+        AudioSystem.play("skill_cast");
         break;
       case "monster_died":
         loop.animState = queueAnimation(loop.animState, {
@@ -319,6 +325,7 @@ function applyEvents(
           targetIndex: event.index,
           elapsed: 0,
         });
+        AudioSystem.play("monster_die");
         break;
       case "buff_applied":
         if (event.target === "player") {
@@ -351,6 +358,7 @@ function applyEvents(
           ...loop.pendingUnlockedSkills,
           ...event.unlockedSkills,
         ];
+        AudioSystem.play("level_up");
         break;
       case "damage_received": {
         const entry = combat.turnOrder[combat.currentTurnIndex];
@@ -374,6 +382,7 @@ function applyEvents(
             false,
           ),
         ];
+        AudioSystem.play("enemy_hit");
         break;
       }
       case "damage_reflected":
@@ -391,6 +400,7 @@ function applyEvents(
             false,
           ),
         ];
+        AudioSystem.play("enemy_hit");
         break;
       case "monster_summon":
         loop.animState = queueAnimation(loop.animState, {
@@ -410,6 +420,7 @@ function applyEvents(
           kind: "boss_phase_shift",
           elapsed: 0,
         });
+        AudioSystem.play("boss_appear");
         break;
       case "boss_enrage":
         loop.animState = queueAnimation(loop.animState, {
@@ -424,6 +435,7 @@ function applyEvents(
           elapsed: 0,
         });
         loop.outcome = "victory";
+        AudioSystem.play("victory");
         break;
       case "combat_lost":
         loop.animState = queueAnimation(loop.animState, {
@@ -431,6 +443,7 @@ function applyEvents(
           elapsed: 0,
         });
         loop.outcome = "defeat";
+        AudioSystem.play("game_over");
         break;
       case "fled":
         loop.animState = queueAnimation(loop.animState, {
@@ -438,12 +451,14 @@ function applyEvents(
           elapsed: 0,
         });
         loop.outcome = "fled";
+        AudioSystem.play("flee");
         break;
       case "item_used":
         loop.animState = queueAnimation(loop.animState, {
           kind: "screen_flash_white",
           elapsed: 0,
         });
+        AudioSystem.play("item_used");
         break;
     }
   }

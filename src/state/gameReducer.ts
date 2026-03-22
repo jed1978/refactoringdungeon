@@ -13,7 +13,11 @@ import type {
 import { TileType } from "../utils/types";
 import { initCombat } from "../features/combat/combatStateMachine";
 import { ITEMS_MAP } from "../data/items";
-import { STARTING_PLAYER } from "./initialState";
+import {
+  STARTING_PLAYER,
+  DEMO_PLAYER,
+  INITIAL_RUN_STATS,
+} from "./initialState";
 
 export type GameAction =
   | {
@@ -80,7 +84,18 @@ export type GameAction =
       readonly slot: keyof EquipmentSlots;
       readonly price: number;
     }
-  | { readonly type: "CONSUME_ITEM"; readonly itemId: string };
+  | { readonly type: "CONSUME_ITEM"; readonly itemId: string }
+  | { readonly type: "TOGGLE_MUTE" }
+  | { readonly type: "DISMISS_TUTORIAL"; readonly which: "move" | "combat" }
+  | {
+      readonly type: "START_DEMO";
+      readonly floor: FloorState;
+      readonly startPos: Position;
+    }
+  | { readonly type: "INCREMENT_KILLS" }
+  | { readonly type: "INCREMENT_ITEMS_USED" }
+  | { readonly type: "INCREMENT_SKILL_USE"; readonly skillId: string }
+  | { readonly type: "SET_FLOOR_CLEARED"; readonly floor: number };
 
 export type GameStateWithPrompt = GameState & {
   readonly interactionPrompt: string | null;
@@ -99,6 +114,9 @@ export function gameReducer(
         player: { ...STARTING_PLAYER, position: action.startPos },
         currentFloor: action.floor.level,
         interactionPrompt: null,
+        runStats: { ...INITIAL_RUN_STATS, startTime: Date.now() },
+        flags: { tutorialMove: false, tutorialCombat: false },
+        demoMode: false,
       };
 
     case "LOAD_SAVE":
@@ -387,6 +405,76 @@ export function gameReducer(
         player: { ...state.player, inventory: newInventory },
       };
     }
+
+    case "TOGGLE_MUTE":
+      return {
+        ...state,
+        settings: { ...state.settings, muted: !state.settings.muted },
+      };
+
+    case "DISMISS_TUTORIAL":
+      return {
+        ...state,
+        flags: {
+          ...state.flags,
+          ...(action.which === "move"
+            ? { tutorialMove: true }
+            : { tutorialCombat: true }),
+        },
+      };
+
+    case "START_DEMO":
+      return {
+        ...state,
+        gameMode: { mode: "exploring" },
+        floor: action.floor,
+        player: { ...DEMO_PLAYER, position: action.startPos },
+        currentFloor: action.floor.level,
+        interactionPrompt: null,
+        runStats: { ...INITIAL_RUN_STATS, startTime: Date.now() },
+        flags: { tutorialMove: true, tutorialCombat: true },
+        demoMode: true,
+      };
+
+    case "INCREMENT_KILLS":
+      return {
+        ...state,
+        runStats: {
+          ...state.runStats,
+          monstersKilled: state.runStats.monstersKilled + 1,
+        },
+      };
+
+    case "INCREMENT_ITEMS_USED":
+      return {
+        ...state,
+        runStats: {
+          ...state.runStats,
+          itemsUsed: state.runStats.itemsUsed + 1,
+        },
+      };
+
+    case "INCREMENT_SKILL_USE":
+      return {
+        ...state,
+        runStats: {
+          ...state.runStats,
+          skillUseCounts: {
+            ...state.runStats.skillUseCounts,
+            [action.skillId]:
+              (state.runStats.skillUseCounts[action.skillId] ?? 0) + 1,
+          },
+        },
+      };
+
+    case "SET_FLOOR_CLEARED":
+      return {
+        ...state,
+        runStats: {
+          ...state.runStats,
+          floorsCleared: Math.max(state.runStats.floorsCleared, action.floor),
+        },
+      };
 
     default:
       return state;

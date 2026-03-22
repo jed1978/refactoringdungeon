@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { CombatAction } from "../utils/types";
 import { useGameState } from "../state/GameContext";
 import { SkillMenu } from "./SkillMenu";
@@ -12,7 +12,7 @@ type Props = {
 
 type PendingType = "attack" | "skill" | null;
 
-export function BattleUI({ onAction }: Props) {
+function BattleUIComponent({ onAction }: Props) {
   const gameState = useGameState();
   const [showSkills, setShowSkills] = useState(false);
   const [showItems, setShowItems] = useState(false);
@@ -373,7 +373,12 @@ type ButtonProps = {
   active?: boolean;
 };
 
-function BattleButton({ label, disabled, onClick, active }: ButtonProps) {
+function BattleButtonComponent({
+  label,
+  disabled,
+  onClick,
+  active,
+}: ButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -397,3 +402,7 @@ function BattleButton({ label, disabled, onClick, active }: ButtonProps) {
     </button>
   );
 }
+
+const BattleButton = memo(BattleButtonComponent);
+
+export const BattleUI = memo(BattleUIComponent);

@@ -94,4 +94,26 @@ export const STRINGS = {
   notEnoughGold: "金幣不足！",
   itemUsed: "使用了 {0}！",
   equipChanged: "裝備了 {0}！",
+  // Phase 5: polish
+  demoMode: "DEMO MODE",
+  tutorialMove: "WASD / 方向鍵移動　Space / Enter 互動",
+  tutorialCombat: "進入戰鬥！選擇行動開始戰鬥",
+  tapToDismiss: "（點擊任意處關閉）",
+  shareText: "我在重構地城成功打敗了 God Class！LV.{0} / 用時 {1} 分鐘 🏆",
+  statsKills: "擊殺怪物",
+  statsFloors: "探索樓層",
+  statsTime: "通關時間",
 } as const;
+
+export const EPITAPHS = [
+  "他死於一個沒有寫測試的重構",
+  "享年 LV.{0}，死因：在 production 直接 debug",
+  "他的最後一句話是：「我先 deploy 再說」",
+  "遺言：「這個 bug 應該不影響...」",
+  "此處長眠一位相信 TODO 會被處理的工程師",
+  "死因：把 console.log 當作 debugging tool",
+  "他的 PR 永遠停在 Requested Changes",
+  "一生都在等 code review approve",
+  "最後一個 commit message: fix bug（無說明）",
+  "遺願：刪除我的 search history 和 node_modules",
+] as const;

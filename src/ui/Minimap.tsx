@@ -1,21 +1,21 @@
-import { useRef, useEffect } from 'react';
-import { useGameState } from '../state/GameContext';
-import { TileType, RoomType } from '../utils/types';
+import { useRef, useEffect, memo } from "react";
+import { useGameState } from "../state/GameContext";
+import { TileType, RoomType } from "../utils/types";
 
 const SCALE = 3; // 3px per tile
 const COLORS: Record<string, string> = {
-  floor: '#4a5944',
-  wall: '#2d3328',
-  player: '#22c55e',
-  monster: '#ef4444',
-  boss: '#dc2626',
-  stairs: '#60a5fa',
-  chest: '#fbbf24',
-  event: '#818cf8',
-  unexplored: '#000000',
+  floor: "#4a5944",
+  wall: "#2d3328",
+  player: "#22c55e",
+  monster: "#ef4444",
+  boss: "#dc2626",
+  stairs: "#60a5fa",
+  chest: "#fbbf24",
+  event: "#818cf8",
+  unexplored: "#000000",
 };
 
-export function Minimap() {
+function MinimapComponent() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameState = useGameState();
 
@@ -30,14 +30,14 @@ export function Minimap() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
 
     let animId: number;
     let stopped = false;
 
     function draw() {
       if (stopped) return;
-      ctx.fillStyle = '#000000';
+      ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
       // Draw explored tiles
@@ -48,18 +48,25 @@ export function Minimap() {
           const tile = tileMap[y]?.[x];
           if (tile === undefined || tile === TileType.Void) continue;
 
-          ctx.fillStyle = tile === TileType.Wall ? COLORS.wall
-            : tile === TileType.StairsDown ? COLORS.stairs
-            : tile === TileType.ChestClosed ? COLORS.chest
-            : (tile === TileType.Shrine || tile === TileType.Bookshelf || tile === TileType.CoffeeMachine) ? COLORS.event
-            : COLORS.floor;
+          ctx.fillStyle =
+            tile === TileType.Wall
+              ? COLORS.wall
+              : tile === TileType.StairsDown
+                ? COLORS.stairs
+                : tile === TileType.ChestClosed
+                  ? COLORS.chest
+                  : tile === TileType.Shrine ||
+                      tile === TileType.Bookshelf ||
+                      tile === TileType.CoffeeMachine
+                    ? COLORS.event
+                    : COLORS.floor;
 
           ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
         }
       }
 
       // Draw boss room indicator
-      const bossRoom = rooms.find(r => r.type === RoomType.Boss);
+      const bossRoom = rooms.find((r) => r.type === RoomType.Boss);
       if (bossRoom) {
         const bossExplored = explored[bossRoom.y]?.[bossRoom.x];
         if (bossExplored) {
@@ -97,7 +104,17 @@ export function Minimap() {
       stopped = true;
       cancelAnimationFrame(animId);
     };
-  }, [tileMap, explored, rooms, monsters, playerPos, mapWidth, mapHeight, canvasWidth, canvasHeight]);
+  }, [
+    tileMap,
+    explored,
+    rooms,
+    monsters,
+    playerPos,
+    mapWidth,
+    mapHeight,
+    canvasWidth,
+    canvasHeight,
+  ]);
 
   return (
     <canvas
@@ -106,10 +123,12 @@ export function Minimap() {
       height={canvasHeight}
       className="absolute top-8 left-1 z-20 opacity-80"
       style={{
-        imageRendering: 'pixelated',
-        border: '1px solid rgba(255,255,255,0.2)',
-        backgroundColor: 'rgba(0,0,0,0.6)',
+        imageRendering: "pixelated",
+        border: "1px solid rgba(255,255,255,0.2)",
+        backgroundColor: "rgba(0,0,0,0.6)",
       }}
     />
   );
 }
+
+export const Minimap = memo(MinimapComponent);

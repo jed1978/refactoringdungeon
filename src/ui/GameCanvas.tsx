@@ -43,6 +43,7 @@ import {
 import type { CombatLoopState } from "../features/combat/combatLoop";
 import { queueAnimation } from "../engine/BattleAnimator";
 import { createRng } from "../utils/random";
+import { AudioSystem } from "../engine/AudioSystem";
 
 export type GameCanvasHandle = {
   submitCombatAction: (action: CombatAction) => void;
@@ -165,6 +166,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
           switch (facing.kind) {
             case "chest":
               dispatch({ type: "OPEN_CHEST", position: facing.position });
+              AudioSystem.play("chest_open");
               dispatch({
                 type: "SET_INTERACTION_PROMPT",
                 prompt: STRINGS.chestOpened,
@@ -369,6 +371,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
               s.playerPixelY = s.playerTileY * TILE_SIZE;
               s.isAnimatingMove = false;
               s.moveProgress = 0;
+              AudioSystem.play("step");
 
               const visible = getVisibleTiles(s.playerTileX, s.playerTileY);
               s.visibleSet = buildVisibleSet(visible);

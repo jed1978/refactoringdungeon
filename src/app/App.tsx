@@ -11,6 +11,7 @@ import { CombatResultOverlay } from "../ui/CombatResultOverlay";
 import { InventoryScreen } from "../ui/InventoryScreen";
 import { ShopScreen } from "../ui/ShopScreen";
 import { DialogueBox } from "../ui/DialogueBox";
+import { TutorialOverlay } from "../ui/TutorialOverlay";
 import { generateFloor } from "../features/map/bspGenerator";
 import { loadFromLocalStorage } from "../state/saveLoad";
 import { useGameDispatch } from "../state/GameContext";
@@ -44,12 +45,31 @@ function AppContent() {
     }
   };
 
+  const handleDemo = () => {
+    const seed = Date.now();
+    const floor = generateFloor(1, seed);
+    const startRoom = floor.rooms.find((r) => r.type === "start");
+    const startPos = startRoom
+      ? {
+          x: Math.floor(startRoom.x + startRoom.width / 2),
+          y: Math.floor(startRoom.y + startRoom.height / 2),
+        }
+      : { x: 5, y: 5 };
+    dispatch({ type: "START_DEMO", floor, startPos });
+  };
+
   const handleCombatAction = (action: CombatAction) => {
     canvasRef.current?.submitCombatAction(action);
   };
 
   if (gameState.gameMode.mode === "title") {
-    return <TitleScreen onStart={handleStart} onContinue={handleContinue} />;
+    return (
+      <TitleScreen
+        onStart={handleStart}
+        onContinue={handleContinue}
+        onDemo={handleDemo}
+      />
+    );
   }
 
   const isCombat = gameState.gameMode.mode === "combat";
@@ -96,6 +116,23 @@ function AppContent() {
 
         {isCombat && <BattleUI onAction={handleCombatAction} />}
         {isOverScreen && <CombatResultOverlay />}
+
+        {isExploring && !gameState.flags?.tutorialMove && (
+          <TutorialOverlay
+            which="move"
+            onDismiss={() =>
+              dispatch({ type: "DISMISS_TUTORIAL", which: "move" })
+            }
+          />
+        )}
+        {isCombat && !gameState.flags?.tutorialCombat && (
+          <TutorialOverlay
+            which="combat"
+            onDismiss={() =>
+              dispatch({ type: "DISMISS_TUTORIAL", which: "combat" })
+            }
+          />
+        )}
 
         {/* Inventory overlay */}
         {showInventory && isExploring && (

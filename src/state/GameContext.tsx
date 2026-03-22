@@ -1,24 +1,30 @@
-import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
-import { gameReducer } from './gameReducer';
-import type { GameAction, GameStateWithPrompt } from './gameReducer';
-import { INITIAL_GAME_STATE } from './initialState';
-import { saveToLocalStorage } from './saveLoad';
+import { createContext, useContext, useReducer, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import { gameReducer } from "./gameReducer";
+import type { GameAction, GameStateWithPrompt } from "./gameReducer";
+import { INITIAL_GAME_STATE } from "./initialState";
+import { saveToLocalStorage } from "./saveLoad";
 
 const INITIAL_STATE_WITH_PROMPT: GameStateWithPrompt = {
   ...INITIAL_GAME_STATE,
   interactionPrompt: null,
 };
 
-const GameStateContext = createContext<GameStateWithPrompt>(INITIAL_STATE_WITH_PROMPT);
-const GameDispatchContext = createContext<React.Dispatch<GameAction>>(() => {});
+const GameStateCtx = createContext<GameStateWithPrompt | null>(null);
+const GameDispatchCtx = createContext<((action: GameAction) => void) | null>(
+  null,
+);
 
 export function useGameState(): GameStateWithPrompt {
-  return useContext(GameStateContext);
+  const v = useContext(GameStateCtx);
+  if (!v) throw new Error("useGameState must be inside GameProvider");
+  return v;
 }
 
-export function useGameDispatch(): React.Dispatch<GameAction> {
-  return useContext(GameDispatchContext);
+export function useGameDispatch(): (action: GameAction) => void {
+  const v = useContext(GameDispatchCtx);
+  if (!v) throw new Error("useGameDispatch must be inside GameProvider");
+  return v;
 }
 
 type GameProviderProps = { readonly children: ReactNode };
@@ -29,7 +35,7 @@ export function GameProvider({ children }: GameProviderProps) {
 
   // Debounced auto-save when exploring
   useEffect(() => {
-    if (state.gameMode.mode !== 'exploring') return;
+    if (state.gameMode.mode !== "exploring") return;
 
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
@@ -42,10 +48,10 @@ export function GameProvider({ children }: GameProviderProps) {
   }, [state]);
 
   return (
-    <GameStateContext value={state}>
-      <GameDispatchContext value={dispatch}>
+    <GameStateCtx.Provider value={state}>
+      <GameDispatchCtx.Provider value={dispatch}>
         {children}
-      </GameDispatchContext>
-    </GameStateContext>
+      </GameDispatchCtx.Provider>
+    </GameStateCtx.Provider>
   );
 }

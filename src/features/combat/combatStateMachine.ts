@@ -115,6 +115,7 @@ export function processPlayerAction(
   action: import("../../utils/types").CombatAction,
   playerStats: PlayerStats,
   rng: () => number,
+  isDemoMode = false,
 ): CombatResult {
   const events: CombatEvent[] = [];
   const log: string[] = [];
@@ -431,7 +432,8 @@ export function processPlayerAction(
               ? STRINGS.enemyDealsCrit.replace("{0}", String(hit.damage))
               : STRINGS.enemyDealsNormal.replace("{0}", String(hit.damage)),
           );
-          const hp = Math.max(0, playerStats.hp - hit.damage);
+          const rawHp = Math.max(0, playerStats.hp - hit.damage);
+          const hp = isDemoMode && rawHp <= 0 ? 1 : rawHp;
           newPlayerStats = { ...(newPlayerStats ?? playerStats), hp };
           if (hp <= 0) events.push({ kind: "combat_lost" });
         }
@@ -464,10 +466,11 @@ export function processPlayerAction(
           if (dmgDealt > 0) {
             const reflectDmg = Math.max(1, Math.floor(dmgDealt * 0.3));
             events.push({ kind: "damage_reflected", damage: reflectDmg });
-            const hp = Math.max(
+            const rawReflectHp = Math.max(
               0,
               (newPlayerStats ?? playerStats).hp - reflectDmg,
             );
+            const hp = isDemoMode && rawReflectHp <= 0 ? 1 : rawReflectHp;
             newPlayerStats = { ...(newPlayerStats ?? playerStats), hp };
             if (hp <= 0) events.push({ kind: "combat_lost" });
             log.push(
@@ -575,6 +578,7 @@ export function processEnemyTurn(
   enemyIndex: number,
   playerStats: PlayerStats,
   rng: () => number,
+  isDemoMode = false,
 ): CombatResult {
   const events: CombatEvent[] = [];
   const log: string[] = [];
@@ -768,7 +772,8 @@ export function processEnemyTurn(
     );
   }
 
-  const newHp = Math.max(0, playerStats.hp - totalDmg);
+  const rawNewHp = Math.max(0, playerStats.hp - totalDmg);
+  const newHp = isDemoMode && rawNewHp <= 0 ? 1 : rawNewHp;
   newPlayerStats = { ...playerStats, hp: newHp };
   if (newHp <= 0) events.push({ kind: "combat_lost" });
 

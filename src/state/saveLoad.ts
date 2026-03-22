@@ -1,13 +1,16 @@
-import type { GameState } from '../utils/types';
+import type { GameState } from "../utils/types";
+import { INITIAL_GAME_STATE } from "./initialState";
 
-const SAVE_KEY = 'refactoring_dungeon_save';
+const SAVE_KEY = "refactoring_dungeon_save";
 
-export function saveToLocalStorage(state: GameState): void {
+export function saveToLocalStorage(state: GameState): boolean {
   try {
-    const serialized = JSON.stringify(state);
-    localStorage.setItem(SAVE_KEY, serialized);
+    const json = JSON.stringify(state);
+    localStorage.setItem(SAVE_KEY, json);
+    const verify = localStorage.getItem(SAVE_KEY);
+    return verify === json;
   } catch {
-    // Storage full or unavailable — silently fail
+    return false;
   }
 }
 
@@ -15,8 +18,21 @@ export function loadFromLocalStorage(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as GameState;
+    const parsed = JSON.parse(raw) as Partial<GameState>;
+    if (!parsed.player || !parsed.floor || !parsed.gameMode) {
+      clearSave();
+      return null;
+    }
+    return {
+      ...INITIAL_GAME_STATE,
+      ...parsed,
+      settings: parsed.settings ?? { muted: false },
+      runStats: parsed.runStats ?? INITIAL_GAME_STATE.runStats,
+      flags: parsed.flags ?? { tutorialMove: false, tutorialCombat: false },
+      demoMode: parsed.demoMode ?? false,
+    } as GameState;
   } catch {
+    clearSave();
     return null;
   }
 }

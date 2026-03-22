@@ -222,12 +222,28 @@ export type GameMode =
   | { readonly mode: "game_over" }
   | { readonly mode: "victory" };
 
+// Run statistics
+export type RunStats = {
+  readonly monstersKilled: number;
+  readonly floorsCleared: number;
+  readonly startTime: number;
+  readonly skillUseCounts: Readonly<Record<string, number>>;
+  readonly itemsUsed: number;
+};
+
 // Complete game state
 export type GameState = {
   readonly gameMode: GameMode;
   readonly player: PlayerState;
   readonly floor: FloorState;
   readonly currentFloor: number;
+  readonly settings: { readonly muted: boolean };
+  readonly runStats: RunStats;
+  readonly flags: {
+    readonly tutorialMove: boolean;
+    readonly tutorialCombat: boolean;
+  };
+  readonly demoMode: boolean;
 };
 
 // Rendering

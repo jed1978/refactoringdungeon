@@ -1,5 +1,6 @@
-import { STRINGS } from '../data/strings';
-import { useGameState } from '../state/GameContext';
+import { memo } from "react";
+import { STRINGS } from "../data/strings";
+import { useGameState } from "../state/GameContext";
 
 type StatBarProps = {
   readonly label: string;
@@ -14,7 +15,7 @@ function StatBar({ label, current, max, color }: StatBarProps) {
     <div className="flex items-center gap-2">
       <span
         className="text-white w-8 text-right"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '18px' }}
+        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "18px" }}
       >
         {label}
       </span>
@@ -26,7 +27,7 @@ function StatBar({ label, current, max, color }: StatBarProps) {
       </div>
       <span
         className="text-gray-300 w-20"
-        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '18px' }}
+        style={{ fontFamily: "'Press Start 2P', monospace", fontSize: "18px" }}
       >
         {current}/{max}
       </span>
@@ -34,7 +35,7 @@ function StatBar({ label, current, max, color }: StatBarProps) {
   );
 }
 
-export function BottomHUD() {
+function BottomHUDComponent() {
   const { player, interactionPrompt } = useGameState();
   const { stats } = player;
 
@@ -43,26 +44,42 @@ export function BottomHUD() {
       {interactionPrompt && (
         <div
           className="text-center text-yellow-300 mb-1"
-          style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: '30px' }}
+          style={{ fontFamily: "'Noto Sans TC', sans-serif", fontSize: "30px" }}
         >
           {interactionPrompt}
         </div>
       )}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <StatBar label="HP" current={stats.hp} max={stats.maxHp} color="#ef4444" />
-          <StatBar label="MP" current={stats.mp} max={stats.maxMp} color="#3b82f6" />
+          <StatBar
+            label="HP"
+            current={stats.hp}
+            max={stats.maxHp}
+            color="#ef4444"
+          />
+          <StatBar
+            label="MP"
+            current={stats.mp}
+            max={stats.maxMp}
+            color="#3b82f6"
+          />
         </div>
         <div className="flex flex-col items-end gap-1">
           <span
             className="text-yellow-300"
-            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '21px' }}
+            style={{
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: "21px",
+            }}
           >
             LV.{stats.level} {STRINGS.level}
           </span>
           <span
             className="text-amber-400"
-            style={{ fontFamily: "'Press Start 2P', monospace", fontSize: '21px' }}
+            style={{
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: "21px",
+            }}
           >
             {STRINGS.gold} {stats.gold}
           </span>
@@ -71,3 +88,5 @@ export function BottomHUD() {
     </div>
   );
 }
+
+export const BottomHUD = memo(BottomHUDComponent);

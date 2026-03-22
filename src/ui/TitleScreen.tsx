@@ -1,33 +1,101 @@
-import { useRef, useEffect } from 'react';
-import { STRINGS } from '../data/strings';
-import { playerMapSprite } from '../sprites/player';
-import { drawSprite, getAnimationFrame } from '../engine/SpriteRenderer';
-import { hasSave } from '../state/saveLoad';
+import { useRef, useEffect, useState } from "react";
+import { STRINGS } from "../data/strings";
+import { playerMapSprite } from "../sprites/player";
+import { drawSprite, getAnimationFrame } from "../engine/SpriteRenderer";
+import { hasSave, loadFromLocalStorage } from "../state/saveLoad";
 
 type TitleScreenProps = {
   readonly onStart: () => void;
   readonly onContinue: () => void;
+  readonly onDemo?: () => void;
 };
 
-export function TitleScreen({ onStart, onContinue }: TitleScreenProps) {
+const KONAMI_SEQ = [
+  "ArrowUp",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowLeft",
+  "ArrowRight",
+];
+
+const CODE_TEXTS = ["{}", ";", "//", "TODO", "BUG", "null", "[]", "=>"];
+
+type CodeParticle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  text: string;
+  alpha: number;
+};
+
+export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const konamiBuffer = useRef<string[]>([]);
+  const [demoUnlocked, setDemoUnlocked] = useState(false);
   const saveExists = hasSave();
+
+  const savedState = loadFromLocalStorage();
+  const saveInfo = savedState
+    ? `LV.${savedState.player.stats.level} / ${savedState.currentFloor}F`
+    : null;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const next = [...konamiBuffer.current, e.key].slice(-KONAMI_SEQ.length);
+      konamiBuffer.current = next;
+      if (next.join(",") === KONAMI_SEQ.join(",")) setDemoUnlocked(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
     ctx.imageSmoothingEnabled = false;
 
     let animId: number;
     let stopped = false;
     const startTime = performance.now();
 
+    const particles: CodeParticle[] = Array.from({ length: 15 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -0.2 - Math.random() * 0.3,
+      text: CODE_TEXTS[Math.floor(Math.random() * CODE_TEXTS.length)] ?? "{}",
+      alpha: 0.1 + Math.random() * 0.3,
+    }));
+
     function draw(now: number) {
       if (stopped) return;
       const elapsed = now - startTime;
-      ctx.clearRect(0, 0, 32, 32);
 
+      // Clear with dark background
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, canvas!.width, canvas!.height);
+
+      // Draw code particles
+      ctx.font = "10px monospace";
+      for (const p of particles) {
+        ctx.fillStyle = `rgba(0, 200, 0, ${p.alpha})`;
+        ctx.fillText(p.text, p.x, p.y);
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < -20) {
+          p.y = canvas!.height + 20;
+          p.x = Math.random() * canvas!.width;
+        }
+        if (p.x < -20) p.x = canvas!.width + 20;
+        if (p.x > canvas!.width + 20) p.x = -20;
+      }
+
+      // Draw player sprite
       const sheet = playerMapSprite.downIdle;
       const frame = getAnimationFrame(sheet, elapsed);
       drawSprite(ctx, frame, 8, 8, 16, 16);
@@ -44,7 +112,7 @@ export function TitleScreen({ onStart, onContinue }: TitleScreenProps) {
 
   const buttonStyle = {
     fontFamily: "'Press Start 2P', monospace",
-    fontSize: '12px',
+    fontSize: "12px",
     boxShadow: `
       inset -2px -2px 0 #111827,
       inset 2px 2px 0 #4b5563,
@@ -74,7 +142,7 @@ export function TitleScreen({ onStart, onContinue }: TitleScreenProps) {
         width={32}
         height={32}
         className="w-16 h-16"
-        style={{ imageRendering: 'pixelated' }}
+        style={{ imageRendering: "pixelated" }}
       />
 
       <div className="flex flex-col gap-3">
@@ -92,6 +160,19 @@ export function TitleScreen({ onStart, onContinue }: TitleScreenProps) {
             style={buttonStyle}
           >
             {STRINGS.continueGame}
+            {saveInfo ? ` (${saveInfo})` : ""}
+          </button>
+        )}
+        {demoUnlocked && onDemo && (
+          <button
+            onClick={onDemo}
+            className="border border-purple-500 text-purple-400 hover:bg-purple-900/20 px-4 py-2"
+            style={{
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: "12px",
+            }}
+          >
+            {STRINGS.demoMode}
           </button>
         )}
       </div>
