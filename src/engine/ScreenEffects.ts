@@ -14,10 +14,6 @@ export function createFlash(color: string, duration: number): ScreenFlash {
   return { color, duration, elapsed: 0 };
 }
 
-function createShake(intensity: number, duration: number): ScreenShake {
-  return { intensity, duration, elapsed: 0 };
-}
-
 export function updateFlash(
   flash: ScreenFlash,
   dt: number,

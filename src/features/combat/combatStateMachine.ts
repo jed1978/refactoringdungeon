@@ -15,6 +15,7 @@ import {
   resolveMonsterAttack,
 } from "./combatActions";
 import { chooseMonsterAction } from "./monsterAI";
+import type { CombatResult, CombatEvent } from "./combatTypes";
 import { SKILLS_MAP } from "../../data/skills";
 import { ITEMS_MAP } from "../../data/items";
 import { STRINGS } from "../../data/strings";

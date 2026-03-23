@@ -1,9 +1,8 @@
-import type { Position } from "../../utils/types";
-import type { DungeonFloor } from "../../utils/types";
+import type { Position, FloorState } from "../../utils/types";
 import { generateFloor } from "../map/bspGenerator";
 
 export function createNewFloorStart(): {
-  floor: DungeonFloor;
+  floor: FloorState;
   startPos: Position;
 } {
   const seed = Date.now();

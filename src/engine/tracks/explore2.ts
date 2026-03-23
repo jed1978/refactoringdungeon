@@ -1,6 +1,6 @@
 import type { TrackDef } from "../MusicTypes";
 // prettier-ignore
-import { R, A2,Bb2, A3,Bb3,D3, D4,Eb4,E4,F4,G4,A4,Bb4, C5,D5 } from "./noteFreqs";
+import { R, A2,Bb2, A3,Bb3,D3, D4,E4,F4,G4,A4,Bb4, C5,D5 } from "./noteFreqs";
 
 // 2F 後端迷宮 — D minor mechanical, 80 BPM, 16 beats
 // prettier-ignore

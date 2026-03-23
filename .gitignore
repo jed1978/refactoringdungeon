@@ -32,3 +32,5 @@ screenshots/
 
 # Browser test screenshots
 *.png
+.vercel
+.env*.local

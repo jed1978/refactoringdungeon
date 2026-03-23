@@ -4,10 +4,6 @@ import {
   FLOOR2_MONSTERS,
   FLOOR3_MONSTERS,
   FLOOR4_MONSTERS,
-  FLOOR1_BOSS,
-  FLOOR2_BOSS,
-  FLOOR3_BOSS,
-  FLOOR4_BOSS,
 } from "../../data/monsters";
 
 export function getMonsterPool(floorLevel: number): readonly MonsterDef[] {
