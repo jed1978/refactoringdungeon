@@ -379,8 +379,11 @@ src/
 │   ├── LightingSystem.ts   # Torch light radial gradient + flicker
 │   ├── TileRenderer.ts     # Draw tile map (only visible tiles)
 │   ├── AudioSystem.ts      # Web Audio synthesized SFX (14 sounds)
-│   ├── MusicSystem.ts      # BGM engine: track switching, loop, fade
-│   └── MusicTracks.ts      # BGM note sequence data (9 tracks)
+│   ├── MusicTypes.ts       # BGM type definitions (Note, VoiceDef, TrackDef, AdsrEnvelope)
+│   ├── MusicSynth.ts       # BGM synthesizer core (ADSR, detuned pairs, filter, reverb, delay)
+│   ├── MusicSystem.ts      # BGM engine: track switching, loop scheduling, crossfade
+│   ├── MusicTracks.ts      # BGM barrel file — re-exports types + all 9 track defs
+│   └── tracks/             # Individual track data (9 files + noteFreqs.ts)
 ├── sprites/                # All sprite data (pure data, no logic)
 │   ├── player.ts           # Player sprite frames
 │   ├── monsters/           # One file per monster
@@ -639,9 +642,13 @@ AudioSystem.setMuted(next);
 
 `MusicSystem` does NOT call `AudioSystem.setMuted` internally (that would create a circular import). Each component that exposes a mute toggle is responsible for calling both.
 
-**MusicSystem files:**
-- `src/engine/MusicSystem.ts` — engine logic (track switching, fade, loop scheduling)
-- `src/engine/MusicTracks.ts` — note sequence data (`// prettier-ignore` to keep arrays compact)
+**MusicSystem files (4-file split after BGM quality upgrade):**
+- `src/engine/MusicTypes.ts` — type defs: `Note`, `AdsrEnvelope`, `VoiceDef` (detune/filter/pan/adsr), `TrackDef` (reverbMix/delayTime), `MusicTrack`
+- `src/engine/MusicSynth.ts` — synthesizer core: per-note oscillators, ADSR gain automation, detuned pairs (chorus), BiquadFilter, StereoPanner, ConvolverNode reverb, DelayNode + feedback
+- `src/engine/MusicSystem.ts` — scheduler: `startTrack` creates TrackBus once per track start; voices scheduled per loop iteration. Public API unchanged: `setTrack`, `setMuted`, `stop`
+- `src/engine/MusicTracks.ts` — barrel file: re-exports types + imports all 9 tracks from `tracks/*.ts`
+- `src/engine/tracks/noteFreqs.ts` — shared note frequency constants (E2–Bb5)
+- `src/engine/tracks/*.ts` — 9 individual track files (title, explore1–4, combat, combatBoss, victory, gameOver)
 
 **Track → GameMode mapping** (in `computeMusicTrack`, `GameCanvas.tsx`):
 - `title` → `"title"`

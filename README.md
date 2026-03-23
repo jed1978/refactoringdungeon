@@ -140,22 +140,48 @@ Monster died
 
 ### Web Audio Synthesized SFX & BGM
 
-零音訊檔案，全部使用 Web Audio API `OscillatorNode` + `GainNode` 合成：
+零音訊檔案，全部使用 Web Audio API 合成：
 
 - **SFX（`AudioSystem.ts`）**：14 種一次性音效，包含攻擊音、暴擊、怪物死亡、升級琶音、勝利和弦等。
-- **BGM（`MusicSystem.ts` + `MusicTracks.ts`）**：9 首合成背景音樂，依 GameMode 自動切換，300ms crossfade：
+- **BGM（`MusicSynth.ts` + `MusicSystem.ts` + `tracks/*.ts`）**：9 首合成背景音樂，依 GameMode 自動切換，300ms crossfade。
 
-| 場景 | 音樂 | 特性 |
-|------|------|------|
-| Title Screen | C minor 神秘琶音 | 100 BPM，loop |
-| 1F 前端泥沼 | A minor 低調氛圍 | 80 BPM，loop |
-| 2F 後端迷宮 | D minor 機械節奏 | 80 BPM，loop |
-| 3F 資料庫深淵 | G minor 深沉低音 | 70 BPM，loop |
-| 4F 神類聖殿 | D minor 壓迫和弦 | 80 BPM，loop |
-| 一般戰鬥 | A minor 快節奏 | 140 BPM，loop |
-| Boss 戰 | D minor 高速連奏 | 160 BPM，loop |
-| 勝利 | C major fanfare | 120 BPM，一次性 |
-| 遊戲結束 | A minor 下行旋律 | 60 BPM，一次性 |
+#### BGM 合成管線（Chiptune 品質）
+
+```
+每個音符（Note）：
+  OscillatorNode ×1 or ×2（去諧對）
+    → GainNode（ADSR 包絡）
+    → BiquadFilterNode（lowpass，可選）
+    → StereoPannerNode（pan，可選）
+    → trackInput
+
+trackInput（每首曲目建立一次，loop 間重用）：
+  → dryGain → masterGain → destination
+  → ConvolverNode（合成混響，可選）→ masterGain
+  → DelayNode + feedback loop（可選）→ masterGain
+```
+
+| 技術 | 效果 |
+|------|------|
+| **ADSR 包絡** | 每音符獨立振盪器，消除 gate 產生的硬切嗶嗶聲 |
+| **去諧振盪器對** | Lead/Pad 聲部用 ±N cents 雙振盪器，產生合唱厚度 |
+| **低通濾波** | BiquadFilterNode 截斷刺耳高頻，square/sawtooth 變暖 |
+| **合成混響** | 噪音 buffer × 指數衰減（1.4s），ConvolverNode 空間感 |
+| **延遲回聲** | DelayNode + feedback，探索曲飄逸、戰鬥曲緊促 |
+| **立體聲展寬** | StereoPannerNode：arp 偏右、pad 偏左 |
+| **4 聲部編排** | Lead + Bass + Pad + Arp（一般戰鬥 = 3 聲部） |
+
+| 場景 | 音樂 | 聲部 | 特性 |
+|------|------|------|------|
+| Title Screen | C minor 神秘琶音 | 4 聲部 | 100 BPM，reverb + delay，loop |
+| 1F 前端泥沼 | A minor 低調氛圍 | 4 聲部 | 80 BPM，reverb，loop |
+| 2F 後端迷宮 | D minor 機械節奏 | 4 聲部 | 80 BPM，reverb + delay，loop |
+| 3F 資料庫深淵 | G minor 深沉低音 | 4 聲部 | 70 BPM，heavy reverb，loop |
+| 4F 神類聖殿 | D minor 壓迫和弦 | 4 聲部 | 80 BPM，reverb + delay，loop |
+| 一般戰鬥 | A minor 快節奏 | 3 聲部 | 140 BPM，dry + short delay，loop |
+| Boss 戰 | D minor 高速連奏 | 4 聲部 | 160 BPM，reverb + delay，loop |
+| 勝利 | C major fanfare | 4 聲部 | 120 BPM，reverb，一次性 |
+| 遊戲結束 | A minor 下行旋律 | 3 聲部 | 60 BPM，heavy reverb，一次性 |
 
 ### 樓層推進邏輯
 
@@ -190,7 +216,7 @@ BossDoor 解鎖（按 Space 開門）
 3. **BSP Generator** — `src/features/map/bspGenerator.ts`：Binary Space Partition 演算法生成無限不重複地城。
 4. **Two-Tier State** — 60fps 遊戲循環（`useRef`）與 React 狀態（`useReducer`）分離，各司其職。
 5. **Zero Dependencies** — 無後端、無外部 API、無圖片、無音效檔、無音樂檔。整個遊戲就是 TypeScript + Canvas + React。
-6. **Synthesized BGM** — `src/engine/MusicSystem.ts`：9 首背景音樂用 Web Audio OscillatorNode 合成，依遊戲模式自動切換，300ms crossfade，零音檔。
+6. **Synthesized BGM** — `src/engine/MusicSynth.ts` + `tracks/*.ts`：9 首背景音樂用 Web Audio API 合成（ADSR 包絡、去諧振盪器對、低通濾波、混響、延遲），4 聲部編排，依遊戲模式自動切換，300ms crossfade，零音檔。
 
 ---
 
@@ -201,8 +227,11 @@ src/
 ├── app/              # React root、providers
 ├── engine/           # Canvas 渲染引擎（零 React 依賴）
 │   ├── AudioSystem.ts      # Web Audio 合成音效（14 種 SFX）
-│   ├── MusicSystem.ts      # BGM 引擎（切換、淡入淡出、loop）
-│   ├── MusicTracks.ts      # BGM 音符序列資料（9 首曲目）
+│   ├── MusicTypes.ts       # BGM 型別（Note, VoiceDef, TrackDef, AdsrEnvelope）
+│   ├── MusicSynth.ts       # BGM 合成器核心（ADSR、去諧對、濾波、混響、延遲）
+│   ├── MusicSystem.ts      # BGM 引擎（切換、淡入淡出、loop 排程）
+│   ├── MusicTracks.ts      # BGM barrel file（匯入 tracks/*.ts）
+│   └── tracks/             # 9 首曲目資料 + noteFreqs.ts 頻率常數
 │   ├── BattleAnimator.ts   # 戰鬥動畫佇列
 │   ├── BattleRenderer.ts   # 戰鬥場景繪製
 │   ├── LightingSystem.ts   # 火炬光照效果
