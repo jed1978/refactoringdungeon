@@ -1,8 +1,12 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { STRINGS } from "../data/strings";
 import { playerMapSprite } from "../sprites/player";
 import { drawSprite, getAnimationFrame } from "../engine/SpriteRenderer";
 import { hasSave, loadFromLocalStorage } from "../state/saveLoad";
+import { MusicSystem } from "../engine/MusicSystem";
+import { AudioSystem } from "../engine/AudioSystem";
+import { setAllAudioMuted } from "../engine/audioControl";
+import { useGameState, useGameDispatch } from "../state/GameContext";
 import { FONT_PIXEL, FONT_UI } from "./styles";
 
 type TitleScreenProps = {
@@ -37,12 +41,27 @@ export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const konamiBuffer = useRef<string[]>([]);
   const [demoUnlocked, setDemoUnlocked] = useState(false);
+  const { settings } = useGameState();
+  const dispatch = useGameDispatch();
+  const [localMuted, setLocalMuted] = useState(settings.muted);
   const saveExists = hasSave();
 
   const savedState = loadFromLocalStorage();
   const saveInfo = savedState
     ? `LV.${savedState.player.stats.level} / ${savedState.currentFloor}F`
     : null;
+
+  // Start title BGM on mount
+  useEffect(() => {
+    MusicSystem.setTrack("title");
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    const next = !AudioSystem.isMuted();
+    setAllAudioMuted(next);
+    setLocalMuted(next);
+    dispatch({ type: "TOGGLE_MUTE" });
+  }, [dispatch]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -123,6 +142,13 @@ export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
 
   return (
     <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center gap-8">
+      <button
+        onClick={toggleMute}
+        className="absolute top-3 right-3 text-white text-2xl px-2 py-1 hover:opacity-70 transition-opacity z-10"
+        title={localMuted ? "取消靜音" : "靜音"}
+      >
+        {localMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A"}
+      </button>
       <div className="flex flex-col items-center gap-3">
         <h1
           className="text-green-400 text-2xl tracking-widest"
@@ -178,10 +204,7 @@ export function TitleScreen({ onStart, onContinue, onDemo }: TitleScreenProps) {
         )}
       </div>
 
-      <p
-        className="text-gray-700 text-xs mt-8"
-        style={{ fontFamily: FONT_UI }}
-      >
+      <p className="text-gray-700 text-xs mt-8" style={{ fontFamily: FONT_UI }}>
         WASD / 方向鍵移動 ｜ Space 互動
       </p>
     </div>

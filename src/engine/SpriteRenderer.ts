@@ -36,17 +36,19 @@ function renderFrameToImageData(
 }
 
 // Offscreen canvas cache for putImageData -> drawImage workflow
-const canvasCache = new Map<SpriteFrame, OffscreenCanvas>();
+const canvasCache = new Map<SpriteFrame, HTMLCanvasElement>();
 
 function getFrameCanvas(
   frame: SpriteFrame,
   width: number,
   height: number,
-): OffscreenCanvas {
+): HTMLCanvasElement {
   const cached = canvasCache.get(frame);
   if (cached) return cached;
 
-  const offscreen = new OffscreenCanvas(width, height);
+  const offscreen = document.createElement("canvas");
+  offscreen.width = width;
+  offscreen.height = height;
   const octx = offscreen.getContext("2d")!;
   const imageData = renderFrameToImageData(frame, width, height);
   octx.putImageData(imageData, 0, 0);
