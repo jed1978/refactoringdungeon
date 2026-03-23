@@ -846,6 +846,19 @@ if (!validateMapNoBossDoor(tileMap, startPos, nonBossRooms)) continue;
 - Canvas coordinates always in logical pixels (16px tile units), scale handled by CSS
 - **UI font size minimums:** Press Start 2P headers ≥ 18px, section labels ≥ 14px; Noto Sans TC item names ≥ 18px, secondary text ≥ 14px — never use 10-12px in player-facing UI (too small on scaled canvas)
 
+### Build Verification (CRITICAL)
+
+**Always use `npm run build` (= `tsc -b && vite build`) to verify, NOT `tsc --noEmit` alone.**
+
+`tsconfig.app.json` enables `noUnusedLocals: true` and `noUnusedParameters: true`. These only take effect under `tsc -b` (composite build mode used by `npm run build` and Vercel CI). Standalone `tsc --noEmit` bypasses project references and may miss these errors.
+
+```bash
+npm run build     # ✅ catches all errors including noUnusedLocals
+npx tsc --noEmit  # ⚠️  misses noUnusedLocals/noUnusedParameters violations
+```
+
+**Past incident:** Vercel CI failed with "exit code 2" because 5 unused-import / undeclared-type errors were not caught locally. Root cause: developer used `tsc --noEmit` instead of `npm run build` for verification.
+
 ## TESTING
 
 ### Browser Testing Tool

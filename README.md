@@ -253,12 +253,22 @@ src/
 
 ---
 
-## Build
+## Build & Deploy
 
 ```bash
-npm run build     # 生產版本
-npx tsc --noEmit  # 型別檢查
+npm run build     # 生產版本（tsc -b + vite build）
+npm run dev       # 本地開發（http://localhost:5173）
 ```
+
+> **注意：** 請用 `npm run build` 驗證，不要只用 `npx tsc --noEmit`。
+> `tsc -b` 才會套用 `noUnusedLocals`/`noUnusedParameters`，`tsc --noEmit` 會漏掉這些錯誤。
+
+### Vercel 部署
+
+專案已部署於 [Vercel](https://vercel.com)，連結 GitHub `main` branch 自動部署：
+
+- push to `main` → Vercel 自動觸發 `npm run build` → production deploy
+- PR → 自動產生 Preview URL
 
 ---
 
