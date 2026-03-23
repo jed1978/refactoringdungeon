@@ -1,74 +1,10 @@
 import { getCtx } from "./AudioSystem";
-import type { TrackDef, VoiceDef } from "./MusicTracks";
+import { scheduleVoice, createTrackBus } from "./MusicSynth";
+import type { TrackDef, MusicTrack } from "./MusicTypes";
 import { TRACKS } from "./MusicTracks";
 
-export type MusicTrack =
-  | "title"
-  | "explore_1"
-  | "explore_2"
-  | "explore_3"
-  | "explore_4"
-  | "combat"
-  | "combat_boss"
-  | "victory"
-  | "game_over"
-  | "silence";
-
-// ── Scheduling ────────────────────────────────────────────────────────────────
-
-function scheduleVoice(
-  ctx: AudioContext,
-  out: GainNode,
-  voice: VoiceDef,
-  startTime: number,
-  beatDur: number,
-): void {
-  const osc = ctx.createOscillator();
-  const vg = ctx.createGain();
-  osc.type = voice.type;
-  osc.connect(vg);
-  vg.connect(out);
-  const firstFreq = voice.notes.find(([f]) => f > 0)?.[0] ?? 440;
-  osc.frequency.setValueAtTime(firstFreq, startTime);
-  vg.gain.setValueAtTime(0, startTime);
-  let t = startTime;
-  for (const [freq, beats] of voice.notes) {
-    const dur = beats * beatDur;
-    if (freq > 0) {
-      osc.frequency.setValueAtTime(freq, t);
-      vg.gain.setValueAtTime(voice.vol, t);
-      vg.gain.setValueAtTime(0, t + dur * 0.85);
-    } else {
-      vg.gain.setValueAtTime(0, t);
-    }
-    t += dur;
-  }
-  osc.start(startTime);
-  osc.stop(t + 0.05);
-}
-
-function scheduleLoop(
-  track: MusicTrack,
-  def: TrackDef,
-  gain: GainNode,
-  startTime: number,
-): void {
-  const ctx = getCtx();
-  const beatDur = 60 / def.bpm;
-  for (const voice of def.voices) {
-    scheduleVoice(ctx, gain, voice, startTime, beatDur);
-  }
-  if (!def.loop) return;
-  const totalDur =
-    def.voices[0].notes.reduce((s, [, b]) => s + b, 0) * beatDur;
-  const nextStart = startTime + totalDur;
-  const delay = Math.max(50, (nextStart - ctx.currentTime) * 1000 - 100);
-  loopTimer = setTimeout(() => {
-    if (currentTrack === track && masterGain === gain) {
-      scheduleLoop(track, def, gain, nextStart);
-    }
-  }, delay);
-}
+// Re-export MusicTrack so existing importers don't need to change
+export type { MusicTrack };
 
 // ── Module state ──────────────────────────────────────────────────────────────
 
@@ -89,12 +25,33 @@ function fadeAndDisconnect(gain: GainNode): void {
   gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
   gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
   setTimeout(() => {
-    try {
-      gain.disconnect();
-    } catch {
-      /* ignore */
-    }
+    try { gain.disconnect(); } catch { /* already disconnected */ }
   }, 400);
+}
+
+// ── Track scheduling ──────────────────────────────────────────────────────────
+
+function startTrack(track: MusicTrack, def: TrackDef, mgain: GainNode): void {
+  const ctx = getCtx();
+  // Create reverb/delay bus ONCE — reused across all loop iterations
+  const trackInput = createTrackBus(mgain, def);
+  const beatDur = 60 / def.bpm;
+  const totalBeats = def.voices[0].notes.reduce((s, [, b]) => s + b, 0);
+  const loopDur = totalBeats * beatDur;
+
+  function iteration(startTime: number): void {
+    for (const voice of def.voices) {
+      scheduleVoice(ctx, trackInput, voice, startTime, beatDur);
+    }
+    if (!def.loop) return;
+    const nextStart = startTime + loopDur;
+    const delayMs = Math.max(50, (nextStart - ctx.currentTime) * 1000 - 100);
+    loopTimer = setTimeout(() => {
+      if (currentTrack === track) iteration(nextStart);
+    }, delayMs);
+  }
+
+  iteration(ctx.currentTime + 0.05);
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -109,6 +66,7 @@ export const MusicSystem = {
     if (prevGain) fadeAndDisconnect(prevGain);
     const def = TRACKS[track];
     if (!def || musicMuted) return;
+    // 350ms gap matches the 300ms crossfade so new track starts after fade-out
     setTimeout(() => {
       if (currentTrack !== track) return;
       const ctx = getCtx();
@@ -117,7 +75,7 @@ export const MusicSystem = {
       gain.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.3);
       gain.connect(ctx.destination);
       masterGain = gain;
-      scheduleLoop(track, def, gain, ctx.currentTime + 0.05);
+      startTrack(track, def, gain);
     }, 350);
   },
 
