@@ -369,3 +369,30 @@ export const legacyDocs: SpriteFrame = [
   [F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2],
   [F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2, F2],
 ];
+
+// Training Room tile — terminal monitor with >_ prompt
+const TB = "#1a1a2e"; // terminal body
+const TG = "#00ff41"; // green phosphor text
+const TS = "#0d0d1a"; // screen dark
+const TF = "#2a2a4e"; // frame
+const TL = "#888888"; // stand/leg
+
+// prettier-ignore
+export const trainingRoom: SpriteFrame = [
+  [F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2],
+  [F2,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  F2],
+  [F2,  TF,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TS,  TG,  TG,  TS,  TG,  TS,  TS,  TS,  TS,  TS,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TS,  TG,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TS,  TG,  TG,  TS,  TG,  TS,  TS,  TS,  TS,  TS,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TS,  TS,  TS,  TS,  TS,  TG,  TG,  TS,  TS,  TS,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TG,  TS,  TS,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TS,  TB,  TF,  F2],
+  [F2,  TF,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TB,  TF,  F2],
+  [F2,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  TF,  F2],
+  [F2,  F2,  F2,  F2,  F2,  F2,  F2,  TL,  TL,  TL,  F2,  F2,  F2,  F2,  F2,  F2],
+  [F2,  F2,  F2,  F2,  F2,  TL,  TL,  TL,  TL,  TL,  TL,  TL,  F2,  F2,  F2,  F2],
+  [F2,  F2,  F2,  F2,  F2,  TL,  F2,  F2,  F2,  F2,  TL,  F2,  F2,  F2,  F2,  F2],
+  [F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2,  F2],
+];

@@ -35,6 +35,7 @@ export enum TileType {
   DebtCollector = 15,
   PairProgrammer = 16,
   LegacyDocs = 17,
+  TrainingRoom = 18,
 }
 
 // Map types

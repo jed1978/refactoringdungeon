@@ -353,8 +353,8 @@ export function generateFloor(floorLevel: number, seed: number): FloorState {
     // Place BossDoor at boss room entrance (one entrance kept, extras sealed with Wall)
     placeBossDoor(tileMap, bossRoom);
 
-    // Validate after BossDoor placement (BossDoor is now passable in validator)
-    if (!validateMap(tileMap, startPos, bossPos)) continue;
+    // Validate after BossDoor placement — all room centers must be reachable
+    if (!validateMap(tileMap, startPos, typedRooms)) continue;
 
     // Populate rooms with content
     const populated = populateRooms(tileMap, typedRooms, floorLevel, rng);

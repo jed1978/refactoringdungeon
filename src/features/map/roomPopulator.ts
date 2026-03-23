@@ -136,9 +136,34 @@ export function populateRooms(
         break;
       }
 
-      // Start and Empty rooms get nothing
+      case RoomType.Empty: {
+        // 30% chance to place a Training Room in empty rooms
+        if (rng() < 0.3 && tileMap[center.y]?.[center.x] === TileType.Floor) {
+          tileMap[center.y][center.x] = TileType.TrainingRoom;
+        }
+        break;
+      }
+
+      // Start and Boss rooms get nothing extra
       default:
         break;
+    }
+  }
+
+  // Guarantee at least one Training Room per floor
+  const hasTraining = tileMap.some((row) =>
+    row.some((t) => t === TileType.TrainingRoom),
+  );
+  if (!hasTraining) {
+    const fallbackRooms = rooms.filter(
+      (r) => r.type !== RoomType.Boss && r.type !== RoomType.Start,
+    );
+    if (fallbackRooms.length > 0) {
+      const target = fallbackRooms[randomInt(rng, 0, fallbackRooms.length - 1)];
+      const c = roomCenter(target);
+      if (tileMap[c.y]?.[c.x] === TileType.Floor) {
+        tileMap[c.y][c.x] = TileType.TrainingRoom;
+      }
     }
   }
 

@@ -14,6 +14,7 @@ import {
   debtCollector,
   pairProgrammer,
   legacyDocs,
+  trainingRoom,
 } from "./tileObjects";
 
 export { floor1A, floor1B, wall1, voidTile } from "./tileFloor";
@@ -30,6 +31,7 @@ export {
   debtCollector,
   pairProgrammer,
   legacyDocs,
+  trainingRoom,
 } from "./tileObjects";
 
 // Map tile type to sprite frame(s)
@@ -51,4 +53,5 @@ export const tileSprites: Record<number, SpriteFrame[]> = {
   [TileType.DebtCollector]: [debtCollector],
   [TileType.PairProgrammer]: [pairProgrammer],
   [TileType.LegacyDocs]: [legacyDocs],
+  [TileType.TrainingRoom]: [trainingRoom],
 };

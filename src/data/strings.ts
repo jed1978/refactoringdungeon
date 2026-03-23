@@ -21,6 +21,7 @@ export const STRINGS = {
   debtCollectorPrompt: "按 Space 面對技術債催收員",
   pairProgrammerPrompt: "按 Space 接受結對邀請",
   legacyDocsPrompt: "按 Space 閱讀遺留文件",
+  trainingRoomPrompt: "按 Space 進入練功沙盒",
   shopPrompt: "按 Space 進入商店",
   chestOpened: "獲得 15 金幣！",
   combatTriggered: "遭遇了 {0}！",

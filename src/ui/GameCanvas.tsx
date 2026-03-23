@@ -45,6 +45,7 @@ import {
 import type { CombatLoopState } from "../features/combat/combatLoop";
 import { queueAnimation } from "../engine/BattleAnimator";
 import { createRng } from "../utils/random";
+import { getMonsterPool } from "../features/map/monsterPools";
 import { AudioSystem } from "../engine/AudioSystem";
 
 export type GameCanvasHandle = {
@@ -265,6 +266,25 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
                 gameMode: { mode: "shop" },
               });
               break;
+            case "training": {
+              const pool = getMonsterPool(gs.currentFloor);
+              const count = Math.random() < 0.4 ? 2 : 1;
+              const trainingMonsters = Array.from({ length: count }, () => {
+                const def = pool[Math.floor(Math.random() * pool.length)];
+                return {
+                  def,
+                  currentHp: def.hp,
+                  position: { x: 0, y: 0 },
+                  buffs: [],
+                };
+              });
+              dispatch({
+                type: "TRIGGER_COMBAT",
+                monsters: trainingMonsters,
+                floorMonsterIndex: -1,
+              });
+              break;
+            }
             case "stairs":
             case "none":
               break;
@@ -694,6 +714,8 @@ function getFacingPrompt(
       return STRINGS.bossDoorOpen;
     case "shop":
       return STRINGS.shopPrompt;
+    case "training":
+      return STRINGS.trainingRoomPrompt;
     case "event":
       switch (facing.tileType) {
         case TileType.Shrine:

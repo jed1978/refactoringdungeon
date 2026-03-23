@@ -242,7 +242,10 @@ export function gameReducer(
         gameMode: { mode: "exploring" },
         floor: {
           ...state.floor,
-          monsters: state.floor.monsters.filter((_, i) => i !== idx),
+          monsters:
+            idx === -1
+              ? state.floor.monsters
+              : state.floor.monsters.filter((_, i) => i !== idx),
         },
         player: {
           ...state.player,

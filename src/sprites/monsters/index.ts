@@ -1,18 +1,19 @@
-import type { SpriteSheet } from '../../utils/types';
-import { duplicateCodeSprite } from './duplicateCode';
-import { magicNumberSprite } from './magicNumber';
-import { deadCodeSprite } from './deadCode';
-import { longMethodSprite } from './longMethod';
-import { featureEnvySprite } from './featureEnvy';
-import { shotgunSurgerySprite } from './shotgunSurgery';
-import { circularDependencySprite } from './circularDependency';
-import { nPlusOneSprite } from './nPlusOne';
-import { prematureOptimizationSprite } from './prematureOptimization';
-import { leakyAbstractionSprite } from './leakyAbstraction';
-import { bigBallOfMudSprite } from './bigBallOfMud';
-import { dataClumpSprite } from './dataClump';
-import { lazyClassSprite } from './lazyClass';
-import { godClassSprite } from './godClass';
+import type { SpriteSheet } from "../../utils/types";
+import { duplicateCodeSprite } from "./duplicateCode";
+import { magicNumberSprite } from "./magicNumber";
+import { deadCodeSprite } from "./deadCode";
+import { longMethodSprite } from "./longMethod";
+import { featureEnvySprite } from "./featureEnvy";
+import { shotgunSurgerySprite } from "./shotgunSurgery";
+import { circularDependencySprite } from "./circularDependency";
+import { nPlusOneSprite } from "./nPlusOne";
+import { prematureOptimizationSprite } from "./prematureOptimization";
+import { leakyAbstractionSprite } from "./leakyAbstraction";
+import { bigBallOfMudSprite } from "./bigBallOfMud";
+import { dataClumpSprite } from "./dataClump";
+import { lazyClassSprite } from "./lazyClass";
+import { godClassSprite } from "./godClass";
+import { spaghettiCodeSprite } from "./spaghettiCode";
 
 export const monsterMapSprites: Record<string, SpriteSheet> = {
   duplicate_code: duplicateCodeSprite,
@@ -29,4 +30,5 @@ export const monsterMapSprites: Record<string, SpriteSheet> = {
   data_clump: dataClumpSprite,
   lazy_class: lazyClassSprite,
   god_class: godClassSprite,
+  spaghetti_code: spaghettiCodeSprite,
 };

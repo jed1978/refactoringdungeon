@@ -727,21 +727,22 @@ const newHp = isDemoMode && rawNewHp <= 0 ? 1 : rawNewHp;
 
 ### Browser Testing Tool
 
-**Platform note:** `agent-browser` binary is NOT available on darwin-arm64 (Apple Silicon Mac). Use **Playwright MCP** instead.
+Use `agent-browser` for all browser testing (installed via Homebrew, works on darwin-arm64).
 
 | Tool | When to Use |
 |------|-------------|
-| `agent-browser:agent-browser` | Linux / CI environments where the binary is available |
-| `agent-browser:dogfood` | Same — Linux / CI only |
-| **Playwright MCP** (`mcp__plugin_playwright_playwright__*`) | **darwin-arm64 (Apple Silicon)** — use this for all browser testing on local dev |
+| `agent-browser:agent-browser` | Targeted test: specific flow (e.g. enter combat → use skill → win) |
+| `agent-browser:dogfood` | Exploratory test: find bugs, UX issues, visual glitches across whole game |
 
-**Playwright MCP quick reference:**
-```
-browser_navigate → http://localhost:5173
-browser_snapshot → read page structure / find element refs
-browser_click / browser_press_key / browser_evaluate → interact
-browser_take_screenshot → visual verification
-browser_console_messages → check for JS errors
+**agent-browser quick reference:**
+```bash
+agent-browser --session NAME open http://localhost:5173
+agent-browser --session NAME wait --load networkidle
+agent-browser --session NAME snapshot -i          # find clickable elements
+agent-browser --session NAME screenshot /tmp/out.png
+agent-browser --session NAME click @e1
+agent-browser --session NAME press_key ArrowRight
+agent-browser --session NAME close
 ```
 
 To read live game state from the browser console:

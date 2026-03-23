@@ -22,7 +22,8 @@ export type InteractionResult =
     }
   | { readonly kind: "door_locked"; readonly position: Position }
   | { readonly kind: "boss_door"; readonly position: Position }
-  | { readonly kind: "shop"; readonly position: Position };
+  | { readonly kind: "shop"; readonly position: Position }
+  | { readonly kind: "training"; readonly position: Position };
 
 const WALKABLE_TILES: ReadonlySet<TileType> = new Set([
   TileType.Floor,
@@ -99,6 +100,8 @@ export function checkFacingTile(
       return { kind: "boss_door", position: facingPos };
     case TileType.ShopCounter:
       return { kind: "shop", position: facingPos };
+    case TileType.TrainingRoom:
+      return { kind: "training", position: facingPos };
     default:
       return { kind: "none" };
   }

@@ -1,4 +1,4 @@
-import type { Position } from "../../utils/types";
+import type { Position, Room } from "../../utils/types";
 import { TileType } from "../../utils/types";
 
 function isPassable(tile: TileType): boolean {
@@ -14,14 +14,18 @@ function isPassable(tile: TileType): boolean {
     tile === TileType.CoffeeMachine ||
     tile === TileType.NpcMarker ||
     tile === TileType.ShopCounter ||
-    tile === TileType.BossDoor
+    tile === TileType.BossDoor ||
+    tile === TileType.DebtCollector ||
+    tile === TileType.PairProgrammer ||
+    tile === TileType.LegacyDocs ||
+    tile === TileType.TrainingRoom
   );
 }
 
 export function validateMap(
   tileMap: readonly (readonly TileType[])[],
   start: Position,
-  boss: Position,
+  rooms: readonly Pick<Room, "x" | "y" | "width" | "height">[],
 ): boolean {
   const height = tileMap.length;
   const width = tileMap[0]?.length ?? 0;
@@ -43,8 +47,6 @@ export function validateMap(
   while (queue.length > 0) {
     const pos = queue.shift()!;
 
-    if (pos.x === boss.x && pos.y === boss.y) return true;
-
     for (const d of dirs) {
       const nx = pos.x + d.x;
       const ny = pos.y + d.y;
@@ -60,5 +62,12 @@ export function validateMap(
     }
   }
 
-  return false;
+  // All room centers must be reachable from start
+  for (const room of rooms) {
+    const cx = Math.floor(room.x + room.width / 2);
+    const cy = Math.floor(room.y + room.height / 2);
+    if (!visited[cy]?.[cx]) return false;
+  }
+
+  return true;
 }
