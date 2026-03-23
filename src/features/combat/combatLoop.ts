@@ -152,6 +152,18 @@ export function updateCombatLoop(
   if (frame.finished) {
     handleAnimationComplete(loop, combat, gameState, dispatch);
   }
+
+  // Fallback: dead-enemy skip queues no animation, so frame.finished never fires.
+  // If we're in enemy_turn with idle animations and an unprocessed turn index,
+  // trigger handleAnimationComplete directly so the turn chain doesn't stall.
+  if (
+    !isAnimating(loop.animState) &&
+    loop.localPhase === "enemy_turn" &&
+    loop.outcome === "none" &&
+    loop.lastProcessedTurnIndex !== combat.currentTurnIndex
+  ) {
+    handleAnimationComplete(loop, combat, gameState, dispatch);
+  }
 }
 
 function spawnDissolveIfNeeded(
@@ -249,9 +261,10 @@ function handleAnimationComplete(
     loop.localPhase === "enemy_turn" &&
     loop.lastProcessedTurnIndex !== combat.currentTurnIndex
   ) {
+    // Always mark as processed first — prevents re-entry on same index
+    loop.lastProcessedTurnIndex = combat.currentTurnIndex;
     const entry = combat.turnOrder[combat.currentTurnIndex];
     if (entry?.kind === "enemy") {
-      loop.lastProcessedTurnIndex = combat.currentTurnIndex;
       const result = processEnemyTurn(
         combat,
         entry.index,
@@ -262,6 +275,9 @@ function handleAnimationComplete(
       loop.localPhase = result.state.phase;
       applyEvents(loop, result.events, combat);
       dispatchCombatResult(dispatch, result);
+    } else {
+      // Unexpected: phase says enemy_turn but entry is player — reset gracefully
+      loop.localPhase = "selecting";
     }
   }
 }

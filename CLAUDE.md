@@ -501,7 +501,9 @@ Every `CombatEvent` kind emitted by `combatStateMachine.ts` **must** have a corr
 
 **Why:** `BattleAnimator`'s `frame.finished` only becomes `true` when the animation queue had items and all have completed. If an event queues no animation, the queue stays empty → `finished` is never `true` → `handleAnimationComplete()` never runs → the game permanently freezes.
 
-**Past incidents:** `flee_failed` and `reveal` events both caused combat lock because they were missing from `applyEvents()`; see also Note 5 for a related flee bug.
+**Past incidents:**
+- `flee_failed` and `reveal` events both caused combat lock because they were missing from `applyEvents()`; see also Note 6 for a related flee bug.
+- **Dead enemy skip in multi-enemy combat:** when a dead monster's turn arrives during `handleAnimationComplete`, `processEnemyTurn` returns early via `advanceToNextTurn` with empty events → no animation queued → `frame.finished` never becomes `true` → combat freeze. Fixed with a fallback in `updateCombatLoop` (see Note 17).
 
 **Rule:** Whenever a new `CombatEvent` kind is added to the discriminated union in `combatStateMachine.ts`, immediately add a matching `case` in `applyEvents()` in `combatLoop.ts` that queues at least a minimal animation (e.g. `hit_reaction_player` or `hit_reaction_enemy`).
 
@@ -602,10 +604,13 @@ case "COMBAT_END_VICTORY":
 Additionally:
 - `validateMap` must be called **after** `placeBossDoor` (not before)
 - `isPassable()` in `mapValidator.ts` must include `TileType.BossDoor` so the validator can reach `bossPos` through the door
+- After `validateMap`, also call `validateMapNoBossDoor` to catch the BossDoor deadlock case (see Note 18)
 
 **Why:** BSP corridors can pass through the boss room, creating entrances on multiple sides. If all are converted to BossDoor, the corridors are cut — other rooms become unreachable and the dungeon is unbeatable.
 
-**Past incident:** Screenshot showed two BossDoor tiles blocking a corridor, making the dungeon unplayable because both sides were sealed.
+**Past incidents:**
+- Screenshot showed two BossDoor tiles blocking a corridor, making the dungeon unplayable because both sides were sealed.
+- `validateMap` treats BossDoor as passable (correct for boss room reachability), but a non-boss monster room was only accessible through a locked BossDoor — deadlock; fixed by `validateMapNoBossDoor` (see Note 18).
 
 ### 9. BossDoor and Stairs Progression Logic
 
@@ -708,6 +713,117 @@ const newHp = isDemoMode && rawNewHp <= 0 ? 1 : rawNewHp;
 
 **Not a bug:** Players who report "HP stays at 1 even when taking lethal damage" are running Demo Mode. No code change is needed. Verify by checking `gameState.demoMode === true` or looking for the `DEMO` badge on screen.
 
+### 14. Training Room Uses `floorMonsterIndex = -1` Sentinel (CRITICAL)
+
+Training Room battles (`TileType.TrainingRoom`) spawn random floor monsters for practice. Because these are not real map monsters, `floorMonsterIndex` must be set to **`-1`** — not a valid array index.
+
+```ts
+// In GameCanvas.tsx when entering Training Room:
+dispatch({ type: "START_COMBAT", monsters: trainingMonsters, floorMonsterIndex: -1 });
+```
+
+`COMBAT_END_VICTORY` in `gameReducer.ts` must guard against this sentinel before removing a monster from `floor.monsters`:
+
+```ts
+case "COMBAT_END_VICTORY":
+  const updatedMonsters =
+    action.floorMonsterIndex === -1
+      ? state.floor.monsters                    // training — nothing to remove
+      : state.floor.monsters.filter((_, i) => i !== action.floorMonsterIndex);
+```
+
+**Why:** If the guard is missing, `floorMonsterIndex = -1` removes no element (`.filter` skips it) but the BossDoor check counts `floor.monsters` — this would work by coincidence. The explicit guard makes intent clear and prevents subtle bugs if the filter semantics change.
+
+**BossDoor safety:** Training battles never modify `floor.monsters`, so clearing all Training Rooms never accidentally unlocks the BossDoor or changes floor state.
+
+### 15. All Boss `spriteId` Values Must Be Registered in `monsterMapSprites` (CRITICAL)
+
+Every `MonsterDef.spriteId` used by a boss (or any monster) must have a matching key in `src/sprites/monsters/index.ts → monsterMapSprites`. If the key is missing, `Renderer.ts` silently skips rendering the monster:
+
+```ts
+// Renderer.ts
+const sheet = monsterMapSprites[monster.spriteId];
+if (!sheet) continue;  // ← silently invisible, but still collidable
+```
+
+This means the boss appears invisible on the map — players walk into it and trigger combat without seeing it. The sprite file **and** the registry entry are both required.
+
+**Current boss sprite IDs and their files:**
+| Floor | Boss | `spriteId` | Sprite file |
+|-------|------|------------|-------------|
+| 1F | 義大利麵蟲 | `spaghetti_code` | `src/sprites/monsters/spaghettiCode.ts` |
+| 2F | 循環依賴蛇 | `circular_dependency` | `src/sprites/monsters/circularDependency.ts` |
+| 3F | 大泥球 | `big_ball_of_mud` | `src/sprites/monsters/bigBallOfMud.ts` |
+| 4F | 神類 | `god_class` | `src/sprites/monsters/godClass.ts` |
+
+**Rule:** Whenever a new monster or boss is added to `src/data/monsters.ts`, immediately create its sprite file AND add an entry to `monsterMapSprites`. The two steps are always paired.
+
+### 16. `validateMap` Checks All Room Centers, Not Just Boss (CRITICAL)
+
+`src/features/map/mapValidator.ts → validateMap` performs a BFS from the start position and verifies that **all room centers** (not just the boss room) are reachable.
+
+**Why this matters:** BSP `connectLeaves()` connects only one room per subtree side. Sibling rooms in the same subtree that are not selected for the connector become unreachable "islands". The old implementation only checked start→boss connectivity — islands passed validation.
+
+**Current signature:**
+```ts
+validateMap(
+  tileMap: readonly (readonly TileType[])[],
+  start: Position,
+  rooms: readonly Pick<Room, "x" | "y" | "width" | "height">[],
+): boolean
+```
+
+**How it's called in `bspGenerator.ts`:**
+```ts
+if (!validateMap(tileMap, startPos, typedRooms)) continue;
+```
+
+Note: `validateMap` is called **after** `placeBossDoor` — this is intentional. `isPassable()` includes `TileType.BossDoor` so the BFS can reach the boss room center through the sealed entrance.
+
+### 17. Dead Enemy Skip Must Not Stall the Turn Chain (CRITICAL)
+
+In multi-enemy combat, when a dead monster's turn arrives, `processEnemyTurn` skips it with `advanceToNextTurn` (empty events). `applyEvents` has nothing to queue → animation queue stays empty → `frame.finished` is never `true` → `handleAnimationComplete` is never called again → **combat freeze**.
+
+**Fix:** `updateCombatLoop` has a fallback check after the `frame.finished` branch:
+
+```ts
+// combatLoop.ts — after the frame.finished check
+if (
+  !isAnimating(loop.animState) &&
+  loop.localPhase === "enemy_turn" &&
+  loop.outcome === "none" &&
+  loop.lastProcessedTurnIndex !== combat.currentTurnIndex
+) {
+  handleAnimationComplete(loop, combat, gameState, dispatch);
+}
+```
+
+`loop.lastProcessedTurnIndex` is updated to `combat.currentTurnIndex` **before** the `if (entry?.kind === "enemy")` guard — ensuring the same index is never processed twice even when React state is briefly stale.
+
+**Past incident:** Killing the 2nd enemy (not the last) in a 2-enemy Training Room battle caused all action buttons to stay disabled permanently. Root cause: dead enemy's turn queued no animation; fallback now recovers without relying on `frame.finished`.
+
+### 18. Non-Boss Rooms Must Be Reachable Without BossDoor (CRITICAL)
+
+`validateMap` treats `BossDoor` as passable so it can confirm the boss room center is reachable. But in-game, the BossDoor only opens after all non-boss monsters are cleared. If any non-boss room is **only** accessible through the BossDoor, its monster can never be killed → BossDoor never unlocks → **deadlock**.
+
+**Fix:** after `validateMap`, call `validateMapNoBossDoor` for all non-boss rooms:
+
+```ts
+// bspGenerator.ts
+if (!validateMap(tileMap, startPos, typedRooms)) continue;
+
+const nonBossRooms = typedRooms.filter((r) => r.type !== RoomType.Boss);
+if (!validateMapNoBossDoor(tileMap, startPos, nonBossRooms)) continue;
+```
+
+`validateMapNoBossDoor` runs the same BFS but treats `BossDoor` as `Wall`. If any non-boss room center is unreachable → reject this map and retry.
+
+**`mapValidator.ts` exports:**
+- `validateMap(tileMap, start, rooms)` — BossDoor passable; verifies boss room reachable
+- `validateMapNoBossDoor(tileMap, start, rooms)` — BossDoor as Wall; verifies no non-boss room is trapped behind BossDoor
+
+**Past incident:** 3F map had a corridor that passed through the boss room boundary. `placeBossDoor` sealed the extra entrance, isolating a non-boss monster room. Player could see the monster on minimap but couldn't reach it → BossDoor never unlocked.
+
 ---
 
 ## CODING STANDARDS
@@ -741,9 +857,14 @@ agent-browser --session NAME wait --load networkidle
 agent-browser --session NAME snapshot -i          # find clickable elements
 agent-browser --session NAME screenshot /tmp/out.png
 agent-browser --session NAME click @e1
-agent-browser --session NAME press_key ArrowRight
+agent-browser --session NAME press ArrowRight   # NOTE: command is "press", NOT "press_key"
 agent-browser --session NAME close
 ```
+
+**DOM element selection tips:**
+- Use `innerText` (not `textContent`) for exact text matching — `textContent` includes nested child text and causes false positives
+- Example: `Array.from(document.querySelectorAll('div')).filter(d => d.innerText.trim() === '▶ 複製貼上靈')`
+
 
 To read live game state from the browser console:
 ```js

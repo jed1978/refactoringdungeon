@@ -3,7 +3,7 @@ import { TileType, RoomType } from "../../utils/types";
 import { FLOOR_THEMES } from "../../utils/constants";
 import { createRng, randomInt } from "../../utils/random";
 import { assignRoomTypes } from "./roomAssigner";
-import { validateMap } from "./mapValidator";
+import { validateMap, validateMapNoBossDoor } from "./mapValidator";
 import { populateRooms } from "./roomPopulator";
 
 const MAP_WIDTH = 40;
@@ -355,6 +355,12 @@ export function generateFloor(floorLevel: number, seed: number): FloorState {
 
     // Validate after BossDoor placement — all room centers must be reachable
     if (!validateMap(tileMap, startPos, typedRooms)) continue;
+
+    // Extra check: all non-boss rooms must be reachable WITHOUT passing through
+    // BossDoor (which is locked until all non-boss monsters are cleared).
+    // Prevents deadlock where a non-boss monster is only accessible via BossDoor.
+    const nonBossRooms = typedRooms.filter((r) => r.type !== RoomType.Boss);
+    if (!validateMapNoBossDoor(tileMap, startPos, nonBossRooms)) continue;
 
     // Populate rooms with content
     const populated = populateRooms(tileMap, typedRooms, floorLevel, rng);

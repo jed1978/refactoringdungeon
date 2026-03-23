@@ -102,10 +102,13 @@ const SLIME_FRAME: SpriteFrame = [
 
 每層地城使用 **Binary Space Partition** 演算法自動生成：
 - 遞迴分割空間 → 建立房間 → 走廊連接
-- 房間類型隨機分配（怪物、事件、寶箱、商店）
-- **保證每層至少 1 個 Event 房間 + 1 個 Shop 房間**
+- 房間類型隨機分配（怪物、事件、寶箱、商店、練功沙盒）
+- **每層保證至少 1 個 Training Room（練功沙盒）**
 - Boss 房間永遠是最大且距出生點最遠的房間
 - Boss 房間只保留**一個入口**，其餘通道封牆 → 確保 BossDoor 不會切斷走廊
+- **雙重連通驗證**（最多重試 5 次）：
+  1. `validateMap`（BossDoor 可通行）：所有房間中心可達
+  2. `validateMapNoBossDoor`（BossDoor 視為牆）：所有非 Boss 房間不依賴 BossDoor 即可到達，防止「非 Boss 怪物被困在 BossDoor 後面」的死局
 
 ### Two-Tier State Architecture
 
@@ -167,6 +170,16 @@ BossDoor 解鎖（按 Space 開門）
       ↓
 進入下一層
 ```
+
+### Training Room（練功沙盒）
+
+每層地城保證至少出現一個 **Training Room**（`TileType.TrainingRoom`，優先放在 Empty 房間中心）。
+
+- 面對 Training Room 磁磚按 **Space** 進入練習戰鬥
+- 使用該樓層怪物池隨機組成 1–3 隻怪物
+- 勝利可獲得 EXP 與 Gold，但**不移除地圖怪物**
+- 可重複挑戰，適合刷等或練習技能
+- BossDoor 邏輯不受影響（Training 戰鬥不計入 `floor.monsters`）
 
 ---
 
