@@ -104,6 +104,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
       camera: createCamera(0, 0) as CameraState,
       elapsedMs: 0,
       keysDown: new Set<string>(),
+      inputQueue: [] as string[],
       moveTargetX: 0,
       moveTargetY: 0,
       isAnimatingMove: false,
@@ -180,6 +181,20 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
       ) {
         e.preventDefault();
         stateRef.current.keysDown.add(key);
+        if (
+          [
+            "w",
+            "a",
+            "s",
+            "d",
+            "arrowup",
+            "arrowdown",
+            "arrowleft",
+            "arrowright",
+          ].includes(key)
+        ) {
+          stateRef.current.inputQueue.push(key);
+        }
       }
     }, []);
 
@@ -549,22 +564,37 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
             }
           }
 
+          // Consume queued key taps (press+release within a single frame)
+          const queuedKey = s.inputQueue.shift();
+          s.inputQueue.length = 0;
+
           if (!s.isAnimatingMove) {
             let dx = 0;
             let dy = 0;
             let newDir = s.playerDirection;
 
             const keys = s.keysDown;
-            if (keys.has("w") || keys.has("arrowup")) {
+            const activeKey =
+              keys.has("w") || keys.has("arrowup")
+                ? "w"
+                : keys.has("s") || keys.has("arrowdown")
+                  ? "s"
+                  : keys.has("a") || keys.has("arrowleft")
+                    ? "a"
+                    : keys.has("d") || keys.has("arrowright")
+                      ? "d"
+                      : (queuedKey ?? "");
+
+            if (activeKey === "w" || activeKey === "arrowup") {
               dy = -1;
               newDir = Direction.Up;
-            } else if (keys.has("s") || keys.has("arrowdown")) {
+            } else if (activeKey === "s" || activeKey === "arrowdown") {
               dy = 1;
               newDir = Direction.Down;
-            } else if (keys.has("a") || keys.has("arrowleft")) {
+            } else if (activeKey === "a" || activeKey === "arrowleft") {
               dx = -1;
               newDir = Direction.Left;
-            } else if (keys.has("d") || keys.has("arrowright")) {
+            } else if (activeKey === "d" || activeKey === "arrowright") {
               dx = 1;
               newDir = Direction.Right;
             }
@@ -663,10 +693,25 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
       window.addEventListener("keydown", handleKeyDown);
       window.addEventListener("keyup", handleKeyUp);
 
+      const clearKeys = () => {
+        stateRef.current.keysDown.clear();
+        stateRef.current.inputQueue.length = 0;
+      };
+      const handleVisibilityChange = () => {
+        if (document.hidden) clearKeys();
+      };
+      window.addEventListener("blur", clearKeys);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
       return () => {
         loop.stop();
         window.removeEventListener("keydown", handleKeyDown);
         window.removeEventListener("keyup", handleKeyUp);
+        window.removeEventListener("blur", clearKeys);
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange,
+        );
       };
     }, [handleKeyDown, handleKeyUp, dispatch]);
 
