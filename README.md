@@ -47,6 +47,41 @@ Fight Code Smell monsters with Refactoring skills, equip Design Pattern gear, an
 
 ---
 
+## 平衡機制 / Balance Systems
+
+### 暈眩抗性（Stun Resistance）
+
+`Replace Magic Number` 暈眩效果採**遞減抗性系統**，模擬「同一個 patch 打兩次就不管用了」：
+
+- 每次暈眩成功後，目標 `stunResistance += 0.4`
+- 抗性在暈眩期間每回合衰減 0.15，主動回合衰減 0.1
+- Boss 有基礎暈眩抗性（`stunImmunity`）：1F Boss 30%、2F 40%、3F 50%、4F 60%
+- 神類（God Class）**Phase 4（HP < 25%）完全免疫暈眩**
+
+### 臨時 Buff 系統
+
+事件獎勵的 ATK 提升改為**有期限的暫時 Buff**（不再永久修改 base stats）：
+
+- 咖啡機：ATK +3，持續 5 場戰鬥
+- Stack Overflow 圖書館：ATK +2，持續 3 場戰鬥
+- **互動格子一次性使用**（使用後變為普通地板，不可重複吃 buff）
+
+### Boss 特性說明
+
+| Boss | 特性 |
+|------|------|
+| 義大利麵蟲（1F） | 纏繞玩家，降低 SPD |
+| 循環依賴蛇（2F） | 反射 40% 受到的傷害 |
+| 大泥球（3F） | 加權隨機技能（三連擊/重擊/偷血/回血），回血回合仍會發動弱攻擊 |
+| 神類（4F） | Phase 轉換在 75/50/25% HP；Phase 3 有 40% 機率「退回 PR」使技能無效（MP 仍消耗）；Phase 4 完全免疫暈眩 |
+
+### 懶惰類別（Lazy Class）
+
+不再站著等死。有隊友時：60% 委派（跳過回合）、30% 治療隊友 15% 最大 HP、10% 罕見攻擊。
+**單獨行動時必定攻擊**（「沒人可以委派了！」）。
+
+---
+
 ## 快速開始 / Quick Start
 
 ```bash
