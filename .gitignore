@@ -26,8 +26,11 @@ dist-ssr
 # Screenshots (dev only)
 screenshots/
 
-# Claude Code
-.claude/
+# Claude Code (keep rules/ for team sharing)
+.claude/settings.json
+.claude/settings.local.json
+.claude/todos/
+.claude/plans/
 .playwright-mcp/
 
 # Browser test screenshots
