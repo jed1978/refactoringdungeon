@@ -39,11 +39,11 @@ Fight Code Smell monsters with Refactoring skills, equip Design Pattern gear, an
 | Extract Method | 2 | 單體傷害（1.5× ATK） | 初始 |
 | Rename Variable | 1 | 揭示敵人數值與弱點 | 初始 |
 | Inline Temp | 1 | 快速攻擊（0.8× ATK），先攻 | 初始 |
-| Replace Magic Number | 3 | 眩暈 1 回合 + 2× 傷害（對魔數精靈） | LV 3 |
+| Replace Magic Number | 4 | 眩暈 1 回合 + 1.5× 傷害（遞減抗性系統） | LV 3 |
 | Move Method | 2 | 閃避下一次攻擊 | LV 5 |
 | Parameter Object | 4 | 群體攻擊，全敵人 0.7× ATK | LV 7 |
 | Polymorphism | 5 | 削弱 Boss 當前 Phase 能力 | LV 9 |
-| Compose Method | 6 | 連鎖 3 個隨機技能（各 0.6× 威力） | LV 11 |
+| Compose Method | 5 | 連鎖 3 個隨機技能（各 0.8× 威力，共 2.4×） | LV 11 |
 
 ---
 
