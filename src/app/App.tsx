@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { GameProvider, useGameState } from "../state/GameContext";
 import { TitleScreen } from "../ui/TitleScreen";
 import { GameCanvas } from "../ui/GameCanvas";
@@ -214,6 +215,7 @@ export function App() {
   return (
     <GameProvider>
       <AppContent />
+      <Analytics />
     </GameProvider>
   );
 }
