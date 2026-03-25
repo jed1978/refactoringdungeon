@@ -1,5 +1,10 @@
 # Refactoring Dungeon（重構地城）— Project Specification v2
 
+> **Architecture rules have been extracted to `.claude/rules/`.**
+> Coding standards, build/test procedures, and all 18 critical architecture notes
+> are now in focused rule files that load automatically based on which files you're editing.
+> This file contains game design, specs, and reference material only.
+
 ## Project Overview
 A browser-based roguelike game where software engineering concepts ARE the game mechanics.
 The player is a Software Engineer descending into a legacy codebase dungeon, fighting Code Smell monsters with Refactoring skills, equipping Design Pattern gear, and ultimately confronting the God Class boss.
@@ -40,8 +45,6 @@ All sprites are defined as **2D arrays of hex color strings** in code. Transpare
 This is the core "conference trick": every monster IS a small TypeScript data literal.
 
 ```typescript
-// Example: 16×16 player sprite
-// Each row is 16 pixels wide, 16 rows tall
 type PixelColor = string | null; // hex "#rrggbb" or null for transparent
 type SpriteFrame = PixelColor[][];
 type SpriteSheet = {
@@ -118,7 +121,6 @@ GameState (data)
 - Light radius: 5 tiles bright, 3 tiles dim, beyond = very dark (barely visible)
 - **Flicker:** Light radius oscillates ±0.3 tiles with perlin noise for torch flicker feel
 - Boss rooms: special lighting (red pulse for God Class Sanctum)
-- This single effect transforms "flat tile grid" into "atmospheric dungeon"
 
 ---
 
@@ -142,14 +144,11 @@ Canvas Battle Scene (240×176 logical pixels):
 DOM Overlay (on top of Canvas):
 ┌──────────────────────────────────────┐
 │ ┌──────────────────────────────────┐ │
-│ │  Combat Log (scrolling text)     │ │ ← Top overlay, semi-transparent bg
-│ │  "你對複製貼上靈施展提取方法！"     │ │
+│ │  Combat Log (scrolling text)     │ │
 │ └──────────────────────────────────┘ │
 │                                      │
-│                                      │
 │ ┌──────────────────────────────────┐ │
-│ │ ⚔️攻擊  🔧技能  💊道具  🏃逃跑  │ │ ← Bottom overlay, action menu
-│ │                                  │ │
+│ │ ⚔️攻擊  🔧技能  💊道具  🏃逃跑  │ │
 │ │ HP ████████░░ 75/100             │ │
 │ │ MP ████░░░░░░ 40/100             │ │
 │ └──────────────────────────────────┘ │
@@ -167,8 +166,8 @@ DOM Overlay (on top of Canvas):
 | Monster attack | Lunge toward player → impact spark | 4 | 300ms |
 | Monster hit | Flash white → shake → damage number floats up | 4 | 300ms |
 | Monster death | Flash rapidly → pixel dissolve (pixels scatter) | 12 | 800ms |
-| Damage number | Float up from target, fade out | - | 600ms (Canvas text) |
-| Critical hit | Screen flash + larger damage number + "暴擊！" text | - | 400ms |
+| Damage number | Float up from target, fade out | - | 600ms |
+| Critical hit | Screen flash + larger damage number + "暴擊！" | - | 400ms |
 | Level up | Gold sparkle shower from top of screen | 16 | 1200ms |
 | Boss phase shift | Screen shake + flash + boss sprite swap | 8 | 1000ms |
 
@@ -178,37 +177,34 @@ When a monster dies:
 2. For each non-transparent pixel, assign a random velocity vector (upward bias) and gravity
 3. Over 800ms, each pixel flies outward as an individual particle
 4. Particles fade out (alpha decreases)
-This creates a dramatic "shatter into pixels" effect that looks amazing and is 100% code — great for conference demo.
 
 ---
 
 ## MONSTER SPRITE DESIGN GUIDE
 
-Each monster's pixel art should visually reference its code smell concept:
-
 | Monster | Visual Concept | Size | Key Visual Elements |
 |---------|---------------|------|-------------------|
 | 複製貼上靈 | Twin ghostly clipboard shapes | 32×32 | Two overlapping translucent forms, copy icon motif |
-| 魔數精靈 | Floating number entity with glitchy aura | 32×32 | Body made of jumbled digits (4, 2, 7...), flickering pixels |
-| 殭屍程式 | Zombie-fied code bracket `{ }` with dead eyes | 32×32 | Gray/green zombie, body shaped like curly braces |
-| 長方法獸 | Tall stretched creature (long body!) | 32×48 | Comically tall and thin, scrollbar on its side |
-| 越界觸手怪 | Octopus-like with tentacles crossing boundaries | 32×32 | Purple tentacles reaching across a dotted line |
-| 散彈修改鳥 | Bird made of scattered code fragments | 32×32 | Fragmented body, pieces floating apart |
+| 魔數精靈 | Floating number entity with glitchy aura | 32×32 | Body made of jumbled digits, flickering pixels |
+| 殭屍程式 | Zombie-fied code bracket `{ }` | 32×32 | Gray/green zombie, body shaped like curly braces |
+| 長方法獸 | Tall stretched creature | 32×48 | Comically tall and thin, scrollbar on its side |
+| 越界觸手怪 | Octopus crossing boundaries | 32×32 | Purple tentacles reaching across a dotted line |
+| 散彈修改鳥 | Bird of scattered fragments | 32×32 | Fragmented body, pieces floating apart |
 | 義大利麵蟲 (Boss) | Massive tangled noodle-worm | 48×48 | Spaghetti strands tangled, marinara red accents |
-| 循環依賴蛇 (Boss) | Ouroboros snake eating own tail | 48×48 | Snake in circle, arrows showing circular flow |
-| N+1 查詢蟲 | Bug that duplicates itself | 32×32 | Insect with "+1" on body, afterimages trailing |
-| 過早優化魔 | Wizard with premature gray hair, gold-plated but fragile | 32×32 | Fancy robes but cracking, magnifying glass |
-| 洩漏抽象體 | Blob leaking mysterious fluid through cracks | 32×32 | Container shape with dripping holes |
-| 大泥球 (Boss) | Massive amorphous mud blob absorbing things | 48×48 | Brown mass with recognizable bits of other monsters inside |
-| 資料泥團 | Cluster of stuck-together data shapes | 32×32 | Multiple small shapes fused uncomfortably |
-| 懶惰類別 | Sleeping block with heavy armor | 32×32 | Cube with Z's floating, thick shell, tiny stubby limbs |
-| 神類 (Final Boss) | Massive entity with ALL type indicators | 48×48 | Imposing figure with crown, body shifts between all monster traits at each phase; 4 distinct sprite variations |
+| 循環依賴蛇 (Boss) | Ouroboros snake | 48×48 | Snake in circle, arrows showing circular flow |
+| N+1 查詢蟲 | Self-duplicating bug | 32×32 | Insect with "+1" on body, afterimages trailing |
+| 過早優化魔 | Fancy but fragile wizard | 32×32 | Fancy robes but cracking, magnifying glass |
+| 洩漏抽象體 | Leaking container blob | 32×32 | Container shape with dripping holes |
+| 大泥球 (Boss) | Amorphous absorbing blob | 48×48 | Brown mass with bits of other monsters inside |
+| 資料泥團 | Stuck-together data cluster | 32×32 | Multiple small shapes fused uncomfortably |
+| 懶惰類別 | Sleeping armored block | 32×32 | Cube with Z's floating, thick shell, stubby limbs |
+| 神類 (Final Boss) | Massive ALL-type entity | 48×48 | Crown, body shifts at each phase; 4 sprite variations |
 
 ### Player Sprite Design
 - **Character:** 工程師 wearing a hoodie, laptop bag, headphones around neck
-- **Map sprite (16×16):** Simple but recognizable silhouette — hoodie outline, glasses glint
-- **Battle sprite (32×48):** More detailed — can see hoodie color, laptop as weapon, glasses
-- **Color scheme:** Dark hoodie (#374151), blue jeans (#3b82f6), skin, glasses glint (#60a5fa)
+- **Map sprite (16×16):** Hoodie outline, glasses glint
+- **Battle sprite (32×48):** Hoodie color, laptop as weapon, glasses
+- **Color scheme:** Dark hoodie (#374151), blue jeans (#3b82f6), glasses glint (#60a5fa)
 
 ---
 
@@ -217,15 +213,14 @@ Each monster's pixel art should visually reference its code smell concept:
 ### Exploration Mode
 ```
 ┌─────────────────────────────────────┐
-│░░░ [Minimap] ░░ 1F 前端泥沼 ░░ [☰] │ ← DOM: top bar (semi-transparent dark bg)
+│░░░ [Minimap] ░░ 1F 前端泥沼 ░░ [☰] │ ← DOM: top bar
 │                                     │
-│         [Canvas: Dungeon Map]       │ ← Canvas: takes full screen
+│         [Canvas: Dungeon Map]       │ ← Canvas: full screen
 │         Camera follows player       │
-│         Tile-based rendering        │
 │         Lighting + fog of war       │
 │                                     │
 │ ┌─────────────────────────────────┐ │
-│ │ HP ████████░░  MP ██████░░░░░░ │ │ ← DOM: bottom HUD (semi-transparent)
+│ │ HP ████████░░  MP ██████░░░░░░ │ │ ← DOM: bottom HUD
 │ │ LV.3 重構學徒   💰 120         │ │
 │ └─────────────────────────────────┘ │
 └─────────────────────────────────────┘
@@ -234,42 +229,19 @@ Each monster's pixel art should visually reference its code smell concept:
 ### Event/Dialogue (DOM Overlay)
 ```
 ┌─────────────────────────────────────┐
-│                                     │
 │         [Canvas: Scene BG]          │
-│         NPC sprite visible          │
-│                                     │
 │ ┌─────────────────────────────────┐ │
-│ │ ┌─┐                            │ │ ← DOM: JRPG dialogue box
-│ │ │☕│ 「要來杯咖啡嗎？            │ │    Portrait icon + typewriter text
+│ │ ┌─┐                            │ │ ← JRPG dialogue box
+│ │ │☕│ 「要來杯咖啡嗎？            │ │    Typewriter text, 30ms/char
 │ │ └─┘  暫時提升攻擊力喔！」       │ │
-│ │                                 │ │
 │ │  [接受 ☕]        [不用了]      │ │
 │ └─────────────────────────────────┘ │
 └─────────────────────────────────────┘
 ```
 
-**Dialogue box styling:**
-- Dark semi-transparent background with 2px pixel-art border (CSS box-shadow)
-- Text appears character-by-character (typewriter effect, 30ms per char)
-- Click/tap/Space to speed up or advance
-- NPC portrait: 32×32 pixel art rendered to small canvas or CSS box-shadow
-
-### Inventory/Status Screen (DOM, full overlay)
-Pixel-art border using CSS box-shadow technique, retro RPG menu feel.
-Items displayed as pixel art icons (small inline canvases) with Chinese names.
-
 ---
 
 ## GAME DESIGN DOCUMENT
-
-### Core Loop
-```
-[Explore Floor] → [Encounter] → [Combat / Event / Shop] → [Loot / Level Up] → [Next Room]
-                                                                                    ↓
-                                                                          [Floor Boss] → [Descend]
-                                                                                    ↓
-                                                                          [Final Boss: God Class]
-```
 
 ### Player Stats
 | Stat | Concept Mapping | Description |
@@ -293,75 +265,55 @@ Items displayed as pixel art icons (small inline canvases) with Chinese names.
 | Monster | 中文名 | HP | Behavior |
 |---------|--------|-----|----------|
 | Duplicate Code | 複製貼上靈 | Low | Splits into 2 copies at 50% HP |
-| Magic Number | 魔數精靈 | Low | Random damage (1~max×3), unpredictable |
-| Dead Code | 殭屍程式 | Very Low | Swarm — always appear in groups of 3-5 |
-| Long Method | 長方法獸 | Very High | Slow but hits hard, multi-phase attack |
+| Magic Number | 魔數精靈 | Low | Random damage (1~max×3) |
+| Dead Code | 殭屍程式 | Very Low | Swarm — groups of 3-5 |
+| Long Method | 長方法獸 | Very High | Slow but hits hard |
 | Feature Envy | 越界觸手怪 | Medium | Steals player buffs |
-| Shotgun Surgery | 散彈修改鳥 | Medium | Hits 3-5 times per turn, low per-hit damage |
-| Spaghetti Code | 義大利麵蟲 | High | Floor 1 Boss — entangles, reduces SPD |
-| Circular Dependency | 循環依賴蛇 | High | Floor 2 Boss — heals when you damage it (reflects %) |
-| N+1 Query | N+1 查詢蟲 | Medium | Summons 1 additional copy each turn |
-| Premature Optimization | 過早優化魔 | Medium | High DEF but low HP, wastes your turns |
-| Leaky Abstraction | 洩漏抽象體 | Medium | Ignores a portion of your DEF |
-| Big Ball of Mud | 大泥球 | Very High | Floor 3 Boss — absorbs defeated monsters' abilities |
-| Data Clump | 資料泥團 | Low | Always appears with 2-3 others, buffs allies |
-| Lazy Class | 懶惰類別 | Low | Does nothing but has high DEF, wastes turns |
-| **God Class** | **神類** | **極高** | **Final Boss — has ALL abilities, phase transitions at 75/50/25% HP** |
+| Shotgun Surgery | 散彈修改鳥 | Medium | 3-5 hits per turn, low each |
+| Spaghetti Code | 義大利麵蟲 | High | Boss 1F — entangles, reduces SPD |
+| Circular Dependency | 循環依賴蛇 | High | Boss 2F — heals on damage (reflects %) |
+| N+1 Query | N+1 查詢蟲 | Medium | Summons 1 copy each turn |
+| Premature Optimization | 過早優化魔 | Medium | High DEF, low HP, wastes turns |
+| Leaky Abstraction | 洩漏抽象體 | Medium | Ignores portion of DEF |
+| Big Ball of Mud | 大泥球 | Very High | Boss 3F — absorbs defeated abilities |
+| Data Clump | 資料泥團 | Low | Appears with 2-3 others, buffs allies |
+| Lazy Class | 懶惰類別 | Low | Does nothing, high DEF |
+| **God Class** | **神類** | **極高** | **Final Boss — ALL abilities, phase shifts at 75/50/25% HP** |
 
-### Refactoring Skills (Player Abilities)
-| Skill | 中文名 | MP Cost | Effect | Unlock |
-|-------|--------|---------|--------|--------|
-| Extract Method | 提取方法 | 2 | Single target damage (1.5× ATK) | Start |
-| Rename Variable | 重新命名 | 1 | Reveal enemy stats + weakness | Start |
-| Inline Temp | 內聯暫存 | 1 | Quick attack (0.8× ATK), always goes first | Start |
-| Replace Magic Number | 常數替換 | 3 | Stun for 1 turn, 2× damage vs Magic Number type | LV 3 |
-| Move Method | 搬移方法 | 2 | Reposition: dodge next attack | LV 5 |
-| Introduce Parameter Object | 參數物件化 | 4 | AoE: hit all enemies (0.7× ATK each) | LV 7 |
-| Replace Conditional with Polymorphism | 多型替換 | 5 | Transform: weaken boss's current phase ability | LV 9 |
-| Compose Method | 組合方法 | 6 | Ultimate: chain 3 random skills at 0.6× power | LV 11 |
+### Refactoring Skills
+| Skill | 中文名 | MP | Effect | Unlock |
+|-------|--------|----|--------|--------|
+| Extract Method | 提取方法 | 2 | 1.5× ATK single target | Start |
+| Rename Variable | 重新命名 | 1 | Reveal enemy stats | Start |
+| Inline Temp | 內聯暫存 | 1 | 0.8× ATK, always first | Start |
+| Replace Magic Number | 常數替換 | 3 | Stun 1 turn, 2× vs Magic Number | LV 3 |
+| Move Method | 搬移方法 | 2 | Dodge next attack | LV 5 |
+| Introduce Parameter Object | 參數物件化 | 4 | AoE 0.7× ATK all enemies | LV 7 |
+| Polymorphism | 多型替換 | 5 | Weaken boss's current phase | LV 9 |
+| Compose Method | 組合方法 | 6 | Chain 3 random skills at 0.6× | LV 11 |
 
 ### Design Pattern Equipment
 | Slot | Pattern | 中文名 | Effect |
 |------|---------|--------|--------|
-| Weapon | Factory Method Keyboard | 工廠方法鍵盤 | +ATK, attacks create a weak clone hit |
-| Armor | Strategy Pattern Hoodie | 策略模式帽T | +DEF, reduce damage from varied attack types |
-| Accessory | Observer Pattern Earbuds | 觀察者模式耳機 | +SPD, alert when ambush incoming |
-| Shield | Singleton Shield | 單例護盾 | Block status effects once per combat |
-| Special | Adapter Pattern Dongle | 轉接器模式轉接頭 | Convert 30% incoming damage to MP |
+| Weapon | Factory Method Keyboard | 工廠方法鍵盤 | +ATK, clone hit |
+| Armor | Strategy Pattern Hoodie | 策略模式帽T | +DEF, varied damage reduction |
+| Accessory | Observer Pattern Earbuds | 觀察者模式耳機 | +SPD, ambush alert |
+| Shield | Singleton Shield | 單例護盾 | Block status effects once |
+| Special | Adapter Pattern Dongle | 轉接器模式轉接頭 | 30% damage → MP |
 
-### Non-Combat Encounters (Random Events)
-- **Code Review 神壇** — Answer a refactoring trivia question, correct = full heal, wrong = lose 20% HP
-- **Stack Overflow 圖書館** — Choose: learn a random skill OR restore MP
-- **Coffee Machine ☕** — Temporary buff (+ATK or +SPD) for 5 combats
-- **Technical Debt Collector 💸** — Pay HP to skip next 2 encounters
-- **Pair Programming Partner 👥** — NPC joins for 3 combats (auto-attacks each turn)
+### Non-Combat Encounters
+- **Code Review 神壇** — Trivia: correct = full heal, wrong = -20% HP
+- **Stack Overflow 圖書館** — Random skill OR restore MP
+- **Coffee Machine ☕** — Temp buff (+ATK or +SPD) for 5 combats
+- **Technical Debt Collector 💸** — Pay HP to skip 2 encounters
+- **Pair Programming Partner 👥** — NPC joins 3 combats
 - **Legacy Documentation 📜** — Reveals full floor map
-
-### Procedural Map Generation
-- Each floor: grid-based dungeon with actual corridors and rooms
-- Generator: **BSP (Binary Space Partition) dungeon generation**
-  - Recursively split area into rooms
-  - Connect rooms with corridors
-  - Place doors at room-corridor connections
-- Map size: 40×30 tiles per floor
-- Room sizes: 5×5 to 10×8 tiles
-- Room types assigned after generation: Monster (50%), Event (15%), Treasure (10%), Shop (5%), Empty (20%)
-- Boss room: always the largest room, farthest from start
-- Start room: smallest room, farthest from boss
-- Fog of war: tiles beyond player light radius are dark
-- Monsters visible on map as sprites (walk into them to trigger combat)
 
 ### Combat System
 - Turn-based, SPD determines order
-- Player chooses: Attack (basic, free) / Skill (costs MP) / Item / Flee (50% chance, fail = enemy free hit)
-- Damage formula: `ATK × skill_multiplier × (1 + random(-0.1, 0.1)) - target_DEF × 0.5`
-- Critical hit: 10% chance, 1.5× damage, screen flash + dramatic message
-- Combat log: scrollable, showing each action with sarcastic commentary
-
-### Game Over & Victory
-- **Death:** Stats summary, sarcastic epitaph, player sprite does pixel-dissolve, "再來一局" button
-- **Victory:** "成功重構 legacy codebase！", full run stats, pixel confetti rains down
-- **Both:** Auto-delete save from localStorage
+- Actions: Attack (free) / Skill (MP) / Item / Flee (50%)
+- Damage: `ATK × multiplier × (1 ± 0.1) - DEF × 0.5`
+- Critical: 10% chance, 1.5× damage
 
 ---
 
@@ -370,44 +322,44 @@ Items displayed as pixel art icons (small inline canvases) with Chinese names.
 ```
 src/
 ├── app/                    # App shell, React root, providers
-├── engine/                 # Canvas rendering engine (NO React here)
-│   ├── GameLoop.ts         # requestAnimationFrame loop, delta time
-│   ├── Renderer.ts         # Main render pipeline
-│   ├── Camera.ts           # Viewport tracking, smooth scroll
-│   ├── SpriteRenderer.ts   # Draw sprite frames to canvas
-│   ├── ParticleSystem.ts   # Pixel dissolve, sparkles, damage numbers
-│   ├── LightingSystem.ts   # Torch light radial gradient + flicker
-│   ├── TileRenderer.ts     # Draw tile map (only visible tiles)
-│   ├── AudioSystem.ts      # Web Audio synthesized SFX (14 sounds)
-│   ├── MusicTypes.ts       # BGM type definitions (Note, VoiceDef, TrackDef, AdsrEnvelope)
-│   ├── MusicSynth.ts       # BGM synthesizer core (ADSR, detuned pairs, filter, reverb, delay)
-│   ├── MusicSystem.ts      # BGM engine: track switching, loop scheduling, crossfade
-│   ├── MusicTracks.ts      # BGM barrel file — re-exports types + all 9 track defs
-│   └── tracks/             # Individual track data (9 files + noteFreqs.ts)
-├── sprites/                # All sprite data (pure data, no logic)
-│   ├── player.ts           # Player sprite frames
-│   ├── monsters/           # One file per monster
-│   ├── tiles.ts            # Tile sprite definitions per floor theme
-│   ├── effects.ts          # Hit/heal/levelup effect frames
-│   ├── items.ts            # Item icons
-│   └── npc.ts              # NPC portraits and map sprites
+├── engine/                 # Canvas rendering engine (NO React)
+│   ├── GameLoop.ts
+│   ├── Renderer.ts
+│   ├── Camera.ts
+│   ├── SpriteRenderer.ts
+│   ├── ParticleSystem.ts
+│   ├── LightingSystem.ts
+│   ├── TileRenderer.ts
+│   ├── AudioSystem.ts      # SFX (14 sounds)
+│   ├── MusicTypes.ts
+│   ├── MusicSynth.ts
+│   ├── MusicSystem.ts
+│   ├── MusicTracks.ts
+│   └── tracks/             # 9 track files + noteFreqs.ts
+├── sprites/                # Pure data, no logic
+│   ├── player.ts
+│   ├── monsters/
+│   ├── tiles.ts
+│   ├── effects.ts
+│   ├── items.ts
+│   └── npc.ts
 ├── features/
-│   ├── game/               # Core game flow, state transitions
-│   ├── combat/             # Combat state machine, AI, formulas
-│   ├── map/                # Dungeon generation (BSP), pathfinding
-│   ├── inventory/          # Equipment, items
-│   └── events/             # Non-combat encounter logic
-├── ui/                     # React DOM overlay components
-│   ├── HUD.tsx             # Top bar
-│   ├── BottomHUD.tsx       # HP/MP bars
-│   ├── BattleUI.tsx        # Action menu, combat log, enemy HP
-│   ├── DialogueBox.tsx     # JRPG typewriter text box
+│   ├── game/
+│   ├── combat/
+│   ├── map/
+│   ├── inventory/
+│   └── events/
+├── ui/                     # React DOM overlays
+│   ├── HUD.tsx
+│   ├── BottomHUD.tsx
+│   ├── BattleUI.tsx
+│   ├── DialogueBox.tsx
 │   ├── InventoryScreen.tsx
 │   ├── ShopScreen.tsx
 │   ├── TitleScreen.tsx
 │   ├── GameOverScreen.tsx
 │   ├── VictoryScreen.tsx
-│   └── components/         # Shared: PixelBorder, StatBar, etc.
+│   └── components/
 ├── data/
 │   ├── monsters.ts
 │   ├── skills.ts
@@ -420,7 +372,7 @@ src/
 │   └── gameReducer.ts
 └── utils/
     ├── types.ts
-    ├── random.ts           # Seeded RNG
+    ├── random.ts
     └── constants.ts
 ```
 
@@ -432,20 +384,13 @@ src/
 1. Vite + React + TypeScript + Tailwind project setup
 2. Google Fonts: Press Start 2P + Noto Sans TC
 3. All TypeScript types & interfaces
-4. **Canvas game engine scaffolding:**
-   - GameLoop with requestAnimationFrame + delta time
-   - Renderer that clears and draws to a canvas ref
-   - Camera with viewport tracking
-   - SpriteRenderer: takes a SpriteFrame[][] and draws to canvas at (x,y)
-5. **Sprite data:**
-   - Player sprite (map: 16×16, 4-dir walk; battle: 32×48 idle)
-   - 3 tile types (floor, wall, void) for Floor 1 theme
-   - Hit spark effect (4 frames)
-6. **Proof of concept:** Render a small 10×10 hardcoded tile grid with the player sprite walking around (WASD/arrow keys/tap)
-7. DOM HUD overlay: top bar (floor name) + bottom bar (HP/MP placeholder)
-8. Title screen with pixel art game logo (CSS + small canvas)
+4. Canvas game engine scaffolding (GameLoop, Renderer, Camera, SpriteRenderer)
+5. Sprite data: Player (map + battle), 3 tile types, hit spark effect
+6. Proof of concept: 10×10 tile grid with player walking (WASD/arrows/tap)
+7. DOM HUD overlay: top bar + bottom bar
+8. Title screen with pixel art logo
 
-**Deliverable:** Player sprite walks on a tile grid with camera follow, lighting effect active, HUD overlays visible. Looks like a real game.
+**Deliverable:** Player sprite walks on tile grid with camera follow and lighting.
 
 ### Phase 2: Dungeon & Exploration
 1. BSP dungeon generator (40×30 tiles, rooms + corridors)
@@ -454,17 +399,17 @@ src/
 4. Fog of war + torch lighting
 5. Player-monster collision → trigger combat (placeholder)
 6. Interactable tiles: chests, doors
-7. Minimap (small canvas in top-left DOM overlay)
-8. Stairs → floor transition (screen fade) → regenerate
+7. Minimap (small canvas in DOM overlay)
+8. Stairs → floor transition → regenerate
 9. Full GameState context + reducer
 10. Auto-save on room change
 
-**Deliverable:** Full dungeon exploration. Atmospheric lighting. Feels like a dungeon crawler.
+**Deliverable:** Full dungeon exploration. Atmospheric lighting.
 
 ### Phase 3: Combat System
 1. All battle sprites (player + Floor 1 monsters + boss)
 2. Battle scene renderer (background, positioning, all animations)
-3. **Pixel dissolve death effect**
+3. Pixel dissolve death effect
 4. Battle DOM overlay (action menu, combat log, HP bars)
 5. Combat logic (turn order, skills, AI, damage, flee)
 6. Combat results (XP, gold, drops, level up)
@@ -495,417 +440,6 @@ src/
 **Deliverable:** Conference-ready. Visually impressive.
 
 ---
-
-## CRITICAL ARCHITECTURE NOTES
-
-### 1. Combat Event → Animation Mapping (CRITICAL)
-
-Every `CombatEvent` kind emitted by `combatStateMachine.ts` **must** have a corresponding `case` in `applyEvents()` in `combatLoop.ts`, and that case **must** queue at least one animation via `queueAnimation()`.
-
-**Why:** `BattleAnimator`'s `frame.finished` only becomes `true` when the animation queue had items and all have completed. If an event queues no animation, the queue stays empty → `finished` is never `true` → `handleAnimationComplete()` never runs → the game permanently freezes.
-
-**Past incidents:**
-- `flee_failed` and `reveal` events both caused combat lock because they were missing from `applyEvents()`; see also Note 6 for a related flee bug.
-- **Dead enemy skip in multi-enemy combat:** when a dead monster's turn arrives during `handleAnimationComplete`, `processEnemyTurn` returns early via `advanceToNextTurn` with empty events → no animation queued → `frame.finished` never becomes `true` → combat freeze. Fixed with a fallback in `updateCombatLoop` (see Note 17).
-
-**Rule:** Whenever a new `CombatEvent` kind is added to the discriminated union in `combatStateMachine.ts`, immediately add a matching `case` in `applyEvents()` in `combatLoop.ts` that queues at least a minimal animation (e.g. `hit_reaction_player` or `hit_reaction_enemy`).
-
-### 2. Two-Tier State Architecture
-
-The game uses two distinct state tiers that must not be mixed:
-
-- **60fps tier (`useRef`):** `CombatLoopState` and other game-loop state lives in a `useRef`. Direct property assignment is allowed for performance. Arrays must still use `.map()` to produce new arrays — no direct index mutation (`arr[i] = x` is forbidden).
-- **React tier (`useReducer`):** `GameState` via `GameContext` + `useReducer`. Strictly immutable — all updates via `dispatch(GameAction)`.
-
-Communication is one-way: 60fps tier reads from React state via snapshot, writes back via `dispatch()`. Never put 60fps loop state into React state (causes re-render storm), and never read React state directly inside the rAF loop.
-
-### 3. Canvas Text Must Use DOM Overlays
-
-Due to `image-rendering: pixelated` CSS scaling applied to the canvas, any text drawn via the Canvas 2D text API becomes blurry/aliased at display size.
-
-**Rule:** All player-visible text (monster names, combat log, HP values, dialogue) must be rendered as DOM elements with `position: absolute` on top of the canvas. Use `VIEWPORT.logicalWidth` / `VIEWPORT.logicalHeight` as the coordinate reference for percentage positioning.
-
-**Exception:** Damage numbers (`DamageNumbers.ts`) are rendered on canvas intentionally — the pixelated style is a feature, not a bug, and they need tight synchronisation with canvas animations.
-
-### 4. DOM Overlay Coordinate System
-
-DOM overlays on the battle canvas use percentage positioning derived from logical canvas coordinates:
-
-```ts
-const xPct = (logicalX / VIEWPORT.logicalWidth) * 100;   // VIEWPORT.logicalWidth = 240
-const yPct = (logicalY / VIEWPORT.logicalHeight) * 100;  // VIEWPORT.logicalHeight = 176
-// style={{ left: `${xPct}%`, top: `${yPct}%` }}
-```
-
-This keeps DOM elements aligned with canvas content at any CSS scale factor (2x–4x).
-
-### 5. New Game Must Reset Player to STARTING_PLAYER (CRITICAL)
-
-The `START_GAME` reducer case **must** spread `STARTING_PLAYER` from `initialState.ts`, not `state.player`.
-
-```ts
-// ✅ CORRECT
-case "START_GAME":
-  return {
-    ...state,
-    player: { ...STARTING_PLAYER, position: action.startPos },
-    ...
-  };
-
-// ❌ WRONG — carries over HP=0 and other dead-state stats from the previous run
-case "START_GAME":
-  return {
-    ...state,
-    player: { ...state.player, position: action.startPos },
-    ...
-  };
-```
-
-**Past incident:** After dying (HP=0 stored in state), starting a new game inherited HP=0 — player was dead from the first frame.
-
-### 6. Flee Fail Must Not Advance to Enemy Turn (CRITICAL)
-
-In `processPlayerAction()` inside `combatStateMachine.ts`, when flee fails, the function must **return early with `phase: "selecting"`** before the normal "advance to enemy_turn" code path.
-
-```ts
-// After resolving flee action:
-const fleeFailed = events.some((e) => e.kind === "flee_failed");
-if (fleeFailed) {
-  return { state: { ...newState, phase: "selecting", isPlayerTurn: true }, events, ... };
-}
-// Only reach enemy_turn advance if flee did NOT fail
-```
-
-**Past incident:** `flee_failed` was correctly handled in `applyEvents()` (no combat lock), but `processPlayerAction` fell through to advance `isPlayerTurn → false`, giving the enemy a free attack after a failed flee — effectively two enemy turns in one round.
-
-### 7. COMBAT_END_VICTORY Must NOT Pass newPlayerStats (CRITICAL)
-
-`APPLY_COMBAT_RESULT` already writes the correct final stats (exp, gold, level-up, HP/MP) to `state.player.stats` during combat. `COMBAT_END_VICTORY` must **not** accept or apply a `newPlayerStats` payload from the 60fps loop.
-
-```ts
-// ✅ CORRECT — reducer uses state.player.stats already set by APPLY_COMBAT_RESULT
-case "COMBAT_END_VICTORY":
-  return { ...state, player: { ...state.player, skills: newSkills }, ... };
-
-// ❌ WRONG — snapshot may be stale, overwrites correctly updated stats
-case "COMBAT_END_VICTORY":
-  return { ...state, player: { ...state.player, stats: action.newPlayerStats, skills: newSkills }, ... };
-```
-
-**Why:** `gameStateRef.current` in the 60fps loop is updated by `useEffect` (after React renders). If `COMBAT_END_VICTORY` fires before `useEffect` has reflected the latest `APPLY_COMBAT_RESULT`, `action.newPlayerStats` is a stale snapshot — it overwrites the correct HP/exp/gold with pre-combat values.
-
-**Past incident:** Combat "felt like it didn't happen" — player's HP appeared unchanged, exp/gold showed no gain, because the stale snapshot reset the React state that `APPLY_COMBAT_RESULT` had correctly updated.
-
-### 8. BossDoor Must Have Exactly One Entrance (CRITICAL)
-
-`placeBossDoor` in `bspGenerator.ts` must:
-1. Collect Floor tiles just outside the boss room boundary
-2. BFS-group them into contiguous entrance clusters
-3. Keep ONE cluster → `TileType.BossDoor`
-4. Seal all other clusters → `TileType.Wall`
-
-Additionally:
-- `validateMap` must be called **after** `placeBossDoor` (not before)
-- `isPassable()` in `mapValidator.ts` must include `TileType.BossDoor` so the validator can reach `bossPos` through the door
-- After `validateMap`, also call `validateMapNoBossDoor` to catch the BossDoor deadlock case (see Note 18)
-
-**Why:** BSP corridors can pass through the boss room, creating entrances on multiple sides. If all are converted to BossDoor, the corridors are cut — other rooms become unreachable and the dungeon is unbeatable.
-
-**Past incidents:**
-- Screenshot showed two BossDoor tiles blocking a corridor, making the dungeon unplayable because both sides were sealed.
-- `validateMap` treats BossDoor as passable (correct for boss room reachability), but a non-boss monster room was only accessible through a locked BossDoor — deadlock; fixed by `validateMapNoBossDoor` (see Note 18).
-
-### 9. BossDoor and Stairs Progression Logic
-
-- **BossDoor** (entering boss room): opens when ALL **non-boss** monsters are cleared
-  - Check: `floor.monsters.some(m => !m.def.behavior.startsWith("boss_"))`
-  - If true → show "消滅所有小怪才能進入 Boss 房！", block
-- **StairsDown** (descending to next floor): requires the **boss** to be dead
-  - Check: `floor.monsters.some(m => m.def.behavior.startsWith("boss_"))`
-  - If true → show "消滅 Boss 才能下樓！", block
-- `behavior.startsWith("boss_")` is the canonical way to identify boss monsters (there is no `isBoss` field on `MonsterDef`)
-
-### 10. MusicSystem Mute Must Sync Both Systems (CRITICAL)
-
-
-
-There are two independent audio systems: `AudioSystem` (SFX) and `MusicSystem` (BGM). Both must be muted/unmuted together. Muting only one silences one channel but leaves the other playing.
-
-```ts
-// ✅ CORRECT — in every mute toggle handler (HUD.tsx, PauseMenu.tsx)
-AudioSystem.setMuted(next);
-MusicSystem.setMuted(next);
-
-// ❌ WRONG — BGM keeps playing after player hits mute
-AudioSystem.setMuted(next);
-```
-
-`MusicSystem` does NOT call `AudioSystem.setMuted` internally (that would create a circular import). Each component that exposes a mute toggle is responsible for calling both.
-
-**MusicSystem files (4-file split after BGM quality upgrade):**
-- `src/engine/MusicTypes.ts` — type defs: `Note`, `AdsrEnvelope`, `VoiceDef` (detune/filter/pan/adsr), `TrackDef` (reverbMix/delayTime), `MusicTrack`
-- `src/engine/MusicSynth.ts` — synthesizer core: per-note oscillators, ADSR gain automation, detuned pairs (chorus), BiquadFilter, StereoPanner, ConvolverNode reverb, DelayNode + feedback
-- `src/engine/MusicSystem.ts` — scheduler: `startTrack` creates TrackBus once per track start; voices scheduled per loop iteration. Public API unchanged: `setTrack`, `setMuted`, `stop`
-- `src/engine/MusicTracks.ts` — barrel file: re-exports types + imports all 9 tracks from `tracks/*.ts`
-- `src/engine/tracks/noteFreqs.ts` — shared note frequency constants (E2–Bb5)
-- `src/engine/tracks/*.ts` — 9 individual track files (title, explore1–4, combat, combatBoss, victory, gameOver)
-
-**Track → GameMode mapping** (in `computeMusicTrack`, `GameCanvas.tsx`):
-- `title` → `"title"`
-- `exploring` / `event` / `shop` → `"explore_{currentFloor}"` (clamped to 4)
-- `combat` → `"combat_boss"` if any enemy has `behavior.startsWith("boss_")`, else `"combat"`
-- `victory` → `"victory"` (one-shot, no loop)
-- `game_over` → `"game_over"` (one-shot, no loop)
-
-**MusicSystem exception to engine purity rule:** `MusicSystem.ts` imports `getCtx()` from `AudioSystem.ts` to share the same `AudioContext`. This is the only allowed cross-import within `src/engine/` — it avoids creating duplicate `AudioContext` instances (browsers limit their count).
-
-### 11. SkillMenu Must Not Use `absolute bottom-full` Positioning
-
-`SkillMenu` must be rendered as a **normal block element in DOM flow**, positioned **before** the action panel div in `BattleUI.tsx`. Do NOT give it `position: absolute` or `bottom: 100%`.
-
-**Why:** The battle UI sits at the bottom of the canvas (`absolute bottom-0`). If SkillMenu uses `absolute bottom-full`, it grows upward relative to its positioned ancestor and overflows the top of the canvas when many skills are unlocked.
-
-**Correct pattern in `BattleUI.tsx`:**
-```tsx
-<div className="absolute bottom-0 left-0 right-0" style={{ padding: "4px 6px 6px" }}>
-  {/* Combat log */}
-  <div>...</div>
-  {/* Skill submenu — must come BEFORE action panel in DOM order */}
-  {showSkills && <SkillMenu ... />}
-  {/* Action panel */}
-  <div className="bg-black bg-opacity-80 ...">...</div>
-</div>
-```
-
-**Correct pattern in `SkillMenu.tsx`:**
-```tsx
-<div
-  className="bg-black bg-opacity-90 border border-gray-500 rounded"
-  style={{ padding: '6px', marginBottom: '4px', maxHeight: '45vh', overflowY: 'auto' }}
->
-```
-
-`maxHeight: '45vh'` + `overflowY: 'auto'` ensures the menu is scrollable if skills overflow, never escaping the viewport.
-
-### 12. Stun Buff Must Be Applied Before Damage (CRITICAL)
-
-In `combatStateMachine.ts`, when a skill applies both a stun and damage (e.g. Replace Magic Number / 常數替換), **push the buff event and update enemy buffs BEFORE calling `applyDamageToEnemy`**.
-
-**Why:** `applyDamageToEnemy` may kill the target. The original pattern checked `targetAfterDamage.currentHp > 0` before applying stun — if the attack killed the enemy, the stun event was never emitted and the combat log showed no stun, confusing players.
-
-**Correct order:**
-```ts
-// 1. Apply stun buff to enemy state
-enemies = enemies.map((e, i) =>
-  i === result.targetIndex ? { ...e, buffs: [...e.buffs, stunBuff] } : e
-);
-// 2. Emit buff_applied event (so animation queues correctly)
-events.push({ kind: "buff_applied", buffId: "stunned", turns: 1, target: result.targetIndex });
-// 3. Log the stun
-log.push(STRINGS.skillStun.replace("{0}", enemies[result.targetIndex]?.def.name ?? ""));
-// 4. Apply damage (may kill — that's fine, stun is already recorded)
-enemies = applyDamageToEnemy(enemies, result.targetIndex, result.damage, events, log, state);
-```
-
-### 13. Demo Mode HP Protection Is Intentional (Not a Bug)
-
-When Demo Mode is active (triggered by Konami Code ↑↑↓↓←→←→BA), the player's HP cannot drop below 1. This is implemented in `processEnemyTurn` in `combatStateMachine.ts`:
-
-```ts
-const rawNewHp = /* calculated damage result */;
-const newHp = isDemoMode && rawNewHp <= 0 ? 1 : rawNewHp;
-```
-
-**Visual indicator:** The HUD displays a yellow `DEMO` badge in the top-left corner while Demo Mode is active.
-
-**Not a bug:** Players who report "HP stays at 1 even when taking lethal damage" are running Demo Mode. No code change is needed. Verify by checking `gameState.demoMode === true` or looking for the `DEMO` badge on screen.
-
-### 14. Training Room Uses `floorMonsterIndex = -1` Sentinel (CRITICAL)
-
-Training Room battles (`TileType.TrainingRoom`) spawn random floor monsters for practice. Because these are not real map monsters, `floorMonsterIndex` must be set to **`-1`** — not a valid array index.
-
-```ts
-// In GameCanvas.tsx when entering Training Room:
-dispatch({ type: "START_COMBAT", monsters: trainingMonsters, floorMonsterIndex: -1 });
-```
-
-`COMBAT_END_VICTORY` in `gameReducer.ts` must guard against this sentinel before removing a monster from `floor.monsters`:
-
-```ts
-case "COMBAT_END_VICTORY":
-  const updatedMonsters =
-    action.floorMonsterIndex === -1
-      ? state.floor.monsters                    // training — nothing to remove
-      : state.floor.monsters.filter((_, i) => i !== action.floorMonsterIndex);
-```
-
-**Why:** If the guard is missing, `floorMonsterIndex = -1` removes no element (`.filter` skips it) but the BossDoor check counts `floor.monsters` — this would work by coincidence. The explicit guard makes intent clear and prevents subtle bugs if the filter semantics change.
-
-**BossDoor safety:** Training battles never modify `floor.monsters`, so clearing all Training Rooms never accidentally unlocks the BossDoor or changes floor state.
-
-### 15. All Boss `spriteId` Values Must Be Registered in `monsterMapSprites` (CRITICAL)
-
-Every `MonsterDef.spriteId` used by a boss (or any monster) must have a matching key in `src/sprites/monsters/index.ts → monsterMapSprites`. If the key is missing, `Renderer.ts` silently skips rendering the monster:
-
-```ts
-// Renderer.ts
-const sheet = monsterMapSprites[monster.spriteId];
-if (!sheet) continue;  // ← silently invisible, but still collidable
-```
-
-This means the boss appears invisible on the map — players walk into it and trigger combat without seeing it. The sprite file **and** the registry entry are both required.
-
-**Current boss sprite IDs and their files:**
-| Floor | Boss | `spriteId` | Sprite file |
-|-------|------|------------|-------------|
-| 1F | 義大利麵蟲 | `spaghetti_code` | `src/sprites/monsters/spaghettiCode.ts` |
-| 2F | 循環依賴蛇 | `circular_dependency` | `src/sprites/monsters/circularDependency.ts` |
-| 3F | 大泥球 | `big_ball_of_mud` | `src/sprites/monsters/bigBallOfMud.ts` |
-| 4F | 神類 | `god_class` | `src/sprites/monsters/godClass.ts` |
-
-**Rule:** Whenever a new monster or boss is added to `src/data/monsters.ts`, immediately create its sprite file AND add an entry to `monsterMapSprites`. The two steps are always paired.
-
-### 16. `validateMap` Checks All Room Centers, Not Just Boss (CRITICAL)
-
-`src/features/map/mapValidator.ts → validateMap` performs a BFS from the start position and verifies that **all room centers** (not just the boss room) are reachable.
-
-**Why this matters:** BSP `connectLeaves()` connects only one room per subtree side. Sibling rooms in the same subtree that are not selected for the connector become unreachable "islands". The old implementation only checked start→boss connectivity — islands passed validation.
-
-**Current signature:**
-```ts
-validateMap(
-  tileMap: readonly (readonly TileType[])[],
-  start: Position,
-  rooms: readonly Pick<Room, "x" | "y" | "width" | "height">[],
-): boolean
-```
-
-**How it's called in `bspGenerator.ts`:**
-```ts
-if (!validateMap(tileMap, startPos, typedRooms)) continue;
-```
-
-Note: `validateMap` is called **after** `placeBossDoor` — this is intentional. `isPassable()` includes `TileType.BossDoor` so the BFS can reach the boss room center through the sealed entrance.
-
-### 17. Dead Enemy Skip Must Not Stall the Turn Chain (CRITICAL)
-
-In multi-enemy combat, when a dead monster's turn arrives, `processEnemyTurn` skips it with `advanceToNextTurn` (empty events). `applyEvents` has nothing to queue → animation queue stays empty → `frame.finished` is never `true` → `handleAnimationComplete` is never called again → **combat freeze**.
-
-**Fix:** `updateCombatLoop` has a fallback check after the `frame.finished` branch:
-
-```ts
-// combatLoop.ts — after the frame.finished check
-if (
-  !isAnimating(loop.animState) &&
-  loop.localPhase === "enemy_turn" &&
-  loop.outcome === "none" &&
-  loop.lastProcessedTurnIndex !== combat.currentTurnIndex
-) {
-  handleAnimationComplete(loop, combat, gameState, dispatch);
-}
-```
-
-`loop.lastProcessedTurnIndex` is updated to `combat.currentTurnIndex` **before** the `if (entry?.kind === "enemy")` guard — ensuring the same index is never processed twice even when React state is briefly stale.
-
-**Past incident:** Killing the 2nd enemy (not the last) in a 2-enemy Training Room battle caused all action buttons to stay disabled permanently. Root cause: dead enemy's turn queued no animation; fallback now recovers without relying on `frame.finished`.
-
-### 18. Non-Boss Rooms Must Be Reachable Without BossDoor (CRITICAL)
-
-`validateMap` treats `BossDoor` as passable so it can confirm the boss room center is reachable. But in-game, the BossDoor only opens after all non-boss monsters are cleared. If any non-boss room is **only** accessible through the BossDoor, its monster can never be killed → BossDoor never unlocks → **deadlock**.
-
-**Fix:** after `validateMap`, call `validateMapNoBossDoor` for all non-boss rooms:
-
-```ts
-// bspGenerator.ts
-if (!validateMap(tileMap, startPos, typedRooms)) continue;
-
-const nonBossRooms = typedRooms.filter((r) => r.type !== RoomType.Boss);
-if (!validateMapNoBossDoor(tileMap, startPos, nonBossRooms)) continue;
-```
-
-`validateMapNoBossDoor` runs the same BFS but treats `BossDoor` as `Wall`. If any non-boss room center is unreachable → reject this map and retry.
-
-**`mapValidator.ts` exports:**
-- `validateMap(tileMap, start, rooms)` — BossDoor passable; verifies boss room reachable
-- `validateMapNoBossDoor(tileMap, start, rooms)` — BossDoor as Wall; verifies no non-boss room is trapped behind BossDoor
-
-**Past incident:** 3F map had a corridor that passed through the boss room boundary. `placeBossDoor` sealed the extra entrance, isolating a non-boss monster room. Player could see the monster on minimap but couldn't reach it → BossDoor never unlocked.
-
----
-
-## CODING STANDARDS
-- No `any` type — strict TypeScript
-- All game logic functions must be pure
-- **Engine code (src/engine/):** Zero React dependencies. Pure TypeScript + Canvas API only.
-- **Sprite data (src/sprites/):** Pure data files. No logic, no imports from engine.
-- React components: functional only, hooks for state
-- File size cap: no file > 200 lines
-- Chinese strings centralized in `src/data/strings.ts`
-- All entities defined as data, not hardcoded in logic
-- Discriminated unions for game states
-- Canvas coordinates always in logical pixels (16px tile units), scale handled by CSS
-- **UI font size minimums:** Press Start 2P headers ≥ 18px, section labels ≥ 14px; Noto Sans TC item names ≥ 18px, secondary text ≥ 14px — never use 10-12px in player-facing UI (too small on scaled canvas)
-
-### Build Verification (CRITICAL)
-
-**Always use `npm run build` (= `tsc -b && vite build`) to verify, NOT `tsc --noEmit` alone.**
-
-`tsconfig.app.json` enables `noUnusedLocals: true` and `noUnusedParameters: true`. These only take effect under `tsc -b` (composite build mode used by `npm run build` and Vercel CI). Standalone `tsc --noEmit` bypasses project references and may miss these errors.
-
-```bash
-npm run build     # ✅ catches all errors including noUnusedLocals
-npx tsc --noEmit  # ⚠️  misses noUnusedLocals/noUnusedParameters violations
-```
-
-**Past incident:** Vercel CI failed with "exit code 2" because 5 unused-import / undeclared-type errors were not caught locally. Root cause: developer used `tsc --noEmit` instead of `npm run build` for verification.
-
-## TESTING
-
-### Browser Testing Tool
-
-Use `agent-browser` for all browser testing (installed via Homebrew, works on darwin-arm64).
-
-| Tool | When to Use |
-|------|-------------|
-| `agent-browser:agent-browser` | Targeted test: specific flow (e.g. enter combat → use skill → win) |
-| `agent-browser:dogfood` | Exploratory test: find bugs, UX issues, visual glitches across whole game |
-
-**agent-browser quick reference:**
-```bash
-agent-browser --session NAME open http://localhost:5173
-agent-browser --session NAME wait --load networkidle
-agent-browser --session NAME snapshot -i          # find clickable elements
-agent-browser --session NAME screenshot /tmp/out.png
-agent-browser --session NAME click @e1
-agent-browser --session NAME press ArrowRight   # NOTE: command is "press", NOT "press_key"
-agent-browser --session NAME close
-```
-
-**DOM element selection tips:**
-- Use `innerText` (not `textContent`) for exact text matching — `textContent` includes nested child text and causes false positives
-- Example: `Array.from(document.querySelectorAll('div')).filter(d => d.innerText.trim() === '▶ 複製貼上靈')`
-
-
-To read live game state from the browser console:
-```js
-const root = document.getElementById('root');
-const key = Object.keys(root).find(k => k.startsWith('__reactContainer'));
-let fiber = root[key]?.child;
-while (fiber) {
-  const s = fiber.memoizedState?.memoizedState;
-  if (s && s.player && s.gameMode) { console.log(JSON.stringify(s, null, 2)); break; }
-  fiber = fiber.child ?? fiber.sibling;
-}
-```
-
-### When to Test
-- After implementing a new feature or fixing a bug, run browser tests to verify visually
-- After combat system changes, test a full battle flow (enter combat → attack/skill → victory/defeat)
-- After UI changes, verify DOM overlay alignment with canvas at different viewport sizes
-
-### Dev Server
-- `npm run dev` must be running before any browser test
-- Default URL: `http://localhost:5173`
 
 ## RESPONSE RULES
 - All responses in Traditional Chinese (繁體中文)
