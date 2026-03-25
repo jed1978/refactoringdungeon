@@ -108,4 +108,5 @@ export const INITIAL_GAME_STATE: GameState = {
   demoMode: false,
   skipEncounters: 0,
   companionCombats: 0,
+  playerBuffs: [],
 };

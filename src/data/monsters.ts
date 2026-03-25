@@ -15,6 +15,7 @@ export const FLOOR1_BOSS: MonsterDef = {
   behavior: "boss_spaghetti",
   spriteId: "spaghetti_code",
   spriteSize: 48,
+  stunImmunity: 0.3,
 };
 
 export const FLOOR1_MONSTERS: readonly MonsterDef[] = [
@@ -77,6 +78,7 @@ export const FLOOR2_BOSS: MonsterDef = {
   behavior: "boss_circular_dep",
   spriteId: "circular_dependency",
   spriteSize: 48,
+  stunImmunity: 0.4,
 };
 
 export const FLOOR2_MONSTERS: readonly MonsterDef[] = [
@@ -139,6 +141,7 @@ export const FLOOR3_BOSS: MonsterDef = {
   behavior: "boss_big_ball",
   spriteId: "big_ball_of_mud",
   spriteSize: 48,
+  stunImmunity: 0.5,
 };
 
 export const FLOOR3_MONSTERS: readonly MonsterDef[] = [
@@ -201,6 +204,7 @@ export const FLOOR4_BOSS: MonsterDef = {
   behavior: "boss_god_class",
   spriteId: "god_class",
   spriteSize: 48,
+  stunImmunity: 0.6,
 };
 
 export const FLOOR4_MONSTERS: readonly MonsterDef[] = [
@@ -280,10 +284,10 @@ export const FLOOR4_MONSTERS: readonly MonsterDef[] = [
   {
     id: "lazy_class",
     name: "懶惰類別",
-    description: "存在但什麼都不做，卻有超高防禦讓你浪費時間",
-    hp: 35,
+    description: "存在但什麼都不做，把工作推給別人，但逼急了還是會動",
+    hp: 50,
     atk: 8,
-    def: 25,
+    def: 18,
     spd: 2,
     exp: 35,
     gold: 20,

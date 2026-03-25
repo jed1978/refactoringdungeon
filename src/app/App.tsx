@@ -19,6 +19,7 @@ import { useGameDispatch } from "../state/GameContext";
 import { EVENTS } from "../data/events";
 import { applyEventReward } from "../features/events/eventHandler";
 import type { CombatAction } from "../utils/types";
+import { TileType } from "../utils/types";
 
 function AppContent() {
   const gameState = useGameState();
@@ -179,6 +180,9 @@ function AppContent() {
                   type: "UPDATE_PLAYER_STATS",
                   stats: result.newStats,
                 });
+                if (result.buff) {
+                  dispatch({ type: "ADD_PLAYER_BUFF", buff: result.buff });
+                }
                 // Side-effects for special reward kinds
                 if (c.reward.kind === "skip_encounters") {
                   const hpCost = Math.floor(gameState.player.stats.maxHp * 0.3);
@@ -195,6 +199,17 @@ function AppContent() {
                   dispatch({
                     type: "SET_COMPANION",
                     combats: c.reward.combats,
+                  });
+                }
+                // Make atk_buff tiles one-time-use
+                if (
+                  c.reward.kind === "atk_buff" &&
+                  gameState.gameMode.mode === "event"
+                ) {
+                  dispatch({
+                    type: "UPDATE_TILE",
+                    position: gameState.gameMode.eventTilePos,
+                    newTile: TileType.Floor,
                   });
                 }
                 dispatch({

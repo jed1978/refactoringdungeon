@@ -6,11 +6,23 @@ import type {
   Position,
   MonsterState,
   PlayerStats,
+  PlayerBuff,
   CombatState,
   Equipment,
   EquipmentSlots,
 } from "../utils/types";
 import { TileType } from "../utils/types";
+
+/** Compute effective player stats after applying all active buffs */
+export function getEffectiveStats(
+  base: PlayerStats,
+  buffs: readonly PlayerBuff[],
+): PlayerStats {
+  return buffs.reduce(
+    (s, b) => ({ ...s, [b.stat]: s[b.stat] + b.value }),
+    base,
+  );
+}
 import { initCombat } from "../features/combat/combatStateMachine";
 import { ITEMS_MAP } from "../data/items";
 import {
@@ -100,7 +112,14 @@ export type GameAction =
   | { readonly type: "DECREMENT_SKIP" }
   | { readonly type: "SET_COMPANION"; readonly combats: number }
   | { readonly type: "DECREMENT_COMPANION" }
-  | { readonly type: "REVEAL_MAP" };
+  | { readonly type: "REVEAL_MAP" }
+  | { readonly type: "ADD_PLAYER_BUFF"; readonly buff: PlayerBuff }
+  | { readonly type: "EXPIRE_PLAYER_BUFFS" }
+  | {
+      readonly type: "UPDATE_TILE";
+      readonly position: Position;
+      readonly newTile: TileType;
+    };
 
 export type GameStateWithPrompt = GameState & {
   readonly interactionPrompt: string | null;
@@ -526,6 +545,27 @@ export function gameReducer(
     case "REVEAL_MAP": {
       const revealed = state.floor.explored.map((row) => row.map(() => true));
       return { ...state, floor: { ...state.floor, explored: revealed } };
+    }
+
+    case "ADD_PLAYER_BUFF":
+      return { ...state, playerBuffs: [...state.playerBuffs, action.buff] };
+
+    case "EXPIRE_PLAYER_BUFFS": {
+      const updated = state.playerBuffs
+        .map((b) => ({ ...b, combatsRemaining: b.combatsRemaining - 1 }))
+        .filter((b) => b.combatsRemaining > 0);
+      return { ...state, playerBuffs: updated };
+    }
+
+    case "UPDATE_TILE": {
+      const newTileMap = state.floor.tileMap.map((row, y) =>
+        y === action.position.y
+          ? row.map((tile, x) =>
+              x === action.position.x ? action.newTile : tile,
+            )
+          : row,
+      );
+      return { ...state, floor: { ...state.floor, tileMap: newTileMap } };
     }
 
     default:

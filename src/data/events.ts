@@ -2,7 +2,11 @@ export type EventReward =
   | { readonly kind: "heal_hp"; readonly value: number }
   | { readonly kind: "heal_mp"; readonly value: number }
   | { readonly kind: "damage_hp"; readonly value: number }
-  | { readonly kind: "atk_buff"; readonly turns: number }
+  | {
+      readonly kind: "atk_buff";
+      readonly turns: number;
+      readonly value: number;
+    }
   | { readonly kind: "skip_encounters"; readonly count: number }
   | { readonly kind: "reveal_map" }
   | { readonly kind: "companion"; readonly combats: number };
@@ -39,8 +43,8 @@ export const EVENTS: Record<string, GameEvent> = {
     choices: [
       { label: "查閱 — 恢復 MP", reward: { kind: "heal_mp", value: 30 } },
       {
-        label: "隨手複製貼上（+ATK 3 回合）",
-        reward: { kind: "atk_buff", turns: 3 },
+        label: "隨手複製貼上（+ATK 3 場戰鬥）",
+        reward: { kind: "atk_buff", turns: 3, value: 2 },
       },
     ],
   },
@@ -51,8 +55,8 @@ export const EVENTS: Record<string, GameEvent> = {
     text: "香氣四溢。一杯好咖啡能讓思路清晰。\n要來一杯嗎？",
     choices: [
       {
-        label: "喝一杯（+ATK 5 回合）",
-        reward: { kind: "atk_buff", turns: 5 },
+        label: "喝一杯（+ATK 5 場戰鬥）",
+        reward: { kind: "atk_buff", turns: 5, value: 3 },
       },
       { label: "不用了，我喝水就好", reward: { kind: "heal_hp", value: 10 } },
     ],

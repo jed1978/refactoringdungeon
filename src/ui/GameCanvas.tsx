@@ -249,6 +249,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
                 gameMode: {
                   mode: "event",
                   eventId: tileTypeToEventId(facing.tileType),
+                  eventTilePos: facing.position,
                 },
               });
               break;
@@ -291,6 +292,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, object>(
                   currentHp: def.hp,
                   position: { x: 0, y: 0 },
                   buffs: [],
+                  stunResistance: 0,
                 };
               });
               dispatch({

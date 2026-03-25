@@ -128,6 +128,8 @@ export type MonsterDef = {
   readonly behavior: string;
   readonly spriteId: string;
   readonly spriteSize: 32 | 48;
+  /** Base stun immunity (0–1). Bosses use this as a floor for stun resistance. */
+  readonly stunImmunity?: number;
 };
 
 export type MonsterState = {
@@ -135,6 +137,8 @@ export type MonsterState = {
   readonly currentHp: number;
   readonly position: Position;
   readonly buffs: readonly Buff[];
+  /** Dynamic stun resistance accumulated per combat (0–1, decays when not stunned). */
+  readonly stunResistance: number;
 };
 
 export type Buff = {
@@ -221,7 +225,11 @@ export type GameMode =
   | { readonly mode: "title" }
   | { readonly mode: "exploring" }
   | { readonly mode: "combat"; readonly combat: CombatState }
-  | { readonly mode: "event"; readonly eventId: string }
+  | {
+      readonly mode: "event";
+      readonly eventId: string;
+      readonly eventTilePos: Position;
+    }
   | { readonly mode: "shop" }
   | { readonly mode: "game_over" }
   | { readonly mode: "victory" };
@@ -233,6 +241,14 @@ export type RunStats = {
   readonly startTime: number;
   readonly skillUseCounts: Readonly<Record<string, number>>;
   readonly itemsUsed: number;
+};
+
+// Player buff (temporary stat boost, counted per combat)
+export type PlayerBuff = {
+  readonly id: string;
+  readonly stat: "atk" | "def" | "spd";
+  readonly value: number;
+  readonly combatsRemaining: number;
 };
 
 // Complete game state
@@ -250,6 +266,7 @@ export type GameState = {
   readonly demoMode: boolean;
   readonly skipEncounters: number;
   readonly companionCombats: number;
+  readonly playerBuffs: readonly PlayerBuff[];
 };
 
 // Rendering

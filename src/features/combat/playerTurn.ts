@@ -76,14 +76,30 @@ export function processPlayerAction(
         skillId: action.skillId,
         mpCost: skill.mpCost,
       });
-      log.push(STRINGS.playerUsesSkill.replace("{0}", skill.name));
+      // Deduct MP first (always consumed even if rejected)
+      newPlayerStats = {
+        ...playerStats,
+        mp: Math.max(0, playerStats.mp - skill.mpCost),
+      };
+
+      // God Class Phase 3 (bossPhase >= 2): 40% chance to reject skill
       const skillTarget =
         enemies[action.targetIndex]?.currentHp > 0
           ? action.targetIndex
           : firstAliveIndex(enemies);
+      const targetMonster = enemies[skillTarget];
+      const isGodClassPhase3 =
+        targetMonster?.def.behavior === "boss_god_class" &&
+        state.bossPhase >= 2;
+      if (isGodClassPhase3 && rng() < 0.4) {
+        log.push(STRINGS.godClassRejectPR);
+        break;
+      }
+
+      log.push(STRINGS.playerUsesSkill.replace("{0}", skill.name));
       const result = resolveSkill(
         action.skillId,
-        playerStats,
+        newPlayerStats,
         skillTarget,
         enemies,
         rng,
@@ -96,13 +112,10 @@ export function processPlayerAction(
         log,
         state,
         newState,
+        rng,
       );
       enemies = applied.enemies;
       newState = applied.newState;
-      newPlayerStats = {
-        ...playerStats,
-        mp: Math.max(0, playerStats.mp - skill.mpCost),
-      };
       break;
     }
 

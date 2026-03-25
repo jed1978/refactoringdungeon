@@ -15,6 +15,7 @@ import type { CombatEvent } from "./combatTypes";
 import type { CombatResult } from "./combatTypes";
 import type { GameStateWithPrompt } from "../../state/gameReducer";
 import type { GameAction } from "../../state/gameReducer";
+import { getEffectiveStats } from "../../state/gameReducer";
 import {
   createBattleAnimState,
   queueAnimation,
@@ -210,7 +211,7 @@ function handlePendingAction(
   const result = processPlayerAction(
     combat,
     pendingAction,
-    gameState.player.stats,
+    getEffectiveStats(gameState.player.stats, gameState.playerBuffs ?? []),
     loop.rng,
     gameState.demoMode ?? false,
     gameState.companionCombats ?? 0,
@@ -240,6 +241,7 @@ function handleAnimationComplete(
     if ((gameState.companionCombats ?? 0) > 0) {
       dispatch({ type: "DECREMENT_COMPANION" });
     }
+    dispatch({ type: "EXPIRE_PLAYER_BUFFS" });
     dispatch({
       type: "COMBAT_END_VICTORY",
       unlockedSkills: loop.pendingUnlockedSkills,
@@ -268,7 +270,7 @@ function handleAnimationComplete(
       const result = processEnemyTurn(
         combat,
         entry.index,
-        gameState.player.stats,
+        getEffectiveStats(gameState.player.stats, gameState.playerBuffs ?? []),
         loop.rng,
         gameState.demoMode ?? false,
       );

@@ -1,9 +1,10 @@
-import type { PlayerStats } from "../../utils/types";
+import type { PlayerStats, PlayerBuff } from "../../utils/types";
 import type { EventReward } from "../../data/events";
 
 export type EventResult = {
   readonly newStats: PlayerStats;
   readonly message: string;
+  readonly buff?: PlayerBuff;
 };
 
 export function applyEventReward(
@@ -35,10 +36,15 @@ export function applyEventReward(
       };
     }
     case "atk_buff": {
-      // ATK buff stored as temporary stat boost (simplified: permanent +1)
       return {
-        newStats: { ...stats, atk: stats.atk + 1 },
-        message: `ATK 暫時提升！持續 ${reward.turns} 回合。`,
+        newStats: stats, // base stats unchanged; buff applied separately
+        message: `ATK +${reward.value}，持續 ${reward.turns} 場戰鬥！`,
+        buff: {
+          id: `atk_buff_${Date.now()}`,
+          stat: "atk" as const,
+          value: reward.value,
+          combatsRemaining: reward.turns,
+        },
       };
     }
     case "skip_encounters": {

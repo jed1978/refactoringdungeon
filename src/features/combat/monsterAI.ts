@@ -83,12 +83,13 @@ export function chooseMonsterAction(
       return { ...base };
 
     case "boss_big_ball": {
-      const phase = combatState.turn % 5;
-      if (phase === 0)
+      // Weighted random ability selection (no longer predictable turn cycle)
+      const roll = rng();
+      if (roll < 0.3)
         return { ...base, hitCount: 3, bigBallAbility: "multi_hit" };
-      if (phase === 1) return { ...base, bigBallAbility: "steal_heal" };
-      if (phase === 2) return { ...base, bigBallAbility: "self_heal" };
-      if (phase === 3) return { ...base, bigBallAbility: "heavy_hit" };
+      if (roll < 0.55) return { ...base, bigBallAbility: "heavy_hit" };
+      if (roll < 0.75) return { ...base, bigBallAbility: "steal_heal" };
+      if (roll < 0.9) return { ...base, bigBallAbility: "self_heal" };
       return { ...base, bigBallAbility: "normal" };
     }
 
@@ -96,7 +97,8 @@ export function chooseMonsterAction(
       return { ...base };
 
     case "lazy_class":
-      return { ...base, shouldSkip: true };
+      // Behavior handled directly in processEnemyTurn (delegate/heal/attack)
+      return { ...base };
 
     case "boss_god_class": {
       // Phase 3 (enrage): attack twice is handled in processEnemyTurn

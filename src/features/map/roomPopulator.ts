@@ -92,6 +92,7 @@ export function populateRooms(
             currentHp: def.hp,
             position: pos,
             buffs: [],
+            stunResistance: 0,
           });
         }
         break;
@@ -131,6 +132,7 @@ export function populateRooms(
             currentHp: boss.hp,
             position: bossPos,
             buffs: [],
+            stunResistance: 0,
           });
         }
         break;

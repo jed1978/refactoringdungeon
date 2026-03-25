@@ -57,13 +57,12 @@ export function makeMonster(overrides?: Partial<MonsterState>): MonsterState {
     currentHp: 50,
     position: { x: 0, y: 0 },
     buffs: [],
+    stunResistance: 0,
     ...overrides,
   };
 }
 
-export function makeCombatState(
-  overrides?: Partial<CombatState>,
-): CombatState {
+export function makeCombatState(overrides?: Partial<CombatState>): CombatState {
   const turnOrder: TurnOrderEntry[] = [
     { kind: "player" },
     { kind: "enemy", index: 0 },
